@@ -1,0 +1,476 @@
+@import "tailwindcss";
+
+/* Self-hosted fonts (no third-party requests). Latin subsets only. */
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
+@import "@fontsource/nunito/latin-500.css";
+@import "@fontsource/nunito/latin-600.css";
+@import "@fontsource/nunito/latin-700.css";
+@import "@fontsource/nunito/latin-800.css";
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-serif/latin-500.css";
+@import "@fontsource/ibm-plex-serif/latin-600.css";
+
+/* ------------------------------------------------------------------
+   Everyday SG themes
+   Four skins share one token set. The default (bare :root) is "sage";
+   the others override the same variables on [data-theme]. Tailwind
+   utilities read these through the @theme inline block below, so a
+   theme switch is a single attribute change on <html>.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --weight-semibold: 600;
+
+  --canvas: #f7f6f2;
+  --ink: #292b29;
+  --ink-muted: #585b57;
+  --ink-faint: #6b6e69;
+
+  --stone-50: #ffffff;
+  --stone-100: #f3f1ec;
+  --stone-200: #ebe8e1;
+  --stone-300: #ddd9cf;
+  --stone-400: #c9c4b8;
+  --stone-500: #a9a497;
+
+  --sage-50: #f1f4f0;
+  --sage-100: #e3e8e1;
+  --sage-200: #c9d3c6;
+  --sage-300: #aebdaa;
+  --sage-400: #98aa94;
+  --sage-500: #859681;
+  --sage-600: #6e7f6a;
+  --sage-700: #566350;
+  --sage-800: #434d3f;
+  --sage-900: #2f362d;
+
+  --clay-100: #f3e9e3;
+  --clay-500: #b07d62;
+  --clay-700: #7f5742;
+
+  --hero: #f7f6f2;
+  --hero-ink: #292b29;
+  --hero-muted: #585b57;
+  --hero-eyebrow: #566350;
+  --hero-pad: 0.5rem 0 0.25rem;
+  --nav-active: #ebe8e1;
+  --tile-1: #ffffff;
+  --tile-2: #ffffff;
+  --tile-3: #ffffff;
+
+  --chart-1: #859681;
+  --chart-2: #566350;
+  --chart-3: #c9d3c6;
+  --chart-4: #b07d62;
+  --chart-5: #a9a497;
+  --chart-grid: #ddd9cf;
+
+  --r-sm: 0.375rem;
+  --r-md: 0.5rem;
+  --r-lg: 0.75rem;
+  --r-xl: 1rem;
+  --shadow-soft: 0 1px 2px rgba(41, 43, 41, 0.05), 0 1px 1px rgba(41, 43, 41, 0.03);
+}
+
+:root[data-theme="playful"] {
+  --font-body: "Nunito", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Nunito", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --weight-semibold: 700;
+
+  --canvas: #fbf8f1;
+  --ink: #2a2552;
+  --ink-muted: #5d5981;
+  --ink-faint: #7b779a;
+
+  --stone-50: #ffffff;
+  --stone-100: #f5f1e7;
+  --stone-200: #ebe5d8;
+  --stone-300: #ddd6c6;
+  --stone-400: #c9c1ad;
+  --stone-500: #a9a28f;
+
+  --sage-50: #f3f1fd;
+  --sage-100: #ecebfb;
+  --sage-200: #d6d2f5;
+  --sage-300: #b9b3ec;
+  --sage-400: #9b92e6;
+  --sage-500: #7b6ce0;
+  --sage-600: #6453d3;
+  --sage-700: #4f3fc4;
+  --sage-800: #3d2f9e;
+  --sage-900: #2e2a66;
+
+  --clay-100: #ffe9df;
+  --clay-500: #e07a4f;
+  --clay-700: #c5623a;
+
+  --hero: #fce48d;
+  --hero-ink: #2a2552;
+  --hero-muted: #4a4472;
+  --hero-eyebrow: #4a4472;
+  --hero-pad: 2rem 2rem 1.75rem;
+  --nav-active: #ffe9a6;
+  --tile-1: #e7e5fa;
+  --tile-2: #ffe3d4;
+  --tile-3: #dcefe3;
+
+  --chart-1: #7b6ce0;
+  --chart-2: #f7b27a;
+  --chart-3: #7cc8a2;
+  --chart-4: #ffd24a;
+  --chart-5: #b9b3ec;
+  --chart-grid: #ebe5d8;
+
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1.25rem;
+  --r-xl: 1.5rem;
+  --shadow-soft: 0 2px 6px rgba(42, 37, 82, 0.06);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #141615;
+  --ink: #eceee9;
+  --ink-muted: #b3b8b0;
+  --ink-faint: #8f948c;
+
+  --stone-50: #1c1f1d;
+  --stone-100: #23272a;
+  --stone-200: #2e3330;
+  --stone-300: #3a403c;
+  --stone-400: #4a514c;
+  --stone-500: #6b726d;
+
+  --sage-50: #1f2622;
+  --sage-100: #243027;
+  --sage-200: #2f4034;
+  --sage-300: #4a5f4c;
+  --sage-400: #6e8a66;
+  --sage-500: #9dbb96;
+  --sage-600: #afc9a8;
+  --sage-700: #bfd7b8;
+  --sage-800: #d2e3cc;
+  --sage-900: #e6efe2;
+
+  --clay-100: #3a2a22;
+  --clay-500: #d9a58a;
+  --clay-700: #e8b89f;
+
+  --hero: #141615;
+  --hero-ink: #eceee9;
+  --hero-muted: #b3b8b0;
+  --hero-eyebrow: #bfd7b8;
+  --nav-active: #2a2f2c;
+  --tile-1: #1c1f1d;
+  --tile-2: #1c1f1d;
+  --tile-3: #1c1f1d;
+
+  --chart-1: #9dbb96;
+  --chart-2: #6e8a66;
+  --chart-3: #4a5a47;
+  --chart-4: #d9a58a;
+  --chart-5: #6b726d;
+  --chart-grid: #2e3330;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="professional"] {
+  --font-body: "IBM Plex Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+
+  --canvas: #f4f6f9;
+  --ink: #10213a;
+  --ink-muted: #46566b;
+  --ink-faint: #64748b;
+
+  --stone-50: #ffffff;
+  --stone-100: #eef2f6;
+  --stone-200: #dfe5ec;
+  --stone-300: #c9d2dd;
+  --stone-400: #aab6c4;
+  --stone-500: #8794a3;
+
+  --sage-50: #eef3fa;
+  --sage-100: #e6eef8;
+  --sage-200: #c8d8ee;
+  --sage-300: #a9c0dd;
+  --sage-400: #7fa0cc;
+  --sage-500: #5a83be;
+  --sage-600: #3a66a8;
+  --sage-700: #1e4b8f;
+  --sage-800: #173c73;
+  --sage-900: #10213a;
+
+  --clay-100: #f8e8df;
+  --clay-500: #d2764a;
+  --clay-700: #b4562b;
+
+  --hero: #10213a;
+  --hero-ink: #ffffff;
+  --hero-muted: #c7d2e0;
+  --hero-eyebrow: #c7d2e0;
+  --hero-pad: 2rem 2rem 1.75rem;
+  --nav-active: #e6eef8;
+  --tile-1: #ffffff;
+  --tile-2: #ffffff;
+  --tile-3: #ffffff;
+
+  --chart-1: #1e4b8f;
+  --chart-2: #5a83be;
+  --chart-3: #a9c0dd;
+  --chart-4: #b4562b;
+  --chart-5: #8794a3;
+  --chart-grid: #dfe5ec;
+
+  --r-sm: 0.25rem;
+  --r-md: 0.375rem;
+  --r-lg: 0.375rem;
+  --r-xl: 0.5rem;
+  --shadow-soft: 0 1px 2px rgba(16, 33, 58, 0.06);
+}
+
+/* Map Tailwind's design tokens onto the live theme variables. */
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-weight-semibold: var(--weight-semibold);
+
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-stone-50: var(--stone-50);
+  --color-stone-100: var(--stone-100);
+  --color-stone-200: var(--stone-200);
+  --color-stone-300: var(--stone-300);
+  --color-stone-400: var(--stone-400);
+  --color-stone-500: var(--stone-500);
+
+  --color-sage-50: var(--sage-50);
+  --color-sage-100: var(--sage-100);
+  --color-sage-200: var(--sage-200);
+  --color-sage-300: var(--sage-300);
+  --color-sage-400: var(--sage-400);
+  --color-sage-500: var(--sage-500);
+  --color-sage-600: var(--sage-600);
+  --color-sage-700: var(--sage-700);
+  --color-sage-800: var(--sage-800);
+  --color-sage-900: var(--sage-900);
+
+  --color-clay-100: var(--clay-100);
+  --color-clay-500: var(--clay-500);
+  --color-clay-700: var(--clay-700);
+
+  --color-hero: var(--hero);
+  --color-hero-ink: var(--hero-ink);
+  --color-hero-muted: var(--hero-muted);
+  --color-hero-eyebrow: var(--hero-eyebrow);
+  --color-nav-active: var(--nav-active);
+  --color-tile-1: var(--tile-1);
+  --color-tile-2: var(--tile-2);
+  --color-tile-3: var(--tile-3);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+
+  --shadow-soft: var(--shadow-soft);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible, consistent focus for keyboard users */
+  :focus-visible {
+    outline: 2px solid var(--sage-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--sage-200);
+  }
+
+  h1, h2, h3, h4 {
+    @apply text-ink tracking-tight;
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    @apply underline-offset-2;
+  }
+
+  /* Native range input — restrained, consistent across browsers */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 1.5rem;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--stone-300);
+  }
+  input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--stone-300);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -7px;
+    border-radius: 999px;
+    background: var(--stone-50);
+    border: 2px solid var(--sage-600);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--stone-50);
+    border: 2px solid var(--sage-600);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+  input[type="range"]:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--sage-600);
+    outline-offset: 2px;
+  }
+  input[type="range"]:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--sage-600);
+    outline-offset: 2px;
+  }
+
+  /* Remove number input spinners for a calmer look (keyboard still works) */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type="date"] {
+    color-scheme: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .prose-esg {
+    @apply text-[15px] leading-7 text-ink;
+  }
+  .prose-esg p + p {
+    @apply mt-3;
+  }
+
+  .field-input {
+    @apply w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-[15px] text-ink placeholder:text-ink-faint shadow-none transition-colors;
+  }
+  .field-input:hover {
+    @apply border-stone-400;
+  }
+  .field-input:focus {
+    @apply border-sage-600 outline-none ring-2 ring-sage-200;
+  }
+  .field-input[aria-invalid="true"] {
+    @apply border-clay-500;
+  }
+
+  .field-select {
+    appearance: none;
+    padding-right: 2.25rem;
+  }
+
+  .surface {
+    @apply rounded-lg border border-stone-200 bg-stone-50;
+  }
+  .surface-muted {
+    @apply rounded-lg border border-stone-200 bg-stone-100;
+  }
+
+  .link {
+    @apply text-sage-700 underline decoration-sage-300 hover:decoration-sage-600;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Print: show the content, hide chrome and controls
+   ------------------------------------------------------------------ */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #444;
+  }
+  .surface, .surface-muted {
+    border-color: #bbb !important;
+    background: #fff !important;
+    break-inside: avoid;
+  }
+  input[type="range"] {
+    display: none !important;
+  }
+  main {
+    max-width: none !important;
+  }
+}
+.print-only {
+  display: none;
+}

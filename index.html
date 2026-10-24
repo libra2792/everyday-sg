@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-SG">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F7F6F2" />
+    <meta
+      name="description"
+      content="Everyday SG — your guide to adulting in Singapore. Independent guides, calculators and checklists for money, housing, family, caregiving, insurance, CPF, careers and life admin."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Everyday SG — Your guide to adulting in Singapore</title>
+    <script>
+      // Apply the saved appearance before first paint to avoid a flash of the default theme.
+      (function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('everydaysg:theme') || 'null');
+          var valid = ['sage', 'playful', 'dark', 'professional'];
+          var theme = valid.indexOf(saved) !== -1 ? saved : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'sage';
+          if (theme !== 'sage') document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
