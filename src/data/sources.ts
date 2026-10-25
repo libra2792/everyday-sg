@@ -152,6 +152,13 @@ export const SOURCES: Source[] = [
   { id: 'myskillsfuture', agency: 'SkillsFuture SG', title: 'MySkillsFuture — courses and credit', url: 'https://www.myskillsfuture.gov.sg', check: 'link', checkedOn: CHECKED },
   { id: 'mycareersfuture', agency: 'WSG', title: 'MyCareersFuture — jobs and career services', url: 'https://www.mycareersfuture.gov.sg', check: 'link', checkedOn: CHECKED },
 
+  // ---- Statistics used as indicative figures in calculators -------------------------
+  { id: 'singstat-income-2025', agency: 'SingStat', title: 'Key Household Income Trends, 2025 (press release, 9 Feb 2026)', url: 'https://www.singstat.gov.sg/-/media/files/news/press09022026.ashx', check: 'content', checkedOn: '2026-10-25' },
+  { id: 'mom-labour-force-2025', agency: 'MOM', title: 'Labour Force in Singapore 2025 — survey findings', url: 'https://stats.mom.gov.sg/iMAS_Tables1/LabourForce/LabourForce_2025/mrsd_2025LabourForce_survey_findings.pdf', check: 'content', checkedOn: '2026-10-25' },
+  { id: 'singstat-hes-2023', agency: 'SingStat', title: 'Household Expenditure Survey 2023 (press release, 28 Nov 2024)', url: 'https://singstat.gov.sg/-/media/files/news/press28112024.ashx', check: 'content', checkedOn: '2026-10-25' },
+  { id: 'hdb-median-resale', agency: 'HDB', title: 'Median resale prices for registered resale applications (3Q 2026)', url: 'https://www.hdb.gov.sg/-/media/managing-my-home/selling-a-flat/process-for-selling-a-flat/resale-flat-planning/resale-statistics/Median-resale-prices-for-registered-resale-applications.pdf', check: 'content', checkedOn: '2026-10-25' },
+  { id: 'ecda-aop', agency: 'ECDA', title: 'Anchor Operator preschools and fee caps', url: 'https://www.ecda.gov.sg/parents/choosing-a-preschool/aop', check: 'content', checkedOn: '2026-10-25' },
+
   // ---- Money -----------------------------------------------------------------------
   { id: 'moneysense-decisions', agency: 'MoneySense', title: 'Navigating major financial decisions', url: 'https://www.moneysense.gov.sg/navigating-major-financial-decisions/', check: 'link', checkedOn: CHECKED },
   { id: 'cpf-retirement-planning', agency: 'CPF Board', title: 'Retirement planning (CPF infohub)', url: 'https://www.cpf.gov.sg/member/infohub/retirement-planning', check: 'link', checkedOn: CHECKED },

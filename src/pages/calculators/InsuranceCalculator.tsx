@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
 import { insuranceNeed, type InsuranceInputs } from '@/lib/finance';
 import { sgd } from '@/lib/format';
+import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { SliderField } from '@/components/ui/Field';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
@@ -55,7 +56,7 @@ export default function InsuranceCalculator() {
     <CalculatorShell
       id="insurance"
       onReset={reset}
-      sourceIds={['moneysense', 'cpf-medishield', 'cpf-careshield']}
+      sourceIds={['moneysense', 'cpf-medishield', 'cpf-careshield', 'singstat-hes-2023']}
       relatedGuides={['insurance-basics', 'review-coverage-and-claims', 'health-insurance-sg']}
       headline={[
         { label: 'Illustrative need', value: sgd(r.totalNeed) },
@@ -107,8 +108,8 @@ export default function InsuranceCalculator() {
     >
       <InputGroup title="Your household">
         <SliderField label="Number of dependants" min={0} max={8} step={1} value={state.dependants} onChange={set('dependants')} allowAboveMax={false} help="Children, a non-working spouse, parents you support." />
-        <SliderField label="Years of income replacement wanted" suffix="years" min={0} max={30} step={1} value={state.yearsOfIncomeReplacement} onChange={set('yearsOfIncomeReplacement')} allowAboveMax={false} help="For example, until the youngest child finishes education or a partner could re-establish income." />
-        <SliderField label="Annual household living expenses" prefix="S$" min={0} max={300000} step={1000} value={state.annualHouseholdExpenses} onChange={set('annualHouseholdExpenses')} help="What your dependants would need per year, not your current gross income." />
+        <SliderField label="Years of income replacement wanted" benchmark={BENCHMARKS.incomeReplacementYears} suffix="years" min={0} max={30} step={1} value={state.yearsOfIncomeReplacement} onChange={set('yearsOfIncomeReplacement')} allowAboveMax={false} help="For example, until the youngest child finishes education or a partner could re-establish income." />
+        <SliderField label="Annual household living expenses" benchmark={BENCHMARKS.annualHouseholdExpenses} prefix="S$" min={0} max={300000} step={1000} value={state.annualHouseholdExpenses} onChange={set('annualHouseholdExpenses')} help="What your dependants would need per year, not your current gross income." />
       </InputGroup>
 
       <InputGroup title="Obligations to cover">

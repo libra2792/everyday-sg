@@ -215,7 +215,8 @@ export function Home() {
       <section className="rounded-lg border border-stone-200 bg-stone-100 p-5 text-[13.5px] leading-6 text-ink-muted sm:p-6">
         <strong className="text-ink">Independent and private by design.</strong> Everyday SG is not a government website and cannot submit applications for you. Guides link to
         the responsible agencies, where rules and amounts are kept current. Your profile, checklists and calculator inputs are stored only in this browser; you can export,
-        import or erase them at any time from <Link to="/plan" className="link">My Plan</Link>.
+        import or erase them at any time from <Link to="/plan" className="link">My Plan</Link>. Made by one Singaporean figuring it out too:{' '}
+        <Link to="/creator" className="link">read the story</Link>.
       </section>
     </div>
   );

@@ -65,20 +65,31 @@ export interface Guide {
   id: string;
   categoryId: CategoryId;
   title: string;
+  /** One line, shown on cards and under the title. */
   summary: string;
+  /** Line icon name used on cards and the guide header. */
+  icon: string;
   lifeStages: LifeStageId[];
   tags: string[];
   /** Does the guide describe rules that change (official) or evergreen practice (general)? */
   infoType: 'official' | 'general';
   /** Date the guide's official references were checked, if they were. */
   reviewedOn?: string;
-  plainEnglish: string[];
-  whoShouldConsider: string[];
-  whenToAct: string[];
+  /** "What this means" — 3 to 4 short bullets. */
+  keyPoints: string[];
+  /** "Who it's for" — short bullets. */
+  whoFor: string[];
+  /** "When to act" — short bullets. */
+  when: string[];
+  /** Recommended sequence — short title and a one-line detail. */
   steps: GuideStep[];
-  documents: string[];
-  costsAndDecisions?: string[];
-  mistakesAndTips: string[];
+  /** Documents or information to prepare — short chips. */
+  prepare: string[];
+  /** Costs or decisions to consider — short bullets. */
+  costs?: string[];
+  /** Common mistakes and tips — short bullets. */
+  watchOuts: string[];
+  /** Eligibility considerations — short bullets. */
   eligibility?: string[];
   officialLinks: string[]; // Source ids
   relatedCalculators: (CalculatorId | ToolId)[];

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
 import { projectRetirement, type RetirementInputs } from '@/lib/finance';
 import { sgd } from '@/lib/format';
+import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
@@ -58,7 +59,7 @@ export default function RetirementCalculator() {
     <CalculatorShell
       id="retirement"
       onReset={reset}
-      sourceIds={['cpf-life', 'cpf-payout-estimator', 'cpf-planner', 'cpf-retirement-planning', 'moneysense']}
+      sourceIds={['cpf-life', 'cpf-payout-estimator', 'cpf-planner', 'cpf-retirement-planning', 'moneysense', 'singstat-hes-2023']}
       relatedGuides={['retirement-income-cpf-life', 'cpf-basics', 'start-investing']}
       headline={[
         { label: 'Savings at retirement', value: sgd(r.savingsAtRetirementNominal) },
@@ -112,15 +113,15 @@ export default function RetirementCalculator() {
     >
       <InputGroup title="Ages">
         <SliderField label="Current age" min={18} max={80} step={1} value={state.currentAge} onChange={set('currentAge')} allowAboveMax={false} />
-        <SliderField label="Intended retirement age" min={40} max={80} step={1} value={state.retirementAge} onChange={set('retirementAge')} allowAboveMax={false} help="CPF LIFE payouts can start from 65 and be deferred up to 70; your own savings can start earlier or later." />
-        <SliderField label="Plan to age" min={70} max={105} step={1} value={state.planToAge} onChange={set('planToAge')} allowAboveMax={false} help="How long your own savings should last. Planning to 90 or beyond is common because of longevity." />
+        <SliderField label="Intended retirement age" benchmark={BENCHMARKS.retirementAge} min={40} max={80} step={1} value={state.retirementAge} onChange={set('retirementAge')} allowAboveMax={false} help="CPF LIFE payouts can start from 65 and be deferred up to 70; your own savings can start earlier or later." />
+        <SliderField label="Plan to age" benchmark={BENCHMARKS.planToAge} min={70} max={105} step={1} value={state.planToAge} onChange={set('planToAge')} allowAboveMax={false} help="How long your own savings should last. Planning to 90 or beyond is common because of longevity." />
       </InputGroup>
 
       <InputGroup title="Savings and spending" description="Today's dollars. Exclude CPF balances that will become CPF LIFE payouts; add those payouts as other income instead.">
         <SliderField label="Current retirement savings (outside CPF LIFE)" prefix="S$" min={0} max={2000000} step={5000} value={state.currentSavings} onChange={set('currentSavings')} />
         <SliderField label="Monthly contributions" prefix="S$" min={0} max={10000} step={50} value={state.monthlyContribution} onChange={set('monthlyContribution')} />
-        <SliderField label="Expected monthly retirement spending (today's dollars)" prefix="S$" min={0} max={15000} step={100} value={state.monthlySpendingToday} onChange={set('monthlySpendingToday')} />
-        <SliderField label="Other expected monthly retirement income (today's dollars)" prefix="S$" min={0} max={10000} step={50} value={state.otherMonthlyIncomeToday} onChange={set('otherMonthlyIncomeToday')} help="CPF LIFE estimate from CPF Board's tool, rental income, annuities, part-time work." />
+        <SliderField label="Expected monthly retirement spending (today's dollars)" benchmark={BENCHMARKS.retirementSpending} prefix="S$" min={0} max={15000} step={100} value={state.monthlySpendingToday} onChange={set('monthlySpendingToday')} />
+        <SliderField label="Other expected monthly retirement income (today's dollars)" benchmark={BENCHMARKS.otherRetirementIncome} prefix="S$" min={0} max={10000} step={50} value={state.otherMonthlyIncomeToday} onChange={set('otherMonthlyIncomeToday')} help="CPF LIFE estimate from CPF Board's tool, rental income, annuities, part-time work." />
       </InputGroup>
 
       <InputGroup title="Assumptions" description="Adjust freely. The presets are labelled illustrations, not predictions.">
@@ -131,8 +132,8 @@ export default function RetirementCalculator() {
             </Button>
           ))}
         </div>
-        <SliderField label="Assumed nominal investment return" suffix="% p.a." min={0} max={10} step={0.1} value={state.nominalReturnPct} onChange={set('nominalReturnPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Before inflation. Cash-like savings earn less; diversified portfolios have historically earned more over long periods, with volatility." />
-        <SliderField label="Assumed annual inflation" suffix="% p.a." min={0} max={6} step={0.1} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} />
+        <SliderField label="Assumed nominal investment return" benchmark={BENCHMARKS.nominalReturn} suffix="% p.a." min={0} max={10} step={0.1} value={state.nominalReturnPct} onChange={set('nominalReturnPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Before inflation. Cash-like savings earn less; diversified portfolios have historically earned more over long periods, with volatility." />
+        <SliderField label="Assumed annual inflation" benchmark={BENCHMARKS.inflation} suffix="% p.a." min={0} max={6} step={0.1} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} />
         <p className="text-[13px] text-ink-faint">Real return implied by these assumptions: {(((1 + state.nominalReturnPct / 100) / (1 + state.inflationPct / 100) - 1) * 100).toFixed(2)}% p.a.</p>
       </InputGroup>
 

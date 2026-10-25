@@ -52,7 +52,7 @@ export function Checklist({ listId, items, title, description, showEssentialBadg
           </Button>
         </div>
       </div>
-      {showEssentialBadges && essentialCount > 0 && essentialCount < items.length && (
+      {showEssentialBadges && !description && essentialCount > 0 && essentialCount < items.length && (
         <p className="mb-3 text-[12.5px] text-ink-faint">
           <span className="font-medium text-ink-muted">Essential</span> items matter most; the rest are optional suggestions. There is no deadline unless you set one.
         </p>

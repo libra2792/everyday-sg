@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { clamp } from '@/lib/format';
+import type { Benchmark } from '@/data/benchmarks';
+import { BenchmarkHint } from './BenchmarkHint';
 
 /* ---------------------------------------------------------------------- */
 /* Shared pieces                                                           */
@@ -22,6 +24,13 @@ export function FieldHelp({ id, children }: { id: string; children: ReactNode })
       {children}
     </p>
   );
+}
+
+/** "S$1,200", "25%", "6 months" — the field's own units, for hints and the benchmark button. */
+export function formatWithUnits(n: number, prefix?: string, suffix?: string, format?: (n: number) => string): string {
+  if (format) return format(n);
+  const tight = suffix === '%';
+  return `${prefix ?? ''}${n.toLocaleString('en-SG')}${suffix ? `${tight ? '' : ' '}${suffix}` : ''}`;
 }
 
 function useNumberText(value: number, format?: (n: number) => string) {
@@ -52,10 +61,14 @@ interface NumberFieldProps {
   className?: string;
   compact?: boolean;
   allowNegative?: boolean;
+  /** An indicative figure shown under the field, with a one-tap "Use" button. */
+  benchmark?: Benchmark;
+  /** Overrides the benchmark's value, e.g. when it is derived from another input. */
+  benchmarkValue?: number;
   'aria-label'?: string;
 }
 
-export function NumberField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, placeholder, className = '', compact, allowNegative = false }: NumberFieldProps) {
+export function NumberField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, placeholder, className = '', compact, allowNegative = false, benchmark, benchmarkValue }: NumberFieldProps) {
   const autoId = useId();
   const fieldId = id || autoId;
   const helpId = `${fieldId}-help`;
@@ -104,6 +117,7 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
         {suffix && <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-ink-faint">{suffix}</span>}
       </div>
       {help && <FieldHelp id={helpId}>{help}</FieldHelp>}
+      {benchmark && <BenchmarkHint benchmark={benchmark} value={benchmarkValue} current={value} onUse={onChange} format={(n) => formatWithUnits(n, prefix, suffix)} />}
     </div>
   );
 }
@@ -127,16 +141,20 @@ interface SliderFieldProps {
   className?: string;
   /** Allow typing values above the slider's max (slider pins at max). */
   allowAboveMax?: boolean;
+  /** An indicative figure shown under the field, with a one-tap "Use" button. */
+  benchmark?: Benchmark;
+  /** Overrides the benchmark's value, e.g. when it is derived from another input. */
+  benchmarkValue?: number;
 }
 
-export function SliderField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, format, className = '', allowAboveMax = true }: SliderFieldProps) {
+export function SliderField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, format, className = '', allowAboveMax = true, benchmark, benchmarkValue }: SliderFieldProps) {
   const autoId = useId();
   const fieldId = id || autoId;
   const sliderId = `${fieldId}-slider`;
   const helpId = `${fieldId}-help`;
   const { text, setText, focused } = useNumberText(value);
   const upper = allowAboveMax ? Number.POSITIVE_INFINITY : max;
-  const display = format ? format(value) : `${prefix ?? ''}${value.toLocaleString('en-SG')}${suffix ? ` ${suffix}` : ''}`;
+  const display = formatWithUnits(value, prefix, suffix, format);
 
   const commitText = (raw: string) => {
     setText(raw);
@@ -190,6 +208,15 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
         </div>
       </div>
       {help && <FieldHelp id={helpId}>{help}</FieldHelp>}
+      {benchmark && (
+        <BenchmarkHint
+          benchmark={benchmark}
+          value={benchmarkValue}
+          current={value}
+          onUse={(n) => onChange(allowAboveMax ? Math.max(Math.min(0, min), n) : clamp(n, min, max))}
+          format={(n) => formatWithUnits(n, prefix, suffix, format)}
+        />
+      )}
     </div>
   );
 }

@@ -8,6 +8,8 @@ import { GUIDES } from './data/guides';
 import { CALCULATORS } from './data/calculators';
 import { SOURCES } from './data/sources';
 import { CATEGORIES } from './data/categories';
+import { CREATOR } from './data/creator';
+import { BENCHMARKS, type Benchmark } from './data/benchmarks';
 
 function renderAt(path: string) {
   return render(
@@ -42,7 +44,8 @@ describe('content integrity', () => {
       for (const c of g.relatedCalculators) expect(calcIds.has(c), `${g.id} references unknown calculator ${c}`).toBe(true);
       for (const r of g.relatedGuides) expect(guideIds.has(r), `${g.id} references unknown guide ${r}`).toBe(true);
       expect(g.steps.length).toBeGreaterThan(2);
-      expect(g.plainEnglish.length).toBeGreaterThan(0);
+      expect(g.keyPoints.length).toBeGreaterThan(1);
+      expect(g.icon).toBeTruthy();
     }
     expect(GUIDES.length).toBeGreaterThanOrEqual(36);
     // every category has at least two guides
@@ -71,9 +74,9 @@ describe('pages render', () => {
   it('renders the guide library, filters by category and opens a guide', async () => {
     renderAt('/guides?category=housing');
     expect(await screen.findByText(/guides in housing/i)).toBeTruthy();
-    const link = screen.getAllByRole('link', { name: /decide between a bto and a resale/i })[0];
+    const link = screen.getAllByRole('link', { name: /bto or resale hdb flat/i })[0];
     fireEvent.click(link);
-    expect(await screen.findByRole('heading', { level: 1, name: /decide between a bto and a resale/i })).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 1, name: /bto or resale hdb flat/i })).toBeTruthy();
     expect(screen.getAllByText(/official next steps/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/your checklist/i).length).toBeGreaterThan(0);
   });
@@ -107,6 +110,18 @@ describe('pages render', () => {
     cleanup();
     renderAt('/calculators');
     expect(screen.getByRole('heading', { level: 1, name: /calculators and tools/i })).toBeTruthy();
+  });
+
+  it('renders the creator page with its story sections and photos', () => {
+    renderAt('/creator');
+    expect(screen.getByRole('heading', { level: 1, name: /figuring this out too/i })).toBeTruthy();
+    for (const section of CREATOR.sections) {
+      expect(screen.getByRole('heading', { level: 2, name: section.title })).toBeTruthy();
+    }
+    const images = screen.getAllByRole('img');
+    expect(images.length).toBe(1 + CREATOR.sections.reduce((n, s) => n + (s.photos?.length ?? 0), 0));
+    for (const img of images) expect((img as HTMLImageElement).alt.length).toBeGreaterThan(10);
+    expect(screen.getAllByRole('link', { name: /about page/i }).length).toBeGreaterThan(0);
   });
 });
 
@@ -248,6 +263,26 @@ describe('calculators recompute from inputs', () => {
     renderAt('/tools/annual-admin');
     expect(await screen.findByRole('heading', { level: 1, name: /annual life-admin/i })).toBeTruthy();
     expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(20);
+  });
+
+  it('benchmarks: every statistic cites a checked source, and "Use" fills the field', async () => {
+    for (const [id, b] of Object.entries(BENCHMARKS as Record<string, Benchmark>)) {
+      expect(b.text.length, id).toBeGreaterThan(20);
+      if (b.kind === 'statistic') {
+        expect(b.sourceId, id).toBeTruthy();
+        expect(b.checkedOn, id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(SOURCES.some((s) => s.id === b.sourceId && s.check !== 'unchecked'), id).toBe(true);
+      }
+      if (b.sourceId) expect(SOURCES.some((s) => s.id === b.sourceId), id).toBe(true);
+    }
+    renderAt('/calculators/budget');
+    const use = await screen.findByRole('button', { name: /^Use S\$3,950$/ });
+    fireEvent.click(use);
+    const income = screen.getByLabelText(/^Monthly take-home income$/i) as HTMLInputElement;
+    expect(income.value).toBe('3950');
+    expect(screen.getByRole('button', { name: /S\$3,950 applied/i })).toBeTruthy();
+    expect(screen.getAllByText(/official figure/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/planning guide/i).length).toBeGreaterThan(0);
   });
 
   it('reset clears saved inputs', async () => {

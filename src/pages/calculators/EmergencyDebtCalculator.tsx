@@ -3,6 +3,8 @@ import { usePersistentState } from '@/lib/usePersistentState';
 import { compareExtraPayments, debtPayoff, emergencyFund, type Debt, type PayoffStrategy } from '@/lib/finance';
 import { months as fmtMonths, sgd } from '@/lib/format';
 import { uid } from '@/lib/storage';
+import { BENCHMARKS } from '@/data/benchmarks';
+import { BenchmarkHint } from '@/components/ui/BenchmarkHint';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { NumberField, Segmented, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
@@ -51,7 +53,7 @@ export default function EmergencyDebtCalculator() {
     <CalculatorShell
       id="emergency-debt"
       onReset={reset}
-      sourceIds={['moneysense']}
+      sourceIds={['moneysense', 'singstat-hes-2023']}
       relatedGuides={['emergency-fund', 'pay-down-debt', 'build-a-budget']}
       headline={[
         { label: 'Fund gap', value: sgd(fund.gap) },
@@ -110,9 +112,9 @@ export default function EmergencyDebtCalculator() {
     >
       <InputGroup title="Emergency fund" description="Cash you can reach within a day or two, kept separate from daily spending.">
         <SliderField label="Current emergency savings" prefix="S$" min={0} max={100000} step={500} value={state.currentSavings} onChange={(v) => setState((s) => ({ ...s, currentSavings: v }))} />
-        <SliderField label="Essential monthly expenses" prefix="S$" min={0} max={15000} step={100} value={state.essentialMonthly} onChange={(v) => setState((s) => ({ ...s, essentialMonthly: v }))} help="Rent or mortgage, food, transport, insurance, minimum debt payments, family support." />
-        <SliderField label="Desired coverage" suffix="months" min={1} max={12} step={1} value={state.coverageMonths} onChange={(v) => setState((s) => ({ ...s, coverageMonths: v }))} allowAboveMax={false} help="Three to six months is a common range; more if income is variable or you have dependants." />
-        <SliderField label="Monthly contribution to the fund" prefix="S$" min={0} max={5000} step={50} value={state.monthlyContribution} onChange={(v) => setState((s) => ({ ...s, monthlyContribution: v }))} />
+        <SliderField label="Essential monthly expenses" benchmark={BENCHMARKS.essentialSpending} prefix="S$" min={0} max={15000} step={100} value={state.essentialMonthly} onChange={(v) => setState((s) => ({ ...s, essentialMonthly: v }))} help="Rent or mortgage, food, transport, insurance, minimum debt payments, family support." />
+        <SliderField label="Desired coverage" benchmark={BENCHMARKS.emergencyMonths} suffix="months" min={1} max={12} step={1} value={state.coverageMonths} onChange={(v) => setState((s) => ({ ...s, coverageMonths: v }))} allowAboveMax={false} help="Three to six months is a common range; more if income is variable or you have dependants." />
+        <SliderField label="Monthly contribution to the fund" benchmark={BENCHMARKS.emergencyContribution} prefix="S$" min={0} max={5000} step={50} value={state.monthlyContribution} onChange={(v) => setState((s) => ({ ...s, monthlyContribution: v }))} />
       </InputGroup>
 
       <InputGroup title="Debts" description="Add each card or loan with its balance, interest rate and minimum payment.">
@@ -153,6 +155,7 @@ export default function EmergencyDebtCalculator() {
         <Button variant="secondary" icon="plus" onClick={addDebt}>
           Add a debt
         </Button>
+        <BenchmarkHint benchmark={BENCHMARKS.cardInterest} className="!mt-0" />
         <SliderField label="Extra monthly repayment" prefix="S$" min={0} max={5000} step={50} value={state.extraMonthly} onChange={(v) => setState((s) => ({ ...s, extraMonthly: v }))} help="On top of all minimum payments, applied to the priority debt." />
         <Segmented
           label="Repayment order"

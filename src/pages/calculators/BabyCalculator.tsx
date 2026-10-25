@@ -3,6 +3,8 @@ import { usePersistentState } from '@/lib/usePersistentState';
 import { babyBudget, type BabyInputs, type ChildcareScenario } from '@/lib/finance';
 import { pct, sgd } from '@/lib/format';
 import { uid } from '@/lib/storage';
+import { BENCHMARKS } from '@/data/benchmarks';
+import { BenchmarkHint } from '@/components/ui/BenchmarkHint';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { NumberField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
@@ -68,7 +70,7 @@ export default function BabyCalculator() {
     <CalculatorShell
       id="baby"
       onReset={reset}
-      sourceIds={['lifesg-sg-child-support', 'lifesg-baby-bonus', 'ecda-subsidies', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare']}
+      sourceIds={['lifesg-sg-child-support', 'lifesg-baby-bonus', 'ecda-subsidies', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare', 'ecda-aop', 'singstat-income-2025']}
       relatedGuides={['preparing-for-pregnancy', 'newborn-first-year', 'childcare-and-preschool']}
       headline={[
         { label: 'Monthly cost', value: sgd(r.monthlyTotal) },
@@ -120,17 +122,17 @@ export default function BabyCalculator() {
       <InputGroup title="Family and horizon">
         <SliderField label="Expected number of children" min={1} max={5} step={1} value={state.numberOfChildren} onChange={set('numberOfChildren')} allowAboveMax={false} />
         <SliderField label="Planning horizon" suffix="years" min={1} max={10} step={1} value={state.horizonYears} onChange={set('horizonYears')} allowAboveMax={false} />
-        <SliderField label="Household monthly income (take-home)" prefix="S$" min={0} max={30000} step={100} value={state.householdMonthlyIncome} onChange={set('householdMonthlyIncome')} help="Optional, for the cash-flow impact figure." />
+        <SliderField label="Household monthly income (take-home)" benchmark={BENCHMARKS.householdTakeHome} prefix="S$" min={0} max={30000} step={100} value={state.householdMonthlyIncome} onChange={set('householdMonthlyIncome')} help="Optional, for the cash-flow impact figure." />
       </InputGroup>
 
       <InputGroup title="One-time costs" description="Per child unless stated.">
-        <SliderField label="Setup budget" prefix="S$" min={0} max={20000} step={100} value={state.setupBudget} onChange={set('setupBudget')} help="Cot, pram, car seat, feeding and bathing gear, clothes, nursery." />
-        <SliderField label="Delivery-related out-of-pocket" prefix="S$" min={0} max={30000} step={100} value={state.deliveryOutOfPocket} onChange={set('deliveryOutOfPocket')} help="Antenatal and delivery costs after MediSave and insurance, using your hospital's estimate." />
+        <SliderField label="Setup budget" benchmark={BENCHMARKS.babySetup} prefix="S$" min={0} max={20000} step={100} value={state.setupBudget} onChange={set('setupBudget')} help="Cot, pram, car seat, feeding and bathing gear, clothes, nursery." />
+        <SliderField label="Delivery-related out-of-pocket" benchmark={BENCHMARKS.deliveryOop} prefix="S$" min={0} max={30000} step={100} value={state.deliveryOutOfPocket} onChange={set('deliveryOutOfPocket')} help="Antenatal and delivery costs after MediSave and insurance, using your hospital's estimate." />
         <SliderField label="Lost income during leave (household)" prefix="S$" min={0} max={60000} step={500} value={state.lostIncomeDuringLeave} onChange={set('lostIncomeDuringLeave')} help="Unpaid leave, reduced bonus or hours. Government-paid leave reduces this; check MOM for eligibility." />
       </InputGroup>
 
       <InputGroup title="Monthly costs" description="Per child.">
-        <SliderField label="Monthly infant costs" prefix="S$" min={0} max={3000} step={25} value={state.monthlyInfantCost} onChange={set('monthlyInfantCost')} help="Formula or feeding, diapers, clinic visits, clothing, insurance for the child." />
+        <SliderField label="Monthly infant costs" benchmark={BENCHMARKS.infantMonthly} prefix="S$" min={0} max={3000} step={25} value={state.monthlyInfantCost} onChange={set('monthlyInfantCost')} help="Formula or feeding, diapers, clinic visits, clothing, insurance for the child." />
         <SliderField label="Other recurring costs" prefix="S$" min={0} max={3000} step={25} value={state.otherMonthlyCost} onChange={set('otherMonthlyCost')} help="Extra transport, household help, enrichment, savings for education." />
       </InputGroup>
 
@@ -171,6 +173,7 @@ export default function BabyCalculator() {
         <Button variant="secondary" icon="plus" onClick={addScenario}>
           Add arrangement
         </Button>
+        <BenchmarkHint benchmark={BENCHMARKS.infantCareCap} className="!mt-0" />
         {r.scenarioComparison.length > 0 && (
           <div>
             <div className="mb-2 text-[13.5px] font-medium text-ink">Monthly cost by arrangement (all children)</div>

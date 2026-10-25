@@ -62,6 +62,65 @@ import {
   Users,
   Wallet,
   X,
+  Archive,
+  Bell,
+  Bike,
+  Blocks,
+  BookMarked,
+  Cake,
+  Camera,
+  ChartColumn,
+  MessageCircleHeart,
+  Sprout,
+  Feather,
+  BadgeCheck,
+  CircleUserRound,
+  CircleDollarSign,
+  ClipboardCheck,
+  Clock,
+  Cross,
+  FileCheck,
+  Files,
+  Fingerprint,
+  Flag,
+  FolderOpen,
+  Footprints,
+  Fuel,
+  Gauge,
+  Gift,
+  Glasses,
+  HandHeart,
+  Handshake,
+  HeartPulse,
+  Hospital,
+  Hourglass,
+  HousePlus,
+  Image,
+  Landmark,
+  Link,
+  ListTodo,
+  Mail,
+  MapPin,
+  Milestone,
+  NotebookPen,
+  Package,
+  Percent,
+  Pill,
+  Plane,
+  Quote,
+  Route,
+  ShieldAlert,
+  Siren,
+  Smartphone,
+  Sparkles,
+  SquareParking,
+  Stamp,
+  Timer,
+  Train,
+  TriangleAlert,
+  Umbrella,
+  Wifi,
+  Wrench,
 } from 'lucide-react';
 
 export type IconName =
@@ -126,7 +185,66 @@ export type IconName =
   | 'user'
   | 'users'
   | 'wallet'
-  | 'x';
+  | 'x'
+  | 'archive'
+  | 'bell'
+  | 'bike'
+  | 'blocks'
+  | 'book-marked'
+  | 'cake'
+  | 'camera'
+  | 'chart-column'
+  | 'message-circle-heart'
+  | 'sprout'
+  | 'feather'
+  | 'badge-check'
+  | 'circle-user-round'
+  | 'circle-dollar-sign'
+  | 'clipboard-check'
+  | 'clock'
+  | 'cross'
+  | 'file-check'
+  | 'files'
+  | 'fingerprint'
+  | 'flag'
+  | 'folder-open'
+  | 'footprints'
+  | 'fuel'
+  | 'gauge'
+  | 'gift'
+  | 'glasses'
+  | 'hand-heart'
+  | 'handshake'
+  | 'heart-pulse'
+  | 'hospital'
+  | 'hourglass'
+  | 'house-plus'
+  | 'image'
+  | 'landmark'
+  | 'link'
+  | 'list-todo'
+  | 'mail'
+  | 'map-pin'
+  | 'milestone'
+  | 'notebook-pen'
+  | 'package'
+  | 'percent'
+  | 'pill'
+  | 'plane'
+  | 'quote'
+  | 'route'
+  | 'shield-alert'
+  | 'siren'
+  | 'smartphone'
+  | 'sparkles'
+  | 'square-parking'
+  | 'stamp'
+  | 'timer'
+  | 'train'
+  | 'triangle-alert'
+  | 'umbrella'
+  | 'wifi'
+  | 'wrench';
 
 type LucideComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number | string; strokeWidth?: number | string }>;
 
@@ -193,6 +311,65 @@ const ICONS: Record<IconName, LucideComponent> = {
   users: Users,
   wallet: Wallet,
   x: X,
+  'archive': Archive,
+  'bell': Bell,
+  'bike': Bike,
+  'blocks': Blocks,
+  'book-marked': BookMarked,
+  'cake': Cake,
+  'camera': Camera,
+  'chart-column': ChartColumn,
+  'message-circle-heart': MessageCircleHeart,
+  'sprout': Sprout,
+  'feather': Feather,
+  'badge-check': BadgeCheck,
+  'circle-user-round': CircleUserRound,
+  'circle-dollar-sign': CircleDollarSign,
+  'clipboard-check': ClipboardCheck,
+  'clock': Clock,
+  'cross': Cross,
+  'file-check': FileCheck,
+  'files': Files,
+  'fingerprint': Fingerprint,
+  'flag': Flag,
+  'folder-open': FolderOpen,
+  'footprints': Footprints,
+  'fuel': Fuel,
+  'gauge': Gauge,
+  'gift': Gift,
+  'glasses': Glasses,
+  'hand-heart': HandHeart,
+  'handshake': Handshake,
+  'heart-pulse': HeartPulse,
+  'hospital': Hospital,
+  'hourglass': Hourglass,
+  'house-plus': HousePlus,
+  'image': Image,
+  'landmark': Landmark,
+  'link': Link,
+  'list-todo': ListTodo,
+  'mail': Mail,
+  'map-pin': MapPin,
+  'milestone': Milestone,
+  'notebook-pen': NotebookPen,
+  'package': Package,
+  'percent': Percent,
+  'pill': Pill,
+  'plane': Plane,
+  'quote': Quote,
+  'route': Route,
+  'shield-alert': ShieldAlert,
+  'siren': Siren,
+  'smartphone': Smartphone,
+  'sparkles': Sparkles,
+  'square-parking': SquareParking,
+  'stamp': Stamp,
+  'timer': Timer,
+  'train': Train,
+  'triangle-alert': TriangleAlert,
+  'umbrella': Umbrella,
+  'wifi': Wifi,
+  'wrench': Wrench,
 };
 
 interface IconProps {

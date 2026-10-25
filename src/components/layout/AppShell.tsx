@@ -125,6 +125,11 @@ function Footer() {
           <div className="text-sm font-semibold text-ink">About</div>
           <ul className="mt-2 space-y-1.5">
             <li>
+              <Link to="/creator" className="hover:text-ink">
+                Who made this
+              </Link>
+            </li>
+            <li>
               <Link to="/about" className="hover:text-ink">
                 Privacy, data and sources
               </Link>

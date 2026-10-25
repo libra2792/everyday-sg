@@ -3,6 +3,7 @@ import { usePersistentState } from '@/lib/usePersistentState';
 import { caregivingPlan, type CaregivingInputs, type Contributor } from '@/lib/finance';
 import { sgd } from '@/lib/format';
 import { uid } from '@/lib/storage';
+import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { NumberField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
@@ -103,8 +104,8 @@ export default function CaregivingCalculator() {
       }
     >
       <InputGroup title="Monthly care costs" description="Before any subsidies or support.">
-        <SliderField label="Home care services" prefix="S$" min={0} max={8000} step={50} value={state.homeCare} onChange={set('homeCare')} help="Home nursing, personal care, therapy, day care fees." />
-        <SliderField label="Helper (salary, levy, insurance, food)" prefix="S$" min={0} max={4000} step={50} value={state.helper} onChange={set('helper')} />
+        <SliderField label="Home care services" benchmark={BENCHMARKS.homeCareCost} prefix="S$" min={0} max={8000} step={50} value={state.homeCare} onChange={set('homeCare')} help="Home nursing, personal care, therapy, day care fees." />
+        <SliderField label="Helper (salary, levy, insurance, food)" benchmark={BENCHMARKS.helperCost} prefix="S$" min={0} max={4000} step={50} value={state.helper} onChange={set('helper')} />
         <SliderField label="Transport" prefix="S$" min={0} max={2000} step={10} value={state.transport} onChange={set('transport')} help="Medical transport, taxis to appointments." />
         <SliderField label="Medical and medication" prefix="S$" min={0} max={5000} step={50} value={state.medical} onChange={set('medical')} help="Consultations, medication, consumables, after MediSave and insurance." />
         <SliderField label="Other (equipment, home modifications, supplies)" prefix="S$" min={0} max={3000} step={25} value={state.other} onChange={set('other')} />
@@ -112,7 +113,7 @@ export default function CaregivingCalculator() {
 
       <InputGroup title="Budget and support">
         <SliderField label="Expected monthly care budget" prefix="S$" min={0} max={10000} step={100} value={state.monthlyBudget} onChange={set('monthlyBudget')} help="What the family intends to spend each month." />
-        <SliderField label="Estimated support or subsidies (your estimate)" prefix="S$" min={0} max={5000} step={25} value={state.monthlySupport} onChange={set('monthlySupport')} help="Home Caregiving Grant, long-term care subsidies, CareShield Life payouts or other support you expect, once confirmed." />
+        <SliderField label="Estimated support or subsidies (your estimate)" benchmark={BENCHMARKS.careSupport} prefix="S$" min={0} max={5000} step={25} value={state.monthlySupport} onChange={set('monthlySupport')} help="Home Caregiving Grant, long-term care subsidies, CareShield Life payouts or other support you expect, once confirmed." />
       </InputGroup>
 
       <InputGroup title="Family cost-sharing" description="Set each contributor's share of the after-support cost.">
@@ -147,8 +148,8 @@ export default function CaregivingCalculator() {
       </InputGroup>
 
       <InputGroup title="Duration and inflation scenario">
-        <SliderField label="Duration of care being planned for" suffix="years" min={1} max={20} step={1} value={state.durationYears} onChange={set('durationYears')} allowAboveMax={false} />
-        <SliderField label="Assumed annual cost inflation" suffix="% p.a." min={0} max={8} step={0.5} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Care and helper costs have tended to rise faster than general inflation." />
+        <SliderField label="Duration of care being planned for" benchmark={BENCHMARKS.careDuration} suffix="years" min={1} max={20} step={1} value={state.durationYears} onChange={set('durationYears')} allowAboveMax={false} />
+        <SliderField label="Assumed annual cost inflation" benchmark={BENCHMARKS.careInflation} suffix="% p.a." min={0} max={8} step={0.5} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Care and helper costs have tended to rise faster than general inflation." />
         {r.yearByYear.length > 0 && r.monthlyAfterSupport > 0 && <ColumnChart ariaLabel="Annual caregiving cost by year with inflation" items={r.yearByYear.slice(0, 12).map((y) => ({ label: `Yr ${y.year}`, value: y.annual }))} />}
       </InputGroup>
 

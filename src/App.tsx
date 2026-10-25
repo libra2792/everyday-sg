@@ -10,6 +10,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { Saved } from './pages/Saved';
 import { SearchPage } from './pages/SearchPage';
 import { About } from './pages/About';
+import { Creator } from './pages/Creator';
 import { NotFound } from './pages/NotFound';
 
 const BudgetCalculator = lazy(() => import('./pages/calculators/BudgetCalculator'));
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/saved" element={<Saved />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/about" element={<About />} />
+          <Route path="/creator" element={<Creator />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

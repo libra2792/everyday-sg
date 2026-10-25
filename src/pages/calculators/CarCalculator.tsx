@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
 import { carOwnershipCost, type CarInputs } from '@/lib/finance';
 import { sgd, sgdCents } from '@/lib/format';
+import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { Segmented, SliderField } from '@/components/ui/Field';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
@@ -37,7 +38,7 @@ export default function CarCalculator() {
     <CalculatorShell
       id="car"
       onReset={reset}
-      sourceIds={['onemotoring', 'onemotoring-upfront', 'onemotoring-coe', 'onemotoring-ongoing', 'onemotoring-road-tax', 'lta-fares']}
+      sourceIds={['onemotoring', 'onemotoring-upfront', 'onemotoring-coe', 'onemotoring-coe-results', 'onemotoring-ongoing', 'onemotoring-road-tax', 'lta-fares']}
       relatedGuides={['car-ownership-costs', 'car-vs-public-transport', 'build-a-budget']}
       headline={[
         { label: 'Economic cost / month', value: sgd(r.economicCostMonthly) },
@@ -102,8 +103,8 @@ export default function CarCalculator() {
       }
     >
       <InputGroup title="Purchase and financing">
-        <SliderField label="Purchase price (including COE and duties)" prefix="S$" min={10000} max={500000} step={1000} value={state.purchasePrice} onChange={set('purchasePrice')} />
-        <SliderField label="Initial payment" prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.initialPayment} onChange={set('initialPayment')} help={`Loan amount: ${sgd(r.loanAmount)}. Minimum down payments and maximum tenures for car loans are regulated; check with your lender.`} />
+        <SliderField label="Purchase price (including COE and duties)" benchmark={BENCHMARKS.coePrice} prefix="S$" min={10000} max={500000} step={1000} value={state.purchasePrice} onChange={set('purchasePrice')} />
+        <SliderField label="Initial payment" benchmark={BENCHMARKS.carDownPayment} benchmarkValue={state.purchasePrice > 0 ? Math.round((state.purchasePrice * 0.3) / 1000) * 1000 : undefined} prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.initialPayment} onChange={set('initialPayment')} help={`Loan amount: ${sgd(r.loanAmount)}. Minimum down payments and maximum tenures for car loans are regulated; check with your lender.`} />
         <SliderField label="Other upfront costs" prefix="S$" min={0} max={30000} step={100} value={state.otherUpfrontCosts} onChange={set('otherUpfrontCosts')} help="Registration, first insurance, accessories, in-vehicle unit." />
         <Segmented
           label="Loan type"
@@ -114,27 +115,27 @@ export default function CarCalculator() {
             { value: 'reducing', label: 'Reducing balance' },
           ]}
         />
-        <SliderField label="Loan interest rate" suffix="% p.a." min={0} max={8} step={0.05} value={state.loanInterestPct} onChange={set('loanInterestPct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
-        <SliderField label="Loan tenure" suffix="years" min={1} max={7} step={1} value={state.loanTenureYears} onChange={set('loanTenureYears')} allowAboveMax={false} help={r.loanAmount > 0 ? `${sgd(r.loanMonthly)} per month · ${sgd(r.totalLoanInterest)} total interest over ${r.loanMonths} months` : 'No loan at this initial payment'} />
+        <SliderField label="Loan interest rate" benchmark={BENCHMARKS.carLoanRate} suffix="% p.a." min={0} max={8} step={0.05} value={state.loanInterestPct} onChange={set('loanInterestPct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
+        <SliderField label="Loan tenure" benchmark={BENCHMARKS.carLoanTenure} suffix="years" min={1} max={7} step={1} value={state.loanTenureYears} onChange={set('loanTenureYears')} allowAboveMax={false} help={r.loanAmount > 0 ? `${sgd(r.loanMonthly)} per month · ${sgd(r.totalLoanInterest)} total interest over ${r.loanMonths} months` : 'No loan at this initial payment'} />
       </InputGroup>
 
       <InputGroup title="Ownership and resale">
-        <SliderField label="Ownership period" suffix="years" min={1} max={10} step={1} value={state.ownershipYears} onChange={set('ownershipYears')} allowAboveMax={false} />
-        <SliderField label="Estimated resale value at the end" prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.resaleValueAtEnd} onChange={set('resaleValueAtEnd')} help={`Depreciation: ${sgd(r.depreciation)} over the period (${sgd(months > 0 ? r.depreciation / months : 0)} per month). Include expected COE or PARF rebates in the resale estimate.`} />
-        <SliderField label="Expected annual mileage" suffix="km" min={0} max={40000} step={500} value={state.annualMileageKm} onChange={set('annualMileageKm')} />
+        <SliderField label="Ownership period" benchmark={BENCHMARKS.ownershipYears} suffix="years" min={1} max={10} step={1} value={state.ownershipYears} onChange={set('ownershipYears')} allowAboveMax={false} />
+        <SliderField label="Estimated resale value at the end" benchmark={BENCHMARKS.carResale} benchmarkValue={state.purchasePrice > 0 ? Math.round((state.purchasePrice * 0.45) / 1000) * 1000 : undefined} prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.resaleValueAtEnd} onChange={set('resaleValueAtEnd')} help={`Depreciation: ${sgd(r.depreciation)} over the period (${sgd(months > 0 ? r.depreciation / months : 0)} per month). Include expected COE or PARF rebates in the resale estimate.`} />
+        <SliderField label="Expected annual mileage" benchmark={BENCHMARKS.mileage} suffix="km" min={0} max={40000} step={500} value={state.annualMileageKm} onChange={set('annualMileageKm')} />
       </InputGroup>
 
       <InputGroup title="Running costs">
-        <SliderField label="Insurance (per year)" prefix="S$" min={0} max={8000} step={50} value={state.insuranceAnnual} onChange={set('insuranceAnnual')} />
-        <SliderField label="Road tax (per year)" prefix="S$" min={0} max={5000} step={10} value={state.roadTaxAnnual} onChange={set('roadTaxAnnual')} help="Depends on engine capacity or power; see OneMotoring." />
-        <SliderField label="Fuel or charging (per month)" prefix="S$" min={0} max={1500} step={10} value={state.fuelMonthly} onChange={set('fuelMonthly')} />
-        <SliderField label="Parking (per month)" prefix="S$" min={0} max={1500} step={10} value={state.parkingMonthly} onChange={set('parkingMonthly')} help="Season parking at home and work, plus casual parking." />
-        <SliderField label="ERP and road-related charges (per month)" prefix="S$" min={0} max={500} step={5} value={state.erpAndTollsMonthly} onChange={set('erpAndTollsMonthly')} />
-        <SliderField label="Maintenance, servicing and tyres (per year)" prefix="S$" min={0} max={6000} step={50} value={state.maintenanceAnnual} onChange={set('maintenanceAnnual')} />
+        <SliderField label="Insurance (per year)" benchmark={BENCHMARKS.carInsurance} prefix="S$" min={0} max={8000} step={50} value={state.insuranceAnnual} onChange={set('insuranceAnnual')} />
+        <SliderField label="Road tax (per year)" benchmark={BENCHMARKS.roadTax} prefix="S$" min={0} max={5000} step={10} value={state.roadTaxAnnual} onChange={set('roadTaxAnnual')} help="Depends on engine capacity or power; see OneMotoring." />
+        <SliderField label="Fuel or charging (per month)" benchmark={BENCHMARKS.fuel} prefix="S$" min={0} max={1500} step={10} value={state.fuelMonthly} onChange={set('fuelMonthly')} />
+        <SliderField label="Parking (per month)" benchmark={BENCHMARKS.parking} prefix="S$" min={0} max={1500} step={10} value={state.parkingMonthly} onChange={set('parkingMonthly')} help="Season parking at home and work, plus casual parking." />
+        <SliderField label="ERP and road-related charges (per month)" benchmark={BENCHMARKS.erp} prefix="S$" min={0} max={500} step={5} value={state.erpAndTollsMonthly} onChange={set('erpAndTollsMonthly')} />
+        <SliderField label="Maintenance, servicing and tyres (per year)" benchmark={BENCHMARKS.maintenance} prefix="S$" min={0} max={6000} step={50} value={state.maintenanceAnnual} onChange={set('maintenanceAnnual')} />
       </InputGroup>
 
       <InputGroup title="Compare with an alternative" description="Your realistic monthly budget for public transport, ride-hailing, car-sharing and taxis.">
-        <SliderField label="Alternative transport budget (per month)" prefix="S$" min={0} max={3000} step={10} value={state.alternativeTransportMonthly} onChange={set('alternativeTransportMonthly')} />
+        <SliderField label="Alternative transport budget (per month)" benchmark={BENCHMARKS.alternativeTransport} prefix="S$" min={0} max={3000} step={10} value={state.alternativeTransportMonthly} onChange={set('alternativeTransportMonthly')} />
         <ColumnChart
           ariaLabel="Monthly economic cost of the car compared with the alternative budget"
           items={[

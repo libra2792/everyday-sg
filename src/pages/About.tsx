@@ -31,6 +31,14 @@ export function About() {
         </section>
 
         <section>
+          <SectionHeading title="Who made it" />
+          <p>
+            Everyday SG is a personal project by one Singaporean working through the same life admin as everyone else: a newborn, parents in retirement, a home that is
+            still being built, and the paperwork that follows a death in the family. <Link to="/creator" className="link">Read the story behind the site</Link>.
+          </p>
+        </section>
+
+        <section>
           <SectionHeading title="Privacy and your data" />
           <ul className="list-disc space-y-2 pl-5">
             <li>Your profile, checklist ticks, saved items, tasks and calculator inputs are stored in this browser's local storage only. They are never sent to a server.</li>

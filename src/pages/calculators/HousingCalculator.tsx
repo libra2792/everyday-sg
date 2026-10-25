@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
 import { housingAffordability, monthlyPayment, type HousingInputs } from '@/lib/finance';
 import { pct, sgd } from '@/lib/format';
+import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { SliderField } from '@/components/ui/Field';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
@@ -45,7 +46,7 @@ export default function HousingCalculator() {
     <CalculatorShell
       id="housing"
       onReset={reset}
-      sourceIds={['hdb-loan', 'hdb-hfe', 'cpf-housing', 'moneysense-decisions']}
+      sourceIds={['hdb-loan', 'hdb-hfe', 'cpf-housing', 'moneysense-decisions', 'hdb-median-resale', 'singstat-income-2025']}
       relatedGuides={['home-affordability-and-loans', 'hdb-bto-vs-resale', 'renovation-and-moving']}
       headline={[
         { label: 'Monthly loan payment', value: sgd(r.monthlyLoan) },
@@ -101,25 +102,25 @@ export default function HousingCalculator() {
       }
     >
       <InputGroup title="Your position" description="Income and what you can commit upfront. Keep an emergency fund out of the cash figure.">
-        <SliderField label="Gross monthly household income" prefix="S$" min={0} max={30000} step={100} value={state.grossMonthlyIncome} onChange={set('grossMonthlyIncome')} help="Before CPF and tax; lenders and HDB assess gross income." />
+        <SliderField label="Gross monthly household income" benchmark={BENCHMARKS.medianHouseholdIncome} prefix="S$" min={0} max={30000} step={100} value={state.grossMonthlyIncome} onChange={set('grossMonthlyIncome')} help="Before CPF and tax; lenders and HDB assess gross income." />
         <SliderField label="Available cash for the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.availableCash} onChange={set('availableCash')} />
         <SliderField label="CPF savings allocated to the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.availableCpf} onChange={set('availableCpf')} help="Ordinary Account savings you intend to use; CPF Board sets the rules on what can be used." />
-        <SliderField label="Monthly CPF OA contribution for repayments" prefix="S$" min={0} max={5000} step={50} value={state.monthlyCpfOaContribution} onChange={set('monthlyCpfOaContribution')} help="If you plan to service the loan from CPF OA, this reduces monthly cash needed." />
+        <SliderField label="Monthly CPF OA contribution for repayments" benchmark={BENCHMARKS.cpfOaForLoan} benchmarkValue={state.grossMonthlyIncome > 0 ? Math.round((state.grossMonthlyIncome * 0.23) / 10) * 10 : undefined} prefix="S$" min={0} max={5000} step={50} value={state.monthlyCpfOaContribution} onChange={set('monthlyCpfOaContribution')} help="If you plan to service the loan from CPF OA, this reduces monthly cash needed." />
       </InputGroup>
 
       <InputGroup title="The property and loan">
-        <SliderField label="Estimated property price" prefix="S$" min={100000} max={3000000} step={5000} value={state.propertyPrice} onChange={set('propertyPrice')} />
-        <SliderField label="Down payment" suffix="%" min={0} max={100} step={1} value={state.downPaymentPct} onChange={set('downPaymentPct')} allowAboveMax={false} help={`Your assumption. ${sgd(r.downPayment)} at the current price; the loan would be ${sgd(r.loanAmount)}.`} />
+        <SliderField label="Estimated property price" benchmark={BENCHMARKS.resale4Room} prefix="S$" min={100000} max={3000000} step={5000} value={state.propertyPrice} onChange={set('propertyPrice')} />
+        <SliderField label="Down payment" benchmark={BENCHMARKS.downPayment} suffix="%" min={0} max={100} step={1} value={state.downPaymentPct} onChange={set('downPaymentPct')} allowAboveMax={false} help={`Your assumption. ${sgd(r.downPayment)} at the current price; the loan would be ${sgd(r.loanAmount)}.`} />
         <SliderField label="Down payment to pay from CPF" prefix="S$" min={0} max={Math.max(1000, Math.round(r.downPayment))} step={1000} value={state.cpfForDownPayment} onChange={set('cpfForDownPayment')} help="The rest of the down payment is paid in cash. Minimum cash components may apply depending on loan type." />
-        <SliderField label="Loan interest rate" suffix="% p.a." min={0} max={8} step={0.05} value={state.interestRatePct} onChange={set('interestRatePct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
-        <SliderField label="Loan tenure" suffix="years" min={5} max={35} step={1} value={state.tenureYears} onChange={set('tenureYears')} allowAboveMax={false} help="Maximum tenures depend on loan type, age and property; check with HDB or your lender." />
+        <SliderField label="Loan interest rate" benchmark={BENCHMARKS.hdbLoanRate} suffix="% p.a." min={0} max={8} step={0.05} value={state.interestRatePct} onChange={set('interestRatePct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
+        <SliderField label="Loan tenure" benchmark={BENCHMARKS.loanTenure} suffix="years" min={5} max={35} step={1} value={state.tenureYears} onChange={set('tenureYears')} allowAboveMax={false} help="Maximum tenures depend on loan type, age and property; check with HDB or your lender." />
       </InputGroup>
 
       <InputGroup title="Other costs">
-        <SliderField label="Renovation and furnishing budget" prefix="S$" min={0} max={200000} step={1000} value={state.renovationBudget} onChange={set('renovationBudget')} />
-        <SliderField label="Other upfront costs" prefix="S$" min={0} max={200000} step={500} value={state.otherUpfrontCosts} onChange={set('otherUpfrontCosts')} help="Buyer's Stamp Duty, Additional Buyer's Stamp Duty if applicable, legal, valuation and agent fees — your estimate from official calculators." />
-        <SliderField label="Monthly maintenance and other recurring costs" prefix="S$" min={0} max={3000} step={10} value={state.monthlyRecurringCosts} onChange={set('monthlyRecurringCosts')} help="Conservancy or maintenance fees, property tax, fire and home insurance." />
-        <SliderField label="Your affordability limit" suffix="% of income" min={10} max={60} step={1} value={state.affordabilityLimitPct} onChange={set('affordabilityLimitPct')} allowAboveMax={false} help="The share of gross income you are comfortable committing to housing each month. This is your choice, not a regulatory figure." />
+        <SliderField label="Renovation and furnishing budget" benchmark={BENCHMARKS.renovation} prefix="S$" min={0} max={200000} step={1000} value={state.renovationBudget} onChange={set('renovationBudget')} />
+        <SliderField label="Other upfront costs" benchmark={BENCHMARKS.upfrontCosts} prefix="S$" min={0} max={200000} step={500} value={state.otherUpfrontCosts} onChange={set('otherUpfrontCosts')} help="Buyer's Stamp Duty, Additional Buyer's Stamp Duty if applicable, legal, valuation and agent fees — your estimate from official calculators." />
+        <SliderField label="Monthly maintenance and other recurring costs" benchmark={BENCHMARKS.recurringHousing} prefix="S$" min={0} max={3000} step={10} value={state.monthlyRecurringCosts} onChange={set('monthlyRecurringCosts')} help="Conservancy or maintenance fees, property tax, fire and home insurance." />
+        <SliderField label="Your affordability limit" benchmark={BENCHMARKS.housingLimit} suffix="% of income" min={10} max={60} step={1} value={state.affordabilityLimitPct} onChange={set('affordabilityLimitPct')} allowAboveMax={false} help="The share of gross income you are comfortable committing to housing each month. This is your choice, not a regulatory figure." />
       </InputGroup>
 
       <InputGroup title="Scenario comparison" description="How the monthly payment moves when assumptions change. The current scenario is highlighted.">

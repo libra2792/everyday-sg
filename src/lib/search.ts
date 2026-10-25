@@ -89,13 +89,13 @@ function expand(tokens: string[]): string[] {
 
 function guideBody(g: Guide): string {
   return [
-    ...g.plainEnglish,
-    ...g.whoShouldConsider,
-    ...g.whenToAct,
+    ...g.keyPoints,
+    ...g.whoFor,
+    ...g.when,
     ...g.steps.map((s) => `${s.title} ${s.detail}`),
-    ...g.documents,
-    ...(g.costsAndDecisions || []),
-    ...g.mistakesAndTips,
+    ...g.prepare,
+    ...(g.costs || []),
+    ...g.watchOuts,
     ...g.checklist.map((c) => c.text),
   ].join(' ');
 }

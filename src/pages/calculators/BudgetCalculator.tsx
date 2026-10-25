@@ -1,8 +1,11 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
 import { budgetSummary, type BudgetCategory, type BudgetKind } from '@/lib/finance';
-import { pct, sgd } from '@/lib/format';
+import { formatDate, pct, sgd } from '@/lib/format';
+import { SOURCE_MAP } from '@/data/sources';
+import { Icon } from '@/components/ui/Icon';
 import { uid } from '@/lib/storage';
+import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { NumberField, SelectField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
@@ -61,7 +64,7 @@ export default function BudgetCalculator() {
     <CalculatorShell
       id="budget"
       onReset={reset}
-      sourceIds={['moneysense', 'moneysense-decisions']}
+      sourceIds={['moneysense', 'moneysense-decisions', 'mom-labour-force-2025', 'singstat-income-2025', 'singstat-hes-2023']}
       relatedGuides={['build-a-budget', 'emergency-fund', 'subscriptions-and-bills']}
       headline={[
         { label: result.surplus < 0 ? 'Monthly deficit' : 'Monthly surplus', value: sgd(Math.abs(result.surplus)) },
@@ -116,9 +119,9 @@ export default function BudgetCalculator() {
       }
     >
       <InputGroup title="Income" description="Monthly figures, after CPF and tax.">
-        <SliderField label="Monthly take-home income" prefix="S$" min={0} max={20000} step={100} value={state.takeHomeIncome} onChange={(v) => setState((s) => ({ ...s, takeHomeIncome: v }))} />
-        <SliderField label="Other household income" prefix="S$" min={0} max={20000} step={100} value={state.otherIncome} onChange={(v) => setState((s) => ({ ...s, otherIncome: v }))} help="A partner's take-home pay, rental income, regular allowances." />
-        <SliderField label="Desired monthly savings" prefix="S$" min={0} max={10000} step={50} value={state.desiredMonthlySavings} onChange={(v) => setState((s) => ({ ...s, desiredMonthlySavings: v }))} help="What you would like to put away each month. The results compare this with what the budget actually allows." />
+        <SliderField label="Monthly take-home income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={20000} step={100} value={state.takeHomeIncome} onChange={(v) => setState((s) => ({ ...s, takeHomeIncome: v }))} />
+        <SliderField label="Other household income" benchmark={BENCHMARKS.householdIncomeContext} prefix="S$" min={0} max={20000} step={100} value={state.otherIncome} onChange={(v) => setState((s) => ({ ...s, otherIncome: v }))} help="A partner's take-home pay, rental income, regular allowances." />
+        <SliderField label="Desired monthly savings" benchmark={BENCHMARKS.savingsTarget} benchmarkValue={state.takeHomeIncome > 0 ? Math.round((state.takeHomeIncome + state.otherIncome) * 0.2 / 50) * 50 : undefined} prefix="S$" min={0} max={10000} step={50} value={state.desiredMonthlySavings} onChange={(v) => setState((s) => ({ ...s, desiredMonthlySavings: v }))} help="What you would like to put away each month. The results compare this with what the budget actually allows." />
       </InputGroup>
 
       <InputGroup title="Monthly spending and savings" description="Edit names, amounts and types. Add or remove categories to match your life.">
@@ -152,6 +155,53 @@ export default function BudgetCalculator() {
         <Button variant="secondary" icon="plus" onClick={addCategory}>
           Add category
         </Button>
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-3">
+          <div className="mb-1 flex items-center gap-2 text-[13px] font-medium text-ink">
+            <Icon name="chart-column" size={14} className="text-sage-700" />
+            What the average household spent in 2023
+          </div>
+          <p className="text-[12.5px] leading-5 text-ink-faint">
+            SingStat's Household Expenditure Survey 2023 puts average spending at S$5,931 a month across all households. The three largest items are below; use them as a reference, not a target.
+          </p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {(
+              [
+                { id: 'housing', label: 'Housing and related', benchmark: BENCHMARKS.avgHousingSpend },
+                { id: 'food', label: 'Food (incl. eating out)', benchmark: BENCHMARKS.avgFoodSpend },
+                { id: 'transport', label: 'Transport', benchmark: BENCHMARKS.avgTransportSpend },
+              ] as const
+            ).map((row) => {
+              const target = state.categories.find((c) => c.id === row.id);
+              const applied = target !== undefined && target.amount === row.benchmark.value;
+              return (
+                <div key={row.id} className="flex items-center justify-between gap-2 rounded-md bg-stone-100 px-3 py-2 text-[13px]">
+                  <span className="min-w-0">
+                    <span className="block text-ink-faint">{row.label}</span>
+                    <span className="font-medium tabular-nums text-ink">{sgd(row.benchmark.value)}</span>
+                  </span>
+                  {target && (
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-md border border-stone-300 bg-stone-50 px-2 py-0.5 text-[12px] font-medium text-sage-800 hover:border-sage-400 disabled:opacity-60"
+                      disabled={applied}
+                      onClick={() => updateCategory(row.id, { amount: row.benchmark.value ?? 0 })}
+                      aria-label={applied ? `${row.label} set to the average` : `Use ${sgd(row.benchmark.value)} for ${target.name}`}
+                    >
+                      {applied ? 'Applied' : 'Use'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[12px] text-ink-faint">
+            Housing is 29.8% and food 20.0% of the S$5,931 average; transport was S$951.{' '}
+            <a href={SOURCE_MAP['singstat-hes-2023'].url} target="_blank" rel="noopener noreferrer" className="link">
+              SingStat source
+            </a>{' '}
+            · read {formatDate('2026-10-25')}.
+          </p>
+        </div>
       </InputGroup>
 
       <InputGroup title="Suggested allocation" description="A rule of thumb you can edit. Compare it with your actual spending.">

@@ -9,12 +9,13 @@ It is **not a government website**, is not affiliated with any agency, and canno
 | Area | Details |
 | --- | --- |
 | **Home** | Search, quick actions, life-stage selector, popular calculators, featured guides, personalised "Your next steps", "Due soon" tasks |
-| **Life Guides** | 41 guides across 12 categories, each with: plain-English explanation, who/when, step sequence, documents, costs and decisions, mistakes and tips, eligibility notes, official links, related tools, and a checklist that persists |
-| **Calculators** | Household budget · Emergency fund and debt repayment · Housing affordability and mortgage · Baby and childcare budget · Retirement projection · Insurance needs organiser · Caregiving and eldercare cost planner · Car ownership total cost |
+| **Life Guides** | 41 guides across 12 categories in a card layout with icons and short bullet points: at a glance (what it means, who it's for, when to act), the persistent checklist near the top, numbered steps, what to prepare, costs, watch-outs, official links and related tools |
+| **Calculators** | Household budget · Emergency fund and debt repayment · Housing affordability and mortgage · Baby and childcare budget · Retirement projection · Insurance needs organiser · Caregiving and eldercare cost planner · Car ownership total cost. Inputs show an indicative figure (an official median/average with its source and check date, or a labelled planning guide) with a one-tap **Use** button |
 | **Tools** | Annual tax preparation checklist (organiser + IRAS links; deliberately no tax-rate engine) · Annual life-admin checklist (8 sections) |
 | **My Plan** | Optional profile (7 broad questions), ranked next steps, dated tasks, checklist progress, JSON export/import, printable summary, one-click reset |
 | **Saved Items** | Bookmarked guides/calculators/tools and saved results snapshots |
 | **About** | Privacy statement, verification policy, full list of official sources with how/when each was checked |
+| **Who made this** (`/creator`) | A first-person page about the creator, with six photos, linked from the footer, the About page and the home page |
 | **Appearance** | Four themes — Sage (default), Playful, Dark, Professional — switchable from the header, the footer or My Plan; saved locally, with Dark following the OS setting until a choice is made |
 
 ### Privacy model
@@ -29,6 +30,7 @@ It is **not a government website**, is not affiliated with any agency, and canno
 - `src/data/sources.ts` is the registry of official links. Each entry records how it was checked (`content` = page read, `link` = confirmed to exist, `unchecked`) and the date. Pages render these labels verbatim; nothing displays a verification date that was not actually recorded.
 - Guides carry `infoType` (`official` vs `general`) and an optional `reviewedOn` date. Guides without a review date are labelled as general guides to confirm with the agency.
 - Amounts, caps, eligibility rules, tax rates and deadlines are intentionally **not** hard-coded. The tax tool is an organiser with links rather than an estimator because the current IRAS rate tables could not be verified from the official source during build.
+- `src/data/benchmarks.ts` holds the indicative figures shown under calculator inputs. Each is either a `statistic` (an official published figure, with `sourceId` and the `checkedOn` date it was read, e.g. SingStat household income 2025, MOM median income 2025, SingStat Household Expenditure Survey 2023, HDB median resale prices 3Q 2026, ECDA fee caps, LTA COE results) or a `guide` (a rule of thumb or typical range, labelled "Planning guide" on screen). A test fails if a statistic lacks a checked source.
 
 ## Tech stack
 
@@ -49,7 +51,7 @@ everyday-sg/
 ├── package.json
 ├── vite.config.ts               # React + Tailwind plugins, @ alias, Vitest config
 ├── tsconfig.json
-├── public/                      # favicon, robots.txt
+├── public/                      # favicon, robots.txt, _redirects, creator/ photos
 └── src/
     ├── main.tsx                 # entry: BrowserRouter + AppStateProvider
     ├── App.tsx                  # routes (calculators/tools are lazy-loaded)
@@ -57,13 +59,15 @@ everyday-sg/
     ├── app.test.tsx             # DOM smoke tests (pages, calculators, persistence)
     ├── components/
     │   ├── layout/AppShell.tsx  # header, mobile tab bar, footer, skip link
-    │   ├── ui/                  # Button, Field (NumberField, SliderField, Select…), Panel, Misc, Icon
+    │   ├── ui/                  # Button, Field (NumberField, SliderField, Select…), BenchmarkHint, Panel, Misc, Icon
     │   ├── charts/Charts.tsx    # BarList, StackedBar, LineChart, ColumnChart (responsive SVG)
     │   ├── calculators/CalculatorShell.tsx
     │   ├── Checklist.tsx        # persistent checklist (grouped, essential/optional)
     │   ├── GuideCard.tsx, SaveButton.tsx, SearchBox.tsx, SourceNote.tsx
     ├── data/
     │   ├── types.ts             # Guide, Category, Source, CalculatorMeta…
+    │   ├── benchmarks.ts        # indicative figures for calculator inputs (statistic vs guide)
+    │   ├── creator.ts           # text and photo captions for the /creator page
     │   ├── categories.ts        # 12 categories + 5 life stages
     │   ├── calculators.ts       # calculator/tool registry (routes, tags)
     │   ├── checklists.ts        # tax-prep and annual-admin checklist content
@@ -92,6 +96,8 @@ All colours, radii and fonts are CSS variables in `src/index.css`. The bare `:ro
 
 - **New guide:** add an object to the relevant file in `src/data/guides/` (follow the `Guide` type). It is automatically searchable, filterable, recommendable and gets a persistent checklist. Reference sources by id from `src/data/sources.ts`.
 - **New source:** add to `SOURCES` with an honest `check`/`checkedOn`.
+- **Indicative figure:** add to `BENCHMARKS` in `src/data/benchmarks.ts` and pass it as `benchmark={BENCHMARKS.yourKey}` on a `SliderField` or `NumberField`. Use `kind: 'statistic'` only for a published figure you have actually opened, with its `sourceId` and `checkedOn`; otherwise use `kind: 'guide'`.
+- **Creator page:** edit the name, text, captions and alt text in `src/data/creator.ts`; replace photos in `public/creator/` (JPEG, 1200px on the long edge, metadata stripped). The layout in `src/pages/Creator.tsx` needs no change.
 - **New calculator:** add the pure calculation to `src/lib/finance.ts` (+ tests), register metadata in `src/data/calculators.ts`, build the page with `CalculatorShell`, and add the lazy route in `src/App.tsx`.
 
 ## Local development
@@ -158,7 +164,7 @@ None are required. The site is entirely static and all user data stays in the br
 ## Testing
 
 - `src/lib/finance.test.ts` — 35 tests covering mortgage/flat-rate maths against known values, budget totals, emergency fund, debt payoff (avalanche vs snowball, insufficient payments, zero-rate), housing splits, baby budget scaling, retirement projection (closed-form future value, growing annuity, funds-run-out detection), insurance need, caregiving shares and inflation, car cash-vs-economic cost — including zero/empty/negative/extreme inputs.
-- `src/app.test.tsx` — renders every guide page, exercises each calculator through the DOM (typing into inputs and moving sliders), verifies checklist persistence across remounts, reset behaviour, profile saving and recommendations, search and 404.
+- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM (typing into inputs and moving sliders), checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404.
 
 ## Known limitations (first version)
 
@@ -166,3 +172,4 @@ None are required. The site is entirely static and all user data stays in the br
 - The tax tool has no numerical tax estimator (the IRAS rate table could not be verified from the official page at build time); it organises documents and links to IRAS.
 - Guides marked "General guide — not yet reviewed against official sources" should be reviewed against the linked agency pages before a public launch; 10 guides were reviewed against their sources on 24 Oct 2026.
 - Data lives only in the current browser; cross-device sync requires the JSON export/import.
+- Indicative figures in calculators are a snapshot: statistics carry the date they were read and will age (COE premiums move fortnightly; income and expenditure surveys are published yearly or less often). Update `src/data/benchmarks.ts` when you refresh them.
