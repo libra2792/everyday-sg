@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { caregivingPlan, type CaregivingInputs, type Contributor } from '@/lib/finance';
 import { sgd } from '@/lib/format';
 import { uid } from '@/lib/storage';
@@ -45,6 +46,7 @@ const RESOURCES: ChecklistItem[] = [
 
 export default function CaregivingCalculator() {
   const [state, setState, reset] = usePersistentState<CaregivingInputs>('calc:caregiving', DEFAULTS);
+  const prefilled = usePrefill(setState, { homecare: 'homeCare', helper: 'helper', transport: 'transport', medical: 'medical', other: 'other', budget: 'monthlyBudget', support: 'monthlySupport', years: 'durationYears', inflation: 'inflationPct' });
   const r = useMemo(() => caregivingPlan(state), [state]);
   const set = <K extends keyof CaregivingInputs>(key: K) => (v: CaregivingInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const updateContributor = (id: string, patch: Partial<Contributor>) => setState((s) => ({ ...s, contributors: s.contributors.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
@@ -55,6 +57,7 @@ export default function CaregivingCalculator() {
   return (
     <CalculatorShell
       id="caregiving"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['aic', 'aic-financial', 'aic-hcg', 'moh-ltc', 'moh-aged-care', 'cpf-careshield', 'mom-mdw']}
       relatedGuides={['caregiving-plan', 'eldercare-costs-and-support', 'hiring-a-helper']}

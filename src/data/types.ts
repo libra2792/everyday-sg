@@ -110,3 +110,131 @@ export interface CalculatorMeta {
   popular?: boolean;
   tags: string[];
 }
+
+/* ---------------------------------------------------------------------- */
+/* Quick checks ("Your situation") and figures shown on guide pages        */
+/* ---------------------------------------------------------------------- */
+
+export interface QuickFieldChoice {
+  id: string;
+  label: string;
+  type: 'choice';
+  options: { value: string; label: string }[];
+  default: string;
+}
+
+export interface QuickFieldMoney {
+  id: string;
+  label: string;
+  type: 'money';
+  default?: number;
+  help?: string;
+  /** Key into BENCHMARKS, shown as an indicative figure with a "Use" button. */
+  benchmark?: string;
+}
+
+export interface QuickFieldNumber {
+  id: string;
+  label: string;
+  type: 'number';
+  suffix?: string;
+  default?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  help?: string;
+  benchmark?: string;
+}
+
+export type QuickField = QuickFieldChoice | QuickFieldMoney | QuickFieldNumber;
+
+/** Raw answers: choices as strings, numbers as numbers (undefined when blank). */
+export type QuickAnswers = Record<string, string | number | undefined>;
+
+export interface QuickNext {
+  kind: 'tool' | 'guide' | 'official';
+  /** Calculator/tool id, guide id, or source id depending on kind. */
+  id: string;
+  note?: string;
+  /** Query parameters handed to the calculator so it opens pre-filled. */
+  prefill?: Record<string, number>;
+}
+
+export interface QuickResult {
+  /** Small label above the verdict, e.g. "Direction", "Pointer", "Target". */
+  label: string;
+  verdict: string;
+  why: string[];
+  next: QuickNext[];
+  stats?: { label: string; value: string }[];
+  /** The honest limits of the pointer, shown in small print. */
+  fine: string;
+  /** A figure drawn from the answers; replaces the guide's static figure. */
+  figure?: FigureSpec;
+}
+
+export interface QuickCheck {
+  intro: string;
+  fields: QuickField[];
+  evaluate: (answers: QuickAnswers) => QuickResult;
+}
+
+export type FigureSpec =
+  | {
+      type: 'timeline';
+      lanes: { label: string; nodes: string[]; wait?: { from: number; to: number; label: string } }[];
+      caption: string;
+      aria: string;
+    }
+  | {
+      type: 'gauge';
+      blocks: number;
+      filled: number;
+      title: string;
+      right?: string;
+      foot?: string;
+      caption: string;
+      aria: string;
+    }
+  | {
+      type: 'band';
+      max: number;
+      unit: 'sgd' | 'months' | 'pct' | 'number';
+      bars: { label: string; value: number; strong?: boolean }[];
+      marker?: { value: number; label: string };
+      ticks?: { value: number; label: string; anchor?: 'start' | 'middle' | 'end' }[];
+      caption: string;
+      aria: string;
+    }
+  | {
+      type: 'stack';
+      title: string;
+      unit: 'sgd' | 'pct' | 'months' | 'number';
+      segments: { label: string; value: number; muted?: boolean }[];
+      marker?: { value: number; label: string };
+      caption: string;
+      aria: string;
+    }
+  | {
+      type: 'flow';
+      start: string;
+      question: string;
+      yes: string;
+      no: string;
+      yesThen?: string;
+      noThen?: string;
+      caption: string;
+      aria: string;
+    }
+  | {
+      type: 'compare';
+      options: [string, string];
+      rows: { label: string; a: 0 | 1 | 2 | 3; b: 0 | 1 | 2 | 3; note?: string }[];
+      caption: string;
+      aria: string;
+    };
+
+export interface GuideExtras {
+  quick: QuickCheck;
+  figure: FigureSpec;
+}

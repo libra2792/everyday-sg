@@ -69,6 +69,7 @@ import {
   BookMarked,
   Cake,
   Camera,
+  AtSign,
   ChartColumn,
   MessageCircleHeart,
   Sprout,
@@ -193,6 +194,7 @@ export type IconName =
   | 'book-marked'
   | 'cake'
   | 'camera'
+  | 'at-sign'
   | 'chart-column'
   | 'message-circle-heart'
   | 'sprout'
@@ -318,6 +320,7 @@ const ICONS: Record<IconName, LucideComponent> = {
   'book-marked': BookMarked,
   'cake': Cake,
   'camera': Camera,
+  'at-sign': AtSign,
   'chart-column': ChartColumn,
   'message-circle-heart': MessageCircleHeart,
   'sprout': Sprout,

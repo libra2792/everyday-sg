@@ -28,55 +28,60 @@
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --weight-semibold: 600;
 
-  --canvas: #f7f6f2;
-  --ink: #292b29;
-  --ink-muted: #585b57;
-  --ink-faint: #6b6e69;
+  /* Sage: cool, minty greens. Page #f5f8f6, surfaces #eaf1ec / #fbfcfb, accents #8cae97 → #3f6653. */
+  --canvas: #f5f8f6;
+  --ink: #1f2d26;
+  --ink-muted: #4c5f55;
+  --ink-faint: #66796f;
 
-  --stone-50: #ffffff;
-  --stone-100: #f3f1ec;
-  --stone-200: #ebe8e1;
-  --stone-300: #ddd9cf;
-  --stone-400: #c9c4b8;
-  --stone-500: #a9a497;
+  --stone-50: #fbfcfb;
+  --stone-100: #eef3ef;
+  --stone-200: #e2ebe4;
+  --stone-300: #d2dfd6;
+  --stone-400: #b9cabf;
+  --stone-500: #93a79a;
 
-  --sage-50: #f1f4f0;
-  --sage-100: #e3e8e1;
-  --sage-200: #c9d3c6;
-  --sage-300: #aebdaa;
-  --sage-400: #98aa94;
-  --sage-500: #859681;
-  --sage-600: #6e7f6a;
-  --sage-700: #566350;
-  --sage-800: #434d3f;
-  --sage-900: #2f362d;
+  --sage-50: #edf5ef;
+  --sage-100: #ddeadf;
+  --sage-200: #c4d9ca;
+  --sage-300: #a8c4b1;
+  --sage-400: #8cae97;
+  --sage-500: #789d85;
+  --sage-600: #5e846f;
+  --sage-700: #3f6653;
+  --sage-800: #2f5041;
+  --sage-900: #22392f;
 
-  --clay-100: #f3e9e3;
-  --clay-500: #b07d62;
-  --clay-700: #7f5742;
+  --clay-100: #f7e9e1;
+  --clay-500: #d4805a;
+  --clay-700: #9c5a3a;
 
-  --hero: #f7f6f2;
-  --hero-ink: #292b29;
-  --hero-muted: #585b57;
-  --hero-eyebrow: #566350;
-  --hero-pad: 0.5rem 0 0.25rem;
-  --nav-active: #ebe8e1;
-  --tile-1: #ffffff;
-  --tile-2: #ffffff;
-  --tile-3: #ffffff;
+  --hero: #eaf1ec;
+  --hero-ink: #1f2d26;
+  --hero-muted: #4c5f55;
+  --hero-eyebrow: #3f6653;
+  --hero-pad: 1.5rem 1.5rem 1.25rem;
+  --nav-active: #dce8df;
+  --tile-1: #dce8df;
+  --tile-2: #e9f0e4;
+  --tile-3: #e2eef0;
+  --tool-bg: #3f6653;
+  --tool-ink: #fbfcfb;
+  --tool-accent: #8cae97;
+  --tool-hover: #2f5041;
 
-  --chart-1: #859681;
-  --chart-2: #566350;
-  --chart-3: #c9d3c6;
-  --chart-4: #b07d62;
-  --chart-5: #a9a497;
-  --chart-grid: #ddd9cf;
+  --chart-1: #8cae97;
+  --chart-2: #5e846f;
+  --chart-3: #c4d9ca;
+  --chart-4: #d4805a;
+  --chart-5: #93a79a;
+  --chart-grid: #d2dfd6;
 
   --r-sm: 0.375rem;
   --r-md: 0.5rem;
   --r-lg: 0.75rem;
   --r-xl: 1rem;
-  --shadow-soft: 0 1px 2px rgba(41, 43, 41, 0.05), 0 1px 1px rgba(41, 43, 41, 0.03);
+  --shadow-soft: 0 1px 2px rgba(31, 45, 38, 0.05), 0 1px 1px rgba(31, 45, 38, 0.03);
 }
 
 :root[data-theme="playful"] {
@@ -111,15 +116,19 @@
   --clay-500: #e07a4f;
   --clay-700: #c5623a;
 
-  --hero: #fce48d;
+  --hero: #ffc3ae;
   --hero-ink: #2a2552;
   --hero-muted: #4a4472;
   --hero-eyebrow: #4a4472;
   --hero-pad: 2rem 2rem 1.75rem;
-  --nav-active: #ffe9a6;
+  --nav-active: #ffd9cb;
   --tile-1: #e7e5fa;
   --tile-2: #ffe3d4;
   --tile-3: #dcefe3;
+  --tool-bg: #2a2552;
+  --tool-ink: #fbf8f1;
+  --tool-accent: #9b92e6;
+  --tool-hover: #3a3470;
 
   --chart-1: #7b6ce0;
   --chart-2: #f7b27a;
@@ -172,6 +181,10 @@
   --tile-1: #1c1f1d;
   --tile-2: #1c1f1d;
   --tile-3: #1c1f1d;
+  --tool-bg: #e6efe2;
+  --tool-ink: #141615;
+  --tool-accent: #bfd7b8;
+  --tool-hover: #d2e3cc;
 
   --chart-1: #9dbb96;
   --chart-2: #6e8a66;
@@ -222,6 +235,10 @@
   --tile-1: #ffffff;
   --tile-2: #ffffff;
   --tile-3: #ffffff;
+  --tool-bg: #10213a;
+  --tool-ink: #ffffff;
+  --tool-accent: #7fa0cc;
+  --tool-hover: #173c73;
 
   --chart-1: #1e4b8f;
   --chart-2: #5a83be;
@@ -278,6 +295,10 @@
   --color-tile-1: var(--tile-1);
   --color-tile-2: var(--tile-2);
   --color-tile-3: var(--tile-3);
+  --color-tool: var(--tool-bg);
+  --color-tool-ink: var(--tool-ink);
+  --color-tool-accent: var(--tool-accent);
+  --color-tool-hover: var(--tool-hover);
 
   --radius-sm: var(--r-sm);
   --radius-md: var(--r-md);
@@ -399,6 +420,56 @@
 }
 
 @layer components {
+  /* Numbered steps joined by a dashed line: a row on wide screens, a column on phones. */
+  .stepper {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .step {
+    @apply relative grid gap-1.5 content-start min-w-0;
+  }
+  .step-n {
+    @apply relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-ink text-[12.5px] font-semibold text-canvas;
+  }
+  .step::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 28px;
+    right: -16px;
+    border-top: 2px dashed var(--stone-300);
+  }
+  .step:last-child::before {
+    display: none;
+  }
+  @media (max-width: 560px) {
+    .stepper {
+      grid-template-columns: 1fr;
+    }
+    .step {
+      grid-template-columns: 28px minmax(0, 1fr);
+      column-gap: 12px;
+    }
+    .step .step-n {
+      grid-row: 1 / span 2;
+    }
+    .step h3 {
+      grid-column: 2;
+      margin-top: 3px;
+    }
+    .step p {
+      grid-column: 2;
+    }
+    .step::before {
+      top: 28px;
+      bottom: -16px;
+      left: 13px;
+      right: auto;
+      border-top: 0;
+      border-left: 2px dashed var(--stone-300);
+    }
+  }
+
   .prose-esg {
     @apply text-[15px] leading-7 text-ink;
   }
@@ -473,4 +544,78 @@
 }
 .print-only {
   display: none;
+}
+
+/* ------------------------------------------------------------------
+   Page transitions. Moving between guides, or into a calculator, must
+   read as a new page: the old page slides out, the new one slides in,
+   a loading sweep runs under the header and the trail bar pulses once.
+   Browsers without the View Transitions API get the entry animation only.
+   ------------------------------------------------------------------ */
+@keyframes esg-page-enter {
+  from { opacity: 0; transform: translateX(72px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes esg-page-enter-back {
+  from { opacity: 0; transform: translateX(-72px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes esg-page-leave {
+  to { opacity: 0; transform: translateX(-56px); }
+}
+@keyframes esg-page-leave-back {
+  to { opacity: 0; transform: translateX(56px); }
+}
+@keyframes esg-sweep {
+  0% { width: 0; opacity: 1; }
+  70% { width: 100%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+@keyframes esg-trail-pulse {
+  0% { background-color: var(--sage-200); box-shadow: 0 0 0 4px var(--sage-100); }
+  100% { background-color: var(--stone-100); box-shadow: 0 0 0 0 transparent; }
+}
+.loadbar {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 3px;
+  width: 0;
+  background: var(--sage-600);
+  animation: esg-sweep 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  pointer-events: none;
+}
+.trail-fresh {
+  animation: esg-trail-pulse 1.8s ease-out 1;
+}
+html.no-vt .page-enter {
+  animation: esg-page-enter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+html.no-vt[data-nav="back"] .page-enter {
+  animation-name: esg-page-enter-back;
+}
+main#main {
+  view-transition-name: esg-page;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(esg-page) {
+  animation: esg-page-leave 0.3s ease-in both;
+}
+::view-transition-new(esg-page) {
+  animation: esg-page-enter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+html[data-nav="back"]::view-transition-old(esg-page) {
+  animation-name: esg-page-leave-back;
+}
+html[data-nav="back"]::view-transition-new(esg-page) {
+  animation-name: esg-page-enter-back;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(esg-page),
+  ::view-transition-new(esg-page) {
+    animation: none;
+  }
 }

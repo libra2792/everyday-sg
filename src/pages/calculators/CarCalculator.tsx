@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { carOwnershipCost, type CarInputs } from '@/lib/finance';
 import { sgd, sgdCents } from '@/lib/format';
 import { BENCHMARKS } from '@/data/benchmarks';
@@ -30,6 +31,7 @@ const DEFAULTS: CarInputs = {
 
 export default function CarCalculator() {
   const [state, setState, reset] = usePersistentState<CarInputs>('calc:car', DEFAULTS);
+  const prefilled = usePrefill(setState, { price: 'purchasePrice', initial: 'initialPayment', upfront: 'otherUpfrontCosts', rate: 'loanInterestPct', tenure: 'loanTenureYears', resale: 'resaleValueAtEnd', insurance: 'insuranceAnnual', roadtax: 'roadTaxAnnual', fuel: 'fuelMonthly', parking: 'parkingMonthly', erp: 'erpAndTollsMonthly', maintenance: 'maintenanceAnnual', km: 'annualMileageKm', years: 'ownershipYears', alt: 'alternativeTransportMonthly' });
   const r = useMemo(() => carOwnershipCost(state), [state]);
   const set = <K extends keyof CarInputs>(key: K) => (v: CarInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const months = Math.round(state.ownershipYears * 12);
@@ -37,6 +39,7 @@ export default function CarCalculator() {
   return (
     <CalculatorShell
       id="car"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['onemotoring', 'onemotoring-upfront', 'onemotoring-coe', 'onemotoring-coe-results', 'onemotoring-ongoing', 'onemotoring-road-tax', 'lta-fares']}
       relatedGuides={['car-ownership-costs', 'car-vs-public-transport', 'build-a-budget']}

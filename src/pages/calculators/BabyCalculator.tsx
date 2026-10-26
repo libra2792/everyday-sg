@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { babyBudget, type BabyInputs, type ChildcareScenario } from '@/lib/finance';
 import { pct, sgd } from '@/lib/format';
 import { uid } from '@/lib/storage';
@@ -53,6 +54,12 @@ const PREP_CHECKLIST: ChecklistItem[] = [
 
 export default function BabyCalculator() {
   const [state, setState, reset] = usePersistentState<BabyInputs>('calc:baby', DEFAULTS);
+  const prefilled = usePrefill(setState, { children: 'numberOfChildren', setup: 'setupBudget', delivery: 'deliveryOutOfPocket', infant: 'monthlyInfantCost', other: 'otherMonthlyCost', leave: 'lostIncomeDuringLeave', horizon: 'horizonYears', income: 'householdMonthlyIncome' }, (params, s) => {
+    const fee = Number(params.get('fee'));
+    const sub = Number(params.get('subsidy'));
+    if (!Number.isFinite(fee) && !Number.isFinite(sub)) return s;
+    return { ...s, scenarios: s.scenarios.map((sc) => (sc.id === s.selectedScenarioId ? { ...sc, monthlyFee: Number.isFinite(fee) && params.has('fee') ? fee : sc.monthlyFee, monthlySubsidy: Number.isFinite(sub) && params.has('subsidy') ? sub : sc.monthlySubsidy } : sc)) };
+  });
   const r = useMemo(() => babyBudget(state), [state]);
   const set = <K extends keyof BabyInputs>(key: K) => (v: BabyInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const updateScenario = (id: string, patch: Partial<ChildcareScenario>) => setState((s) => ({ ...s, scenarios: s.scenarios.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
@@ -69,6 +76,7 @@ export default function BabyCalculator() {
   return (
     <CalculatorShell
       id="baby"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['lifesg-sg-child-support', 'lifesg-baby-bonus', 'ecda-subsidies', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare', 'ecda-aop', 'singstat-income-2025']}
       relatedGuides={['preparing-for-pregnancy', 'newborn-first-year', 'childcare-and-preschool']}

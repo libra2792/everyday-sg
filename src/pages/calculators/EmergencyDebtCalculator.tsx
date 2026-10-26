@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { compareExtraPayments, debtPayoff, emergencyFund, type Debt, type PayoffStrategy } from '@/lib/finance';
 import { months as fmtMonths, sgd } from '@/lib/format';
 import { uid } from '@/lib/storage';
@@ -34,6 +35,13 @@ const DEFAULTS: State = {
 
 export default function EmergencyDebtCalculator() {
   const [state, setState, reset] = usePersistentState<State>('calc:emergency-debt', DEFAULTS);
+  const prefilled = usePrefill(setState, { savings: 'currentSavings', ess: 'essentialMonthly', months: 'coverageMonths', monthly: 'monthlyContribution', extra: 'extraMonthly' }, (params, s) => {
+    const bal = Number(params.get('debt_balance'));
+    if (!Number.isFinite(bal) || bal <= 0) return s;
+    const apr = Number(params.get('debt_rate'));
+    const min = Number(params.get('debt_min'));
+    return { ...s, debts: [...s.debts, { id: uid(), name: params.get('debt_name') || 'Card or loan', balance: bal, aprPct: Number.isFinite(apr) ? apr : 26, minPayment: Number.isFinite(min) && min > 0 ? min : Math.max(50, Math.round(bal * 0.03)) }] };
+  });
   const fund = useMemo(() => emergencyFund(state.currentSavings, state.essentialMonthly, state.coverageMonths, state.monthlyContribution), [state]);
   const payoff = useMemo(() => debtPayoff(state.debts, state.extraMonthly, state.strategy), [state.debts, state.extraMonthly, state.strategy]);
   const comparison = useMemo(() => {
@@ -52,6 +60,7 @@ export default function EmergencyDebtCalculator() {
   return (
     <CalculatorShell
       id="emergency-debt"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['moneysense', 'singstat-hes-2023']}
       relatedGuides={['emergency-fund', 'pay-down-debt', 'build-a-budget']}

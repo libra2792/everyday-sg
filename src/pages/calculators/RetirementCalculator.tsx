@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { projectRetirement, type RetirementInputs } from '@/lib/finance';
 import { sgd } from '@/lib/format';
 import { BENCHMARKS } from '@/data/benchmarks';
@@ -31,6 +32,7 @@ const SCENARIOS: { id: string; label: string; returnPct: number; inflationPct: n
 
 export default function RetirementCalculator() {
   const [state, setState, reset] = usePersistentState<RetirementInputs>('calc:retirement', DEFAULTS);
+  const prefilled = usePrefill(setState, { age: 'currentAge', retire: 'retirementAge', savings: 'currentSavings', monthly: 'monthlyContribution', spend: 'monthlySpendingToday', return: 'nominalReturnPct', inflation: 'inflationPct', other: 'otherMonthlyIncomeToday', to: 'planToAge' });
   const r = useMemo(() => projectRetirement(state), [state]);
   const set = <K extends keyof RetirementInputs>(key: K) => (v: RetirementInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const cpfEstimator = SOURCE_MAP['cpf-payout-estimator'];
@@ -58,6 +60,7 @@ export default function RetirementCalculator() {
   return (
     <CalculatorShell
       id="retirement"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['cpf-life', 'cpf-payout-estimator', 'cpf-planner', 'cpf-retirement-planning', 'moneysense', 'singstat-hes-2023']}
       relatedGuides={['retirement-income-cpf-life', 'cpf-basics', 'start-investing']}

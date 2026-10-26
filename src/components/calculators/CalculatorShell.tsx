@@ -7,6 +7,7 @@ import { Disclosure, Note, PageHeader, SectionHeading } from '@/components/ui/Mi
 import { GuideCard } from '@/components/GuideCard';
 import { SaveButton } from '@/components/SaveButton';
 import { SourceNote } from '@/components/SourceNote';
+import { TrailBar } from '@/components/LinkTiles';
 
 interface CalculatorShellProps {
   id: string;
@@ -22,6 +23,8 @@ interface CalculatorShellProps {
   relatedGuides?: string[];
   intro?: ReactNode;
   caveat?: ReactNode;
+  /** True when inputs were filled from a guide's quick check; shows a note under the header. */
+  prefilled?: boolean;
 }
 
 /**
@@ -29,7 +32,7 @@ interface CalculatorShellProps {
  * results near the inputs (sticky on wide screens), then assumptions, methodology,
  * sources and related guides.
  */
-export function CalculatorShell({ id, children, results, assumptions, methodology, onReset, snapshot, headline, sourceIds = [], relatedGuides = [], intro, caveat }: CalculatorShellProps) {
+export function CalculatorShell({ id, children, results, assumptions, methodology, onReset, snapshot, headline, sourceIds = [], relatedGuides = [], intro, caveat, prefilled }: CalculatorShellProps) {
   const meta = CALCULATOR_MAP[id];
   const { addSnapshot } = useAppState();
   const [savedFlash, setSavedFlash] = useState(false);
@@ -50,6 +53,7 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
 
   return (
     <div>
+      <TrailBar nowTitle={meta.name} nowKind="tool" />
       <PageHeader
         breadcrumbs={[{ label: meta.kind === 'tool' ? 'Tools' : 'Calculators', to: '/calculators' }, { label: meta.shortName }]}
         eyebrow={meta.kind === 'tool' ? 'Tool' : 'Calculator'}
@@ -72,6 +76,11 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
           </>
         }
       />
+      {prefilled && (
+        <Note className="mb-6" icon="sliders-horizontal" title="Filled in from your answers in the guide">
+          Adjust anything below; the results update as you type. Reset inputs clears the lot.
+        </Note>
+      )}
       {caveat && <Note className="mb-6">{caveat}</Note>}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
         <div className="order-2 min-w-0 space-y-6 lg:order-none">{children}</div>

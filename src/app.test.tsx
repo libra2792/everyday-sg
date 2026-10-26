@@ -81,6 +81,34 @@ describe('pages render', () => {
     expect(screen.getAllByText(/your checklist/i).length).toBeGreaterThan(0);
   });
 
+  it('guide page: quick check answers change the verdict, a related guide opens with a trail bar, and a calculator opens pre-filled', async () => {
+    renderAt('/guides/home-affordability-and-loans');
+    expect(screen.getByRole('heading', { level: 2, name: /your situation/i })).toBeTruthy();
+    expect(screen.getByText(/waiting for your numbers/i)).toBeTruthy();
+    const income = screen.getByLabelText(/gross monthly household income/i) as HTMLInputElement;
+    fireEvent.focus(income);
+    fireEvent.change(income, { target: { value: '9000' } });
+    fireEvent.change(screen.getByLabelText(/cash you can commit/i), { target: { value: '60000' } });
+    fireEvent.change(screen.getByLabelText(/cpf oa you can commit/i), { target: { value: '90000' } });
+    expect(await screen.findByText(/comfortable up to about S\$600k/i)).toBeTruthy();
+    expect(screen.getByText(/drawn from your answers above/i)).toBeTruthy();
+    // keep reading → another guide, with the trail bar
+    const keepReading = screen.getByRole('heading', { level: 2, name: /keep reading/i }).closest('section')!;
+    fireEvent.click(within(keepReading).getByRole('link', { name: /bto or resale hdb flat/i }));
+    expect(await screen.findByRole('heading', { level: 1, name: /bto or resale hdb flat/i })).toBeTruthy();
+    expect(screen.getByText(/new page/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /back to what home can you afford/i })).toBeTruthy();
+    // run the numbers → calculator, pre-filled from the quick check
+    fireEvent.click(screen.getByRole('button', { name: /back to what home can you afford/i }));
+    expect(await screen.findByRole('heading', { level: 1, name: /what home can you afford/i })).toBeTruthy();
+    const doNext = screen.getByText(/do next/i).parentElement!;
+    fireEvent.click(within(doNext).getByRole('link', { name: /housing affordability and mortgage/i }));
+    expect(await screen.findByRole('heading', { level: 1, name: /housing affordability and mortgage/i })).toBeTruthy();
+    expect(await screen.findByText(/filled in from your answers in the guide/i)).toBeTruthy();
+    await waitFor(() => expect((screen.getByLabelText(/^Estimated property price$/i) as HTMLInputElement).value).toBe('600000'));
+    expect(screen.getByText(/you are now in a/i)).toBeTruthy();
+  });
+
   it('renders every guide page without crashing', () => {
     for (const g of GUIDES) {
       cleanup();
@@ -122,6 +150,11 @@ describe('pages render', () => {
     expect(images.length).toBe(1 + CREATOR.sections.reduce((n, s) => n + (s.photos?.length ?? 0), 0));
     for (const img of images) expect((img as HTMLImageElement).alt.length).toBeGreaterThan(10);
     expect(screen.getAllByRole('link', { name: /about page/i }).length).toBeGreaterThan(0);
+    for (const s of CREATOR.socials) {
+      const links = screen.getAllByRole('link', { name: new RegExp(s.label, 'i') }) as HTMLAnchorElement[];
+      expect(links.length).toBeGreaterThan(0);
+      expect(links.every((l) => l.href === s.url && l.target === '_blank' && /noopener/.test(l.rel))).toBe(true);
+    }
   });
 });
 

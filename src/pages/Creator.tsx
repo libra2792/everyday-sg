@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CREATOR, type CreatorPhoto, type CreatorSection } from '@/data/creator';
 import { Icon } from '@/components/ui/Icon';
 import { LinkButton } from '@/components/ui/Button';
+import { BrandIcon } from '@/components/ui/BrandIcon';
 
 const TILES = ['bg-tile-1', 'bg-tile-2', 'bg-tile-3'];
 const SHAPE: Record<CreatorPhoto['shape'], string> = {
@@ -69,6 +70,25 @@ export function Creator() {
         <p className="mb-2 text-[12px] font-medium uppercase tracking-wider text-sage-700">{CREATOR.eyebrow}</p>
         <h1 className="text-[30px] font-semibold leading-[1.15] text-ink sm:text-[38px]">{CREATOR.title}</h1>
         <p className="mt-4 max-w-2xl text-[16px] leading-7 text-ink-muted">{CREATOR.lead}</p>
+        <ul className="mt-5 flex flex-wrap items-center gap-2" aria-label="Find me online">
+          {CREATOR.socials.map((s) => (
+            <li key={s.id}>
+              <a
+                href={s.url}
+                target="_blank"
+                rel="me noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-stone-50 py-1.5 pl-2.5 pr-3 text-[13.5px] text-ink transition-colors hover:border-sage-500 hover:bg-sage-50"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sage-100 text-sage-800" aria-hidden>
+                  <BrandIcon name={s.brand} size={12} />
+                </span>
+                <span className="font-medium">{s.label}</span>
+                <span className="text-ink-faint">{s.handle}</span>
+                <Icon name="external-link" size={12} className="text-ink-faint" />
+              </a>
+            </li>
+          ))}
+        </ul>
       </header>
 
       <Photo photo={CREATOR.heroPhoto} tile="bg-tile-1" priority />
@@ -108,6 +128,19 @@ export function Creator() {
             Try a calculator
           </LinkButton>
         </div>
+        <p className="mt-5 text-[14px] text-hero-muted">
+          Say hello on{' '}
+          {CREATOR.socials.map((s, i) => (
+            <span key={s.id}>
+              {i > 0 && ' or '}
+              <a href={s.url} target="_blank" rel="me noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-hero-ink underline decoration-hero-muted underline-offset-2 hover:decoration-hero-ink">
+                <BrandIcon name={s.brand} size={13} />
+                {s.label}
+              </a>
+            </span>
+          ))}
+          .
+        </p>
       </section>
 
       <p className="mt-8 text-[13px] leading-6 text-ink-faint">

@@ -9,14 +9,15 @@ It is **not a government website**, is not affiliated with any agency, and canno
 | Area | Details |
 | --- | --- |
 | **Home** | Search, quick actions, life-stage selector, popular calculators, featured guides, personalised "Your next steps", "Due soon" tasks |
-| **Life Guides** | 41 guides across 12 categories in a card layout with icons and short bullet points: at a glance (what it means, who it's for, when to act), the persistent checklist near the top, numbered steps, what to prepare, costs, watch-outs, official links and related tools |
+| **Life Guides** | 41 guides across 12 categories in a card layout with a category illustration and short bullet points: at a glance (what it means, who it's for, when to act), a **"Your situation" quick check** (a few questions or numbers → a tailored pointer, reasons, and "do next" links that open a calculator pre-filled), the persistent checklist, a **"How it works" diagram** (timeline, gauge, price band, stacked bar, flowchart or comparison, many drawn from the answers), numbered steps, what to prepare, watch-outs, then **Run the numbers** (dark calculator tiles) and **Keep reading** (tinted guide cards), official links and sources |
 | **Calculators** | Household budget · Emergency fund and debt repayment · Housing affordability and mortgage · Baby and childcare budget · Retirement projection · Insurance needs organiser · Caregiving and eldercare cost planner · Car ownership total cost. Inputs show an indicative figure (an official median/average with its source and check date, or a labelled planning guide) with a one-tap **Use** button |
 | **Tools** | Annual tax preparation checklist (organiser + IRAS links; deliberately no tax-rate engine) · Annual life-admin checklist (8 sections) |
 | **My Plan** | Optional profile (7 broad questions), ranked next steps, dated tasks, checklist progress, JSON export/import, printable summary, one-click reset |
 | **Saved Items** | Bookmarked guides/calculators/tools and saved results snapshots |
 | **About** | Privacy statement, verification policy, full list of official sources with how/when each was checked |
 | **Who made this** (`/creator`) | A first-person page about the creator, with six photos, linked from the footer, the About page and the home page |
-| **Appearance** | Four themes — Sage (default), Playful, Dark, Professional — switchable from the header, the footer or My Plan; saved locally, with Dark following the OS setting until a choice is made |
+| **Appearance** | Four themes — Sage (default, cool mint greens), Playful (cream, coral hero, pastel tiles), Dark, Professional — switchable from the header, the footer or My Plan; saved locally, with Dark following the OS setting until a choice is made |
+| **Navigation** | Moving between guides, or into a calculator, reads as a new page: the old page slides out and the new one slides in (View Transitions API, with an entry animation as the fallback), a loading sweep runs under the header, and a pulsing "New page" trail bar names where you are with a one-tap Back |
 
 ### Privacy model
 
@@ -62,6 +63,10 @@ everyday-sg/
     │   ├── ui/                  # Button, Field (NumberField, SliderField, Select…), BenchmarkHint, Panel, Misc, Icon
     │   ├── charts/Charts.tsx    # BarList, StackedBar, LineChart, ColumnChart (responsive SVG)
     │   ├── calculators/CalculatorShell.tsx
+    │   ├── figures/Figures.tsx   # timeline, gauge, band, stack, flow and compare diagrams (SVG)
+    │   ├── Illustration.tsx     # one spot illustration per category, in theme colours
+    │   ├── QuickCheck.tsx       # "Your situation" form and result panel
+    │   ├── LinkTiles.tsx        # ToolTile, GuideLinkCard, OfficialLinkCard, TrailBar
     │   ├── Checklist.tsx        # persistent checklist (grouped, essential/optional)
     │   ├── GuideCard.tsx, SaveButton.tsx, SearchBox.tsx, SourceNote.tsx
     ├── data/
@@ -72,13 +77,16 @@ everyday-sg/
     │   ├── calculators.ts       # calculator/tool registry (routes, tags)
     │   ├── checklists.ts        # tax-prep and annual-admin checklist content
     │   ├── sources.ts           # official link registry with verification status
-    │   └── guides/              # one file per category + index.ts
+    │   ├── guides/              # one file per category + index.ts
+    │   └── quick/               # quick checks and figures per category + index.ts + tests
     ├── lib/
     │   ├── finance.ts           # all calculation functions (pure, NaN-safe)
     │   ├── finance.test.ts      # unit tests (boundaries + realistic samples)
     │   ├── format.ts            # SGD / percentage / date formatting
     │   ├── storage.ts           # namespaced localStorage, export/import/reset
     │   ├── usePersistentState.ts
+    │   ├── usePrefill.ts        # calculators read ?price=…&rate=… once, then clear the URL
+    │   ├── quick.ts             # helpers for quick-check logic (num, sgd, pmt, tool/guide/official)
     │   ├── search.ts            # scored search with synonyms
     │   ├── recommend.ts         # profile → ranked recommendations
     │   └── dates.ts
@@ -97,7 +105,8 @@ All colours, radii and fonts are CSS variables in `src/index.css`. The bare `:ro
 - **New guide:** add an object to the relevant file in `src/data/guides/` (follow the `Guide` type). It is automatically searchable, filterable, recommendable and gets a persistent checklist. Reference sources by id from `src/data/sources.ts`.
 - **New source:** add to `SOURCES` with an honest `check`/`checkedOn`.
 - **Indicative figure:** add to `BENCHMARKS` in `src/data/benchmarks.ts` and pass it as `benchmark={BENCHMARKS.yourKey}` on a `SliderField` or `NumberField`. Use `kind: 'statistic'` only for a published figure you have actually opened, with its `sourceId` and `checkedOn`; otherwise use `kind: 'guide'`.
-- **Creator page:** edit the name, text, captions and alt text in `src/data/creator.ts`; replace photos in `public/creator/` (JPEG, 1200px on the long edge, metadata stripped). The layout in `src/pages/Creator.tsx` needs no change.
+- **Creator page:** edit the name, text, captions, alt text and social links in `src/data/creator.ts`; replace photos in `public/creator/` (JPEG, 1200px on the long edge, metadata stripped). The layout in `src/pages/Creator.tsx` needs no change. Brand glyphs for the social links come from Font Awesome Free (`@fortawesome/free-brands-svg-icons`, icons CC BY 4.0, credited on the page).
+- **Quick check or figure:** each guide's entry lives in `src/data/quick/<category>.ts` as `{ quick, figure }`. `quick.fields` are choice, money or number inputs (a `benchmark` key shows an indicative figure with a Use button); `quick.evaluate(answers)` returns the verdict, reasons, `next` links (`tool(id, note, prefill)`, `guide(id, note)`, `official(sourceId, note)`) and optionally a figure drawn from the answers. `prefill` keys are the calculator's query parameters (see each calculator's `usePrefill` map). `src/data/quick/quick.test.ts` checks every guide has one and that every link points at something that exists.
 - **New calculator:** add the pure calculation to `src/lib/finance.ts` (+ tests), register metadata in `src/data/calculators.ts`, build the page with `CalculatorShell`, and add the lazy route in `src/App.tsx`.
 
 ## Local development
@@ -124,6 +133,10 @@ Use your own GitHub and Netlify accounts; nothing in the project is tied to any 
 
 ### 1. Put the project on GitHub
 
+**With GitHub Desktop (no terminal):** install GitHub Desktop and sign in to your personal GitHub account. Choose **File → Add local repository**, pick the unzipped `everyday-sg` folder, and accept the offer to **create a repository** there. In the left panel, type a summary such as “Everyday SG — initial version” and click **Commit to main**, then click **Publish repository** (keep it private or make it public, as you prefer). Done.
+
+**With the terminal:**
+
 ```bash
 cd everyday-sg
 git init
@@ -137,7 +150,7 @@ git push -u origin main
 
 ### 2. Create the Netlify site
 
-1. In Netlify, choose **Add new site → Import an existing project** and connect the GitHub repository.
+1. In Netlify (logged in to the account you want), choose **Add new project → Import an existing project → GitHub**, authorise Netlify for your account if asked, and pick `everyday-sg`.
 2. Netlify reads `netlify.toml`, so the settings are pre-filled:
    - Build command: `npm run build`
    - Publish directory: `dist`
@@ -164,7 +177,8 @@ None are required. The site is entirely static and all user data stays in the br
 ## Testing
 
 - `src/lib/finance.test.ts` — 35 tests covering mortgage/flat-rate maths against known values, budget totals, emergency fund, debt payoff (avalanche vs snowball, insufficient payments, zero-rate), housing splits, baby budget scaling, retirement projection (closed-form future value, growing annuity, funds-run-out detection), insurance need, caregiving shares and inflation, car cash-vs-economic cost — including zero/empty/negative/extreme inputs.
-- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM (typing into inputs and moving sliders), checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404.
+- `src/data/quick/quick.test.ts` — every guide has a quick check and a figure; every quick check evaluates with defaults and with blanks; every "do next" link points at an existing calculator, guide or source; sample answers produce the expected pointers.
+- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM, walks the guide → related guide (trail bar) → back → calculator (pre-filled) flow, checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404.
 
 ## Known limitations (first version)
 

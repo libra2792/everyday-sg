@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { useAppState } from '@/state/AppState';
@@ -29,7 +29,8 @@ function Wordmark() {
 function Header() {
   const { saved } = useAppState();
   return (
-    <header className="no-print sticky top-0 z-30 border-b border-stone-200 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/85">
+    <header className="no-print relative sticky top-0 z-30 border-b border-stone-200 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/85">
+      <LoadSweep />
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Wordmark />
         <nav aria-label="Main" className="hidden md:block">
@@ -161,6 +162,29 @@ function ScrollToTop() {
   return null;
 }
 
+/** A short loading sweep under the header on every navigation, like a browser's own bar. */
+function LoadSweep() {
+  const { pathname } = useLocation();
+  const first = useRef(pathname);
+  if (pathname === first.current) return null;
+  return <i key={pathname} className="loadbar" aria-hidden="true" />;
+}
+
+
+/** The routed page. Keyed by location so each navigation re-mounts it with the entry animation. */
+function PageFrame({ children }: { children: ReactNode }) {
+  // Keyed by path, not location key, so clearing a query string does not re-mount the page.
+  const { pathname: key } = useLocation();
+  useEffect(() => {
+    if (typeof (document as Document & { startViewTransition?: unknown }).startViewTransition !== 'function') document.documentElement.classList.add('no-vt');
+  }, []);
+  return (
+    <main id="main" key={key} className="page-enter mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:px-6 md:pb-12">
+      {children}
+    </main>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
@@ -169,9 +193,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <ScrollToTop />
       <Header />
-      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:px-6 md:pb-12">
-        {children}
-      </main>
+      <PageFrame>{children}</PageFrame>
       <Footer />
       <MobileNav />
     </div>

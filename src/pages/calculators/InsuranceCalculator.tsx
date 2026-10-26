@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { insuranceNeed, type InsuranceInputs } from '@/lib/finance';
 import { sgd } from '@/lib/format';
 import { BENCHMARKS } from '@/data/benchmarks';
@@ -49,12 +50,14 @@ const QUESTIONS = [
 
 export default function InsuranceCalculator() {
   const [state, setState, reset] = usePersistentState<InsuranceInputs>('calc:insurance', DEFAULTS);
+  const prefilled = usePrefill(setState, { dependants: 'dependants', years: 'yearsOfIncomeReplacement', expenses: 'annualHouseholdExpenses', debts: 'outstandingDebts', commitments: 'futureCommitments', existing: 'existingLifeCoverage', assets: 'liquidAssetsToCount' });
   const r = useMemo(() => insuranceNeed(state), [state]);
   const set = <K extends keyof InsuranceInputs>(key: K) => (v: InsuranceInputs[K]) => setState((s) => ({ ...s, [key]: v }));
 
   return (
     <CalculatorShell
       id="insurance"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['moneysense', 'cpf-medishield', 'cpf-careshield', 'singstat-hes-2023']}
       relatedGuides={['insurance-basics', 'review-coverage-and-claims', 'health-insurance-sg']}

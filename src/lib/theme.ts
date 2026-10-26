@@ -11,8 +11,8 @@ export interface ThemeMeta {
 }
 
 export const THEMES: ThemeMeta[] = [
-  { id: 'sage', name: 'Sage', description: 'Warm off-white with a muted green accent.', swatch: ['#f7f6f2', '#859681'] },
-  { id: 'playful', name: 'Playful', description: 'Cream, soft yellow and pastel tiles with rounded corners.', swatch: ['#fce48d', '#7b6ce0'] },
+  { id: 'sage', name: 'Sage', description: 'Cool mint page with layered sage greens.', swatch: ['#eaf1ec', '#5e846f'] },
+  { id: 'playful', name: 'Playful', description: 'Cream, coral and pastel tiles with rounded corners.', swatch: ['#ffc3ae', '#7b6ce0'] },
   { id: 'dark', name: 'Dark', description: 'Low-light palette; follows your system setting by default.', swatch: ['#1c1f1d', '#9dbb96'] },
   { id: 'professional', name: 'Professional', description: 'Cool grey, navy and serif headings.', swatch: ['#10213a', '#5a83be'] },
 ];

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { housingAffordability, monthlyPayment, type HousingInputs } from '@/lib/finance';
 import { pct, sgd } from '@/lib/format';
 import { BENCHMARKS } from '@/data/benchmarks';
@@ -27,6 +28,7 @@ const DEFAULTS: HousingInputs = {
 
 export default function HousingCalculator() {
   const [state, setState, reset] = usePersistentState<HousingInputs>('calc:housing', DEFAULTS);
+  const prefilled = usePrefill(setState, { income: 'grossMonthlyIncome', cash: 'availableCash', cpf: 'availableCpf', price: 'propertyPrice', down: 'downPaymentPct', rate: 'interestRatePct', tenure: 'tenureYears', reno: 'renovationBudget', upfront: 'otherUpfrontCosts', recurring: 'monthlyRecurringCosts', oa: 'monthlyCpfOaContribution', limit: 'affordabilityLimitPct' });
   const r = useMemo(() => housingAffordability(state), [state]);
   const set = <K extends keyof HousingInputs>(key: K) => (v: HousingInputs[K]) => setState((s) => ({ ...s, [key]: v }));
 
@@ -45,6 +47,7 @@ export default function HousingCalculator() {
   return (
     <CalculatorShell
       id="housing"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['hdb-loan', 'hdb-hfe', 'cpf-housing', 'moneysense-decisions', 'hdb-median-resale', 'singstat-income-2025']}
       relatedGuides={['home-affordability-and-loans', 'hdb-bto-vs-resale', 'renovation-and-moving']}

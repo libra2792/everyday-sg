@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { usePrefill } from '@/lib/usePrefill';
 import { budgetSummary, type BudgetCategory, type BudgetKind } from '@/lib/finance';
 import { formatDate, pct, sgd } from '@/lib/format';
 import { SOURCE_MAP } from '@/data/sources';
@@ -51,6 +52,16 @@ const KIND_OPTIONS: { value: BudgetKind; label: string }[] = [
 
 export default function BudgetCalculator() {
   const [state, setState, reset] = usePersistentState<BudgetState>('calc:budget', DEFAULTS);
+  const prefilled = usePrefill(setState, { income: 'takeHomeIncome', other: 'otherIncome', savings: 'desiredMonthlySavings' }, (params, s) => {
+    const byId: Record<string, string> = { housing: 'housing', food: 'food', transport: 'transport', insurance: 'insurance', childcare: 'family', debt: 'debt', personal: 'personal', saving: 'savings' };
+    let cats = s.categories;
+    for (const [param, catId] of Object.entries(byId)) {
+      const raw = params.get(param);
+      if (raw === null || !Number.isFinite(Number(raw))) continue;
+      cats = cats.map((c) => (c.id === catId ? { ...c, amount: Number(raw) } : c));
+    }
+    return { ...s, categories: cats };
+  });
   const result = useMemo(() => budgetSummary(state), [state]);
   const allocationTotal = state.allocation.essential + state.allocation.lifestyle + state.allocation.savings;
 
@@ -63,6 +74,7 @@ export default function BudgetCalculator() {
   return (
     <CalculatorShell
       id="budget"
+      prefilled={prefilled}
       onReset={reset}
       sourceIds={['moneysense', 'moneysense-decisions', 'mom-labour-force-2025', 'singstat-income-2025', 'singstat-hes-2023']}
       relatedGuides={['build-a-budget', 'emergency-fund', 'subscriptions-and-bills']}

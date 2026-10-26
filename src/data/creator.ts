@@ -5,6 +5,8 @@
  * page layout. Photos live in /public/creator. Keep captions accurate to the photos.
  */
 
+import type { BrandName } from '@/components/ui/BrandIcon';
+
 export interface CreatorPhoto {
   src: string;
   alt: string;
@@ -109,9 +111,9 @@ export const CREATOR = {
       ],
       photos: [
         {
-          src: '/creator/hike.jpg',
-          alt: 'Nigel and his wife holding hands while hiking up a dirt trail, with a lake, a town and mountains far below.',
-          caption: 'The long walk up, together.',
+          src: '/creator/showflat.jpg',
+          alt: 'Nigel and his wife smiling in front of a Park Town Residence launch banner, holding its brochure.',
+          caption: 'At the Park Town Residence launch, brochure in hand.',
           shape: 'portrait',
         },
       ],
@@ -124,6 +126,10 @@ export const CREATOR = {
     { icon: 'badge-check', title: 'Honest about numbers', text: 'Figures are labelled as official statistics or planning guides, with the date they were checked, and links go to the agency itself.' },
     { icon: 'compass', title: 'Not advice', text: 'This is general information, not financial, legal or tax advice. Use it to prepare, then confirm with the agency or a licensed professional.' },
   ],
+  socials: [
+    { id: 'instagram', label: 'Instagram', handle: '@nigelmessi', url: 'https://www.instagram.com/nigelmessi/', brand: 'instagram' },
+    { id: 'linkedin', label: 'LinkedIn', handle: 'nigelwongkc', url: 'https://www.linkedin.com/in/nigelwongkc/', brand: 'linkedin' },
+  ] satisfies { id: string; label: string; handle: string; url: string; brand: BrandName }[],
   closing: 'If this site saves you one evening of confusion, it has done its job. Share it with one person who needs it.',
-  credit: 'Made in Singapore by Nigel. The photos are my own. Built with React, TypeScript and Tailwind CSS; icons by Lucide.',
+  credit: 'Made in Singapore by Nigel. The photos are my own. Built with React, TypeScript and Tailwind CSS; icons by Lucide, brand logos from Font Awesome Free (CC BY 4.0).',
 };
