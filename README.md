@@ -96,6 +96,10 @@ everyday-sg/
         └── tools/
 ```
 
+### Page titles and link previews
+
+`src/lib/head.ts` maps every route to a `<title>` ("{Page} · Everyday SG") and description (a guide's or calculator's one-line summary). In the browser, `useDocumentHead` keeps the title, description, Open Graph tags and canonical link current. At build time a small Vite plugin in `vite.config.ts` writes a copy of `index.html` for each public route (`dist/guides/<id>.html` and so on) with those tags filled in, so WhatsApp, Telegram and search engines see the right title without running JavaScript. Canonical and `og:url` use Netlify's build-time `URL`; set it yourself for other hosts. The share image is `public/og-image.png`. The page body is still rendered in the browser; prerendering content as well would need server rendering and is not done.
+
 ### Themes
 
 All colours, radii and fonts are CSS variables in `src/index.css`. The bare `:root` block is the Sage theme; `:root[data-theme="playful"]`, `[data-theme="dark"]` and `[data-theme="professional"]` override the same variables, and a `@theme inline` block maps them onto Tailwind's tokens (`bg-canvas`, `text-ink`, `border-stone-200`, `rounded-lg`…). To change a theme, edit its variables; to add one, copy a block, add its id to `THEMES` in `src/lib/theme.ts` and to the `valid` list in `index.html`. Fonts (Inter, Nunito, IBM Plex Sans/Serif) are self-hosted via Fontsource, so no third-party requests are made.

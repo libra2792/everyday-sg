@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigationType } from 'react-router-dom'
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { useAppState } from '@/state/AppState';
 import { ThemeMenu, ThemeOptions } from '@/components/ThemePicker';
+import { useDocumentHead } from '@/lib/useDocumentHead';
 
 const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: 'Home', icon: 'home', end: true },
@@ -265,6 +266,7 @@ function PageFrame({ children }: { children: ReactNode }) {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  useDocumentHead();
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-canvas">
