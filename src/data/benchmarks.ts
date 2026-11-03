@@ -27,6 +27,14 @@ export const BENCHMARKS = {
     sourceId: 'mom-labour-force-2025',
     checkedOn: D,
   },
+  /** The same MOM figure for fields that ask for gross income: the button inserts the gross amount. */
+  medianFullTimeIncomeGross: {
+    text: 'Median full-time income was S$5,775/month in 2025, gross and including employer CPF (MOM); that is roughly S$3,950 take-home after CPF for someone under 55.',
+    value: 5775,
+    kind: 'statistic',
+    sourceId: 'mom-labour-force-2025',
+    checkedOn: D,
+  },
   medianHouseholdIncome: {
     text: 'Median household market income was S$12,446/month in 2025, all members and sources, before transfers and taxes (SingStat).',
     value: 12446,

@@ -318,6 +318,13 @@ describe('calculators recompute from inputs', () => {
     expect(screen.getAllByText(/planning guide/i).length).toBeGreaterThan(0);
   });
 
+  it('benchmarks: gross income fields offer the gross figure, not take-home', async () => {
+    renderAt('/calculators/housing');
+    // "Your" and "Partner's" gross monthly income
+    expect((await screen.findAllByRole('button', { name: /^Use S\$5,775$/ })).length).toBe(2);
+    expect(screen.queryByRole('button', { name: /^Use S\$3,950$/ })).toBeNull();
+  });
+
   it('reset clears saved inputs', async () => {
     renderAt('/calculators/insurance');
     await setNumber(/^Annual household living expenses$/i, 50000);

@@ -172,7 +172,7 @@ export default function HousingCalculator() {
       }
     >
       <InputGroup title="You" description="Your income and what you can commit upfront. Keep an emergency fund out of the cash figure.">
-        <SliderField label={withPartner ? 'Your gross monthly income' : 'Gross monthly household income'} benchmark={withPartner ? BENCHMARKS.medianFullTimeIncome : BENCHMARKS.medianHouseholdIncome} prefix="S$" min={0} max={30000} step={100} value={state.grossMonthlyIncome} onChange={set('grossMonthlyIncome')} help="Before CPF and tax; lenders and HDB assess gross income." />
+        <SliderField label={withPartner ? 'Your gross monthly income' : 'Gross monthly household income'} benchmark={withPartner ? BENCHMARKS.medianFullTimeIncomeGross : BENCHMARKS.medianHouseholdIncome} prefix="S$" min={0} max={30000} step={100} value={state.grossMonthlyIncome} onChange={set('grossMonthlyIncome')} help="Before CPF and tax; lenders and HDB assess gross income." />
         <SliderField label="Your cash for the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.availableCash} onChange={set('availableCash')} />
         <SliderField label="Your CPF savings allocated to the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.availableCpf} onChange={set('availableCpf')} help="Ordinary Account savings you intend to use; CPF Board sets the rules on what can be used." />
         <SliderField label="Your monthly CPF OA contribution for repayments" benchmark={BENCHMARKS.cpfOaForLoan} benchmarkValue={state.grossMonthlyIncome > 0 ? Math.round((state.grossMonthlyIncome * 0.23) / 10) * 10 : undefined} prefix="S$" min={0} max={5000} step={50} value={state.monthlyCpfOaContribution} onChange={set('monthlyCpfOaContribution')} help="If you plan to service the loan from CPF OA, this reduces monthly cash needed." />
@@ -191,7 +191,7 @@ export default function HousingCalculator() {
         />
         {withPartner && (
           <>
-            <SliderField label="Partner's gross monthly income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={30000} step={100} value={state.partnerGrossMonthlyIncome ?? 0} onChange={set('partnerGrossMonthlyIncome')} />
+            <SliderField label="Partner's gross monthly income" benchmark={BENCHMARKS.medianFullTimeIncomeGross} prefix="S$" min={0} max={30000} step={100} value={state.partnerGrossMonthlyIncome ?? 0} onChange={set('partnerGrossMonthlyIncome')} />
             <SliderField label="Partner's cash for the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.partnerAvailableCash ?? 0} onChange={set('partnerAvailableCash')} />
             <SliderField label="Partner's CPF savings allocated to the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.partnerAvailableCpf ?? 0} onChange={set('partnerAvailableCpf')} />
             <SliderField label="Partner's monthly CPF OA contribution for repayments" benchmark={BENCHMARKS.cpfOaForLoan} benchmarkValue={(state.partnerGrossMonthlyIncome ?? 0) > 0 ? Math.round(((state.partnerGrossMonthlyIncome ?? 0) * 0.23) / 10) * 10 : undefined} prefix="S$" min={0} max={5000} step={50} value={state.partnerMonthlyCpfOaContribution ?? 0} onChange={set('partnerMonthlyCpfOaContribution')} />
