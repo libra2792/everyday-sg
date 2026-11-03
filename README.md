@@ -13,7 +13,7 @@ It is **not a government website**, is not affiliated with any agency, and canno
 | **Calculators** | Household budget · Emergency fund and debt repayment · Housing affordability and mortgage · Baby and childcare budget · Retirement projection · Insurance needs organiser · Caregiving and eldercare cost planner · Car ownership total cost. Inputs show an indicative figure (an official median/average with its source and check date, or a labelled planning guide) with a one-tap **Use** button |
 | **Tools** | Annual tax preparation checklist (organiser + IRAS links; deliberately no tax-rate engine) · Annual life-admin checklist (8 sections) |
 | **My Plan** | Optional profile (7 broad questions), ranked next steps, dated tasks, checklist progress, JSON export/import, printable summary, one-click reset |
-| **Saved Items** | Bookmarked guides/calculators/tools and saved results snapshots |
+| **Saved Items** | Bookmarked guides/calculators/tools and calculator snapshots, which reopen the exact scenario they were saved from |
 | **About** | Privacy statement, verification policy, full list of official sources with how/when each was checked |
 | **Who made this** (`/creator`) | A first-person page about the creator, with six photos, linked from the footer, the About page and the home page |
 | **Appearance** | Four themes — Sage (default, cool mint greens), Playful (cream, coral hero, pastel tiles), Dark, Professional — switchable from the header, the footer or My Plan; saved locally, with Dark following the OS setting until a choice is made |

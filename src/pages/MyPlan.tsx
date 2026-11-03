@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAppState, PRIORITY_OPTIONS } from '@/state/AppState';
+import { savedItemHref, useAppState, PRIORITY_OPTIONS } from '@/state/AppState';
 import { GUIDES } from '@/data/guides';
 import { recommend } from '@/lib/recommend';
 import { daysUntil, describeDue, isValidISODate } from '@/lib/dates';
@@ -277,12 +277,12 @@ export function MyPlan() {
         <div className="min-w-0 space-y-6">
           <Panel title="Saved items" icon="bookmark" id="saved-summary" actions={<Link to="/saved" className="text-[13px] text-sage-800 hover:underline">Open</Link>}>
             {saved.length === 0 ? (
-              <p className="text-[13.5px] text-ink-faint">Save guides, calculators and results snapshots to find them again quickly.</p>
+              <p className="text-[13.5px] text-ink-faint">Bookmark guides, calculators and tools, or save calculator snapshots, to find them again quickly.</p>
             ) : (
               <ul className="space-y-2 text-[14px]">
                 {saved.slice(0, 6).map((s) => (
                   <li key={s.id} className="truncate">
-                    <Link to={s.path} className="text-ink hover:text-sage-900">
+                    <Link to={savedItemHref(s)} className="text-ink hover:text-sage-900">
                       {s.title}
                     </Link>
                   </li>

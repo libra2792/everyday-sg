@@ -10,6 +10,7 @@ import { SOURCES } from './data/sources';
 import { CATEGORIES } from './data/categories';
 import { CREATOR } from './data/creator';
 import { BENCHMARKS, type Benchmark } from './data/benchmarks';
+import { snapshotHref } from './lib/usePrefill';
 
 function renderAt(path: string) {
   return render(
@@ -323,6 +324,14 @@ describe('calculators recompute from inputs', () => {
     // "Your" and "Partner's" gross monthly income
     expect((await screen.findAllByRole('button', { name: /^Use S\$5,775$/ })).length).toBe(2);
     expect(screen.queryByRole('button', { name: /^Use S\$3,950$/ })).toBeNull();
+  });
+
+  it('a snapshot link reopens the calculator with its saved inputs', async () => {
+    renderAt(snapshotHref('/calculators/insurance', { yearsOfIncomeReplacement: 10, annualHouseholdExpenses: 60000, outstandingDebts: 0, futureCommitments: 0, existingLifeCoverage: 0, liquidAssetsToCount: 0, dependants: 2 }, 'Insurance — 3 Nov'));
+    expect(await screen.findByText(/loaded from your snapshot “insurance — 3 nov”/i)).toBeTruthy();
+    await waitFor(() => expect((screen.getByLabelText(/^Annual household living expenses$/i) as HTMLInputElement).value).toBe('60000'));
+    fireEvent.click(screen.getByRole('button', { name: /reset inputs/i }));
+    await waitFor(() => expect(screen.queryByText(/loaded from your snapshot/i)).toBeNull());
   });
 
   it('reset clears saved inputs', async () => {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAppState, type SavedItemType } from '@/state/AppState';
+import { savedItemHref, useAppState, type SavedItemType } from '@/state/AppState';
 import { formatDate } from '@/lib/format';
 import { Button, LinkButton } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
@@ -10,7 +10,7 @@ const TYPE_META: Record<SavedItemType, { label: string; icon: IconName }> = {
   guide: { label: 'Guide', icon: 'book-open' },
   calculator: { label: 'Calculator', icon: 'calculator' },
   tool: { label: 'Tool', icon: 'list-checks' },
-  snapshot: { label: 'Results snapshot', icon: 'save' },
+  snapshot: { label: 'Snapshot', icon: 'save' },
 };
 
 export function Saved() {
@@ -25,9 +25,9 @@ export function Saved() {
 
   return (
     <div>
-      <PageHeader title="Saved Items" description="Guides, calculators, tools and results snapshots you bookmarked. Stored in this browser only." actions={saved.length > 0 ? <Button size="sm" variant="ghost" icon="printer" onClick={() => window.print()}>Print</Button> : null} />
+      <PageHeader title="Saved Items" description="Your bookmarked guides, calculators and tools, and the calculator snapshots you saved. Stored in this browser only." actions={saved.length > 0 ? <Button size="sm" variant="ghost" icon="printer" onClick={() => window.print()}>Print</Button> : null} />
       {saved.length === 0 ? (
-        <EmptyState icon="bookmark" title="Nothing saved yet" description="Use the Save button on any guide or calculator, or “Save results” on a calculator to keep a snapshot of the figures." action={<div className="flex gap-2"><LinkButton to="/guides">Browse guides</LinkButton><LinkButton to="/calculators">Open calculators</LinkButton></div>} />
+        <EmptyState icon="bookmark" title="Nothing saved yet" description="Use Bookmark on any guide or calculator, or Save snapshot on a calculator to keep its figures and reopen them later." action={<div className="flex gap-2"><LinkButton to="/guides">Browse guides</LinkButton><LinkButton to="/calculators">Open calculators</LinkButton></div>} />
       ) : (
         <>
           <div className="no-print mb-5 flex flex-wrap gap-1.5" role="group" aria-label="Filter saved items">
@@ -46,7 +46,7 @@ export function Saved() {
                       <Icon name={TYPE_META[s.type].icon} size={13} />
                       {TYPE_META[s.type].label}
                     </div>
-                    <Link to={s.path} className="block text-[15.5px] font-semibold text-ink hover:text-sage-900">
+                    <Link to={savedItemHref(s)} className="block text-[15.5px] font-semibold text-ink hover:text-sage-900">
                       {s.title}
                     </Link>
                     {s.subtitle && <p className="mt-1 text-[13px] leading-5 text-ink-muted">{s.subtitle}</p>}
@@ -65,7 +65,17 @@ export function Saved() {
                     ))}
                   </dl>
                 )}
-                <div className="mt-3 text-[12px] text-ink-faint">Saved {formatDate(s.savedAt)}</div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[12px] text-ink-faint">Saved {formatDate(s.savedAt)}</span>
+                  {s.type === 'snapshot' &&
+                    (s.inputs ? (
+                      <LinkButton to={savedItemHref(s)} size="sm" icon="rotate-ccw" className="no-print">
+                        Reopen this scenario
+                      </LinkButton>
+                    ) : (
+                      <span className="text-[12px] text-ink-faint">Saved before snapshots kept their inputs</span>
+                    ))}
+                </div>
               </li>
             ))}
           </ul>

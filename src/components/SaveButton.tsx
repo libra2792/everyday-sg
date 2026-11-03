@@ -11,7 +11,7 @@ interface SaveButtonProps {
   className?: string;
 }
 
-/** Toggle an item in Saved Items. */
+/** Bookmark a guide, calculator or tool into Saved Items (or remove the bookmark). */
 export function SaveButton({ type, refId, title, subtitle, path, size = 'md', className }: SaveButtonProps) {
   const { isSaved, toggleSaved } = useAppState();
   const saved = isSaved(type, refId);
@@ -24,7 +24,7 @@ export function SaveButton({ type, refId, title, subtitle, path, size = 'md', cl
       className={className}
       onClick={() => toggleSaved({ type, refId, title, subtitle, path })}
     >
-      {saved ? 'Saved' : 'Save'}
+      {saved ? 'Bookmarked' : 'Bookmark'}
     </Button>
   );
 }

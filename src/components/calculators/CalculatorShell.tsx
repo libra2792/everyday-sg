@@ -2,6 +2,8 @@ import { useRef, useState, type ReactNode } from 'react';
 import { CALCULATOR_MAP } from '@/data/calculators';
 import { GUIDE_MAP } from '@/data/guides';
 import { useAppState } from '@/state/AppState';
+import { formatDayMonth } from '@/lib/format';
+import type { PrefillSource } from '@/lib/usePrefill';
 import { Button } from '@/components/ui/Button';
 import { Disclosure, Note, PageHeader, SectionHeading } from '@/components/ui/Misc';
 import { GuideCard } from '@/components/GuideCard';
@@ -23,9 +25,12 @@ interface CalculatorShellProps {
   relatedGuides?: string[];
   intro?: ReactNode;
   caveat?: ReactNode;
-  /** True when inputs were filled from a guide's quick check; shows a note under the header. */
-  prefilled?: boolean;
-  /** The calculator's current inputs, so the shell can tell when prefilled values were changed. */
+  /** Set when inputs were filled from a guide's quick check or a saved snapshot; shows a note under the header. */
+  prefilled?: PrefillSource | null;
+  /**
+   * The calculator's current inputs: stored with a snapshot so it can be reopened, and used
+   * to tell when prefilled values have been changed.
+   */
   inputs?: unknown;
   /**
    * Set when a required input is missing or out of range (e.g. a tenure of 0). The results
@@ -45,18 +50,28 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
   const [savedFlash, setSavedFlash] = useState(false);
   const [resetFlash, setResetFlash] = useState(false);
   // The banner belongs to the prefilled values: Reset clears it, and once anything is changed
-  // it no longer claims the inputs came from the guide. Reloading never brings it back, because
-  // the query string that prefilled the page has already been removed.
+  // it no longer claims the inputs came from the guide or snapshot. Reloading never brings it
+  // back, because the query string that prefilled the page has already been removed.
   const [prefillCleared, setPrefillCleared] = useState(false);
   const prefillBaseline = useRef<string | null>(null);
   if (prefilled && prefillBaseline.current === null) prefillBaseline.current = JSON.stringify(inputs);
   const showPrefill = Boolean(prefilled) && !prefillCleared;
   const prefillEdited = showPrefill && JSON.stringify(inputs) !== prefillBaseline.current;
+  const prefillTitle = !prefilled
+    ? ''
+    : prefilled.from === 'snapshot'
+      ? `${prefillEdited ? 'Started from' : 'Loaded from'} your snapshot “${prefilled.title}”`
+      : prefillEdited
+        ? 'Started from your answers in the guide'
+        : 'Filled in from your answers in the guide';
+  const [announcement, setAnnouncement] = useState('');
   const strip = (headline ?? snapshot ?? []).slice(0, 2).map((s) => (blocked ? { ...s, value: '—' } : s));
 
   const saveSnapshot = () => {
     if (!snapshot || snapshot.length === 0 || blocked) return;
-    addSnapshot({ refId: id, title: `${meta.shortName} — ${new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'short' })}`, subtitle: meta.name, path: meta.path, snapshot });
+    // The full input set is kept so the snapshot can reopen exactly this scenario.
+    addSnapshot({ refId: id, title: `${meta.shortName} — ${formatDayMonth(new Date())}`, subtitle: meta.name, path: meta.path, snapshot, inputs });
+    setAnnouncement('Snapshot saved to Saved Items');
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 2000);
   };
@@ -80,7 +95,7 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
             <SaveButton type={meta.kind} refId={id} title={meta.name} subtitle={meta.description} path={meta.path} size="sm" />
             {snapshot && (
               <Button size="sm" variant="ghost" icon="save" onClick={saveSnapshot} disabled={Boolean(blocked)} title={blocked ?? undefined}>
-                {savedFlash ? 'Saved to My Plan' : 'Save results'}
+                {savedFlash ? 'Snapshot saved to Saved Items' : 'Save snapshot'}
               </Button>
             )}
             <Button size="sm" variant="ghost" icon="printer" onClick={() => window.print()}>
@@ -92,8 +107,11 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
           </>
         }
       />
+      <span role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </span>
       {showPrefill && (
-        <Note className="mb-6" icon="sliders-horizontal" title={prefillEdited ? 'Started from your answers in the guide' : 'Filled in from your answers in the guide'}>
+        <Note className="mb-6" icon="sliders-horizontal" title={prefillTitle}>
           Adjust anything below; the results update as you type. Reset inputs clears the lot.
         </Note>
       )}

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePersistentState } from '@/lib/usePersistentState';
+import { snapshotHref } from '@/lib/usePrefill';
 import { uid } from '@/lib/storage';
 import { applyTheme, currentTheme, readStoredTheme, saveTheme, systemDefaultTheme, type ThemeId } from '@/lib/theme';
 
@@ -75,7 +76,14 @@ export interface SavedItem {
   savedAt: string;
   /** For snapshots: key results captured at save time */
   snapshot?: { label: string; value: string }[];
+  /** For snapshots: the calculator's full input set, so the scenario can be reopened. */
+  inputs?: unknown;
   note?: string;
+}
+
+/** Where a saved item opens: snapshots reopen their calculator with the saved inputs. */
+export function savedItemHref(item: SavedItem): string {
+  return item.type === 'snapshot' && item.inputs ? snapshotHref(item.path, item.inputs, item.title) : item.path;
 }
 
 export interface PlanTask {
