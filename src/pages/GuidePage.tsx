@@ -100,17 +100,16 @@ export function GuidePage() {
     setAnnouncement(addedLabel(due));
   };
 
+  // At most six tabs. Steps covers what follows it (support for parents, prepare and watch
+  // out); Next steps covers calculators, further reading and official links. Every section
+  // keeps its own id, so older #prepare, #tools, #reading and #official links still land.
   const nav: { id: string; label: string }[] = [
     { id: 'glance', label: 'At a glance' },
     ...(extras ? [{ id: 'situation', label: 'Your situation' }] : []),
     { id: 'checklist', label: 'Checklist' },
     ...(figure ? [{ id: 'how', label: 'How it works' }] : []),
-    { id: 'steps', label: 'Steps' },
-    ...(showParentSupport ? [{ id: 'support', label: 'Support for parents' }] : []),
-    { id: 'prepare', label: 'Prepare' },
-    { id: 'tools', label: 'Run the numbers' },
-    { id: 'reading', label: 'Keep reading' },
-    { id: 'official', label: 'Official links' },
+    { id: 'steps', label: showParentSupport ? 'Steps and support' : 'Steps' },
+    { id: 'next', label: 'Next steps' },
   ];
 
   return (
@@ -188,8 +187,9 @@ export function GuidePage() {
         </div>
       </header>
 
-      <nav aria-label="On this page" className="no-print -mx-4 mt-4 mb-2 overflow-x-auto border-b border-stone-200 px-4 sm:mx-0 sm:px-0">
-        <ol className="flex gap-1 whitespace-nowrap">
+      {/* Below md the bar can scroll: a fade on the right edge says there is more. */}
+      <nav aria-label="On this page" className="no-print -mx-4 mt-4 mb-2 overflow-x-auto border-b border-stone-200 px-4 max-md:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] sm:mx-0 sm:px-0">
+        <ol className="flex gap-1 whitespace-nowrap max-md:pr-8">
           {nav.map((n) => (
             <li key={n.id}>
               <a href={`#${n.id}`} className="block border-b-2 border-transparent px-2.5 py-2 text-[13px] text-ink-muted hover:border-stone-400 hover:text-ink">
@@ -324,53 +324,55 @@ export function GuidePage() {
           </Card>
         </section>
 
-        {/* Run the numbers */}
-        {guide.relatedCalculators.length > 0 && (
-          <section id="tools" aria-labelledby="tools-h" className="scroll-mt-24">
-            <SectionHead id="tools" icon="calculator" title="Run the numbers" lede="Calculators: your figures in, results out" dark />
-            <div className="grid gap-2.5 md:grid-cols-2">
-              {guide.relatedCalculators.map((id) => (
-                <ToolTile key={id} id={id} from={from} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Keep reading */}
-        {guide.relatedGuides.length > 0 && (
-          <section id="reading" aria-labelledby="reading-h" className="scroll-mt-24">
-            <SectionHead id="reading" icon="book-open" title="Keep reading" lede="Guides: explanations and checklists" />
-            <div className="grid gap-2.5 md:grid-cols-2">
-              {guide.relatedGuides.map((id) => (
-                <GuideLinkCard key={id} id={id} from={from} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Official links */}
-        <section id="official" aria-labelledby="official-h" className="scroll-mt-24">
-          <SectionHead id="official" icon="landmark" title="Official next steps" />
-          {sources.length > 0 ? (
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {sources.map((s) => (
-                <li key={s.id} className="min-w-0">
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex h-full min-w-0 items-center gap-3 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 hover:border-sage-400">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-stone-100 text-ink-muted" aria-hidden>
-                      <Icon name="external-link" size={15} />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block break-words text-[14px] font-medium leading-snug text-ink group-hover:text-sage-900">{s.title}</span>
-                      <span className="block text-[12px] text-ink-faint">{s.agency}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[14px] text-ink-muted">General practice; no agency process involved.</p>
+        <div id="next" className="scroll-mt-24 space-y-7">
+          {/* Run the numbers */}
+          {guide.relatedCalculators.length > 0 && (
+            <section id="tools" aria-labelledby="tools-h" className="scroll-mt-24">
+              <SectionHead id="tools" icon="calculator" title="Run the numbers" lede="Calculators: your figures in, results out" dark />
+              <div className="grid gap-2.5 md:grid-cols-2">
+                {guide.relatedCalculators.map((id) => (
+                  <ToolTile key={id} id={id} from={from} />
+                ))}
+              </div>
+            </section>
           )}
-        </section>
+
+          {/* Keep reading */}
+          {guide.relatedGuides.length > 0 && (
+            <section id="reading" aria-labelledby="reading-h" className="scroll-mt-24">
+              <SectionHead id="reading" icon="book-open" title="Keep reading" lede="Guides: explanations and checklists" />
+              <div className="grid gap-2.5 md:grid-cols-2">
+                {guide.relatedGuides.map((id) => (
+                  <GuideLinkCard key={id} id={id} from={from} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Official links */}
+          <section id="official" aria-labelledby="official-h" className="scroll-mt-24">
+            <SectionHead id="official" icon="landmark" title="Official next steps" />
+            {sources.length > 0 ? (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {sources.map((s) => (
+                  <li key={s.id} className="min-w-0">
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex h-full min-w-0 items-center gap-3 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 hover:border-sage-400">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-stone-100 text-ink-muted" aria-hidden>
+                        <Icon name="external-link" size={15} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block break-words text-[14px] font-medium leading-snug text-ink group-hover:text-sage-900">{s.title}</span>
+                        <span className="block text-[12px] text-ink-faint">{s.agency}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[14px] text-ink-muted">General practice; no agency process involved.</p>
+            )}
+          </section>
+        </div>
 
         <SourceNote sources={sources} reviewedOn={guide.reviewedOn} infoType={guide.infoType} />
       </div>
