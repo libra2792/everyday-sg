@@ -60,6 +60,13 @@ export default function BudgetCalculator() {
       if (raw === null || !Number.isFinite(Number(raw))) continue;
       cats = cats.map((c) => (c.id === catId ? { ...c, amount: Number(raw) } : c));
     }
+    // A guide that asks for essentials as one total: keep it as one line to split later.
+    const lump = Number(params.get('essentials'));
+    if (params.has('essentials') && Number.isFinite(lump)) {
+      cats = cats.some((c) => c.id === 'essentials')
+        ? cats.map((c) => (c.id === 'essentials' ? { ...c, amount: lump } : c))
+        : [{ id: 'essentials', name: 'Essentials (total from the guide)', amount: lump, kind: 'essential' }, ...cats];
+    }
     return { ...s, categories: cats };
   });
   const result = useMemo(() => budgetSummary(state), [state]);

@@ -52,7 +52,8 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
           verdict: income === 0 ? 'Waiting for your numbers' : left < 0 ? `Over by ${sgd(-left)} a month` : `Saving ${pct(save + Math.max(0, left))}% of take-home`,
           stats: income > 0 ? [{ label: 'Essentials', value: `${pct(ess)}%` }, { label: 'Lifestyle', value: `${pct(life)}%` }] : undefined,
           why,
-          next: [tool('budget', 'Opens with your income and savings target; add categories there.', { income, savings: save }), guide('emergency-fund', 'The first thing the savings line should fund.')],
+          // The three totals go in too, so the calculator opens with the same split as above.
+          next: [tool('budget', spent > 0 ? 'Opens with your income, spending and savings; split the essentials into categories there.' : 'Opens with your income and savings target; add categories there.', { income, savings: save, ...(spent > 0 ? { essentials: ess, personal: life, saving: save } : {}) }), guide('emergency-fund', 'The first thing the savings line should fund.')],
           fine: FINE_PLAN,
           figure:
             income > 0
@@ -122,7 +123,7 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
           stats: ess > 0 ? [{ label: 'Target fund', value: sgd(target) }, { label: 'Covered so far', value: `${cover.toFixed(1)} mo` }] : undefined,
           why,
           next: [
-            tool('emergency-debt', ess > 0 ? `Opens with ${sgd(ess)}, ${months} months and your savings filled in.` : 'Plan the target and timeline in full.', { ess: ess || 3500, months, savings: have, monthly: monthly || 600 }),
+            tool('emergency-debt', ess > 0 ? `Opens with ${sgd(ess)}, ${months} months and your savings filled in.` : 'Plan the target and timeline in full.', { months, savings: have, ...(ess > 0 ? { ess } : {}), ...(monthly > 0 ? { monthly } : {}) }),
             guide('build-a-budget', 'Find the essentials figure if you are unsure.'),
           ],
           fine: FINE_PLAN,

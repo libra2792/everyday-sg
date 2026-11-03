@@ -40,7 +40,10 @@ export default function EmergencyDebtCalculator() {
     if (!Number.isFinite(bal) || bal <= 0) return s;
     const apr = Number(params.get('debt_rate'));
     const min = Number(params.get('debt_min'));
-    return { ...s, debts: [...s.debts, { id: uid(), name: params.get('debt_name') || 'Card or loan', balance: bal, aprPct: Number.isFinite(apr) ? apr : 26, minPayment: Number.isFinite(min) && min > 0 ? min : Math.max(50, Math.round(bal * 0.03)) }] };
+    const debt = { id: uid(), name: params.get('debt_name') || 'Card or loan', balance: bal, aprPct: Number.isFinite(apr) ? apr : 26, minPayment: Number.isFinite(min) && min > 0 ? min : Math.max(50, Math.round(bal * 0.03)) };
+    // Opening the same guide link twice should not add the same debt twice.
+    if (s.debts.some((d) => d.balance === debt.balance && d.aprPct === debt.aprPct && d.minPayment === debt.minPayment)) return s;
+    return { ...s, debts: [...s.debts, debt] };
   });
   const fund = useMemo(() => emergencyFund(state.currentSavings, state.essentialMonthly, state.coverageMonths, state.monthlyContribution), [state]);
   const payoff = useMemo(() => debtPayoff(state.debts, state.extraMonthly, state.strategy), [state.debts, state.extraMonthly, state.strategy]);

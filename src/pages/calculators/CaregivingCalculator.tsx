@@ -46,7 +46,19 @@ const RESOURCES: ChecklistItem[] = [
 
 export default function CaregivingCalculator() {
   const [state, setState, reset] = usePersistentState<CaregivingInputs>('calc:caregiving', DEFAULTS);
-  const prefilled = usePrefill(setState, { homecare: 'homeCare', helper: 'helper', transport: 'transport', medical: 'medical', other: 'other', budget: 'monthlyBudget', support: 'monthlySupport', years: 'durationYears', inflation: 'inflationPct' });
+  const prefilled = usePrefill(setState, { homecare: 'homeCare', helper: 'helper', transport: 'transport', medical: 'medical', other: 'other', budget: 'monthlyBudget', support: 'monthlySupport', years: 'durationYears', inflation: 'inflationPct' }, (params, s) => {
+    // people=N: the guide splits the cost equally between N family members.
+    const people = Math.round(Number(params.get('people')));
+    if (!params.has('people') || !Number.isFinite(people) || people < 1 || people > 10) return s;
+    // One decimal place keeps the shares within a dollar of the guide's equal split.
+    const share = Math.floor(1000 / people) / 10;
+    const contributors = Array.from({ length: people }, (_, n) => ({
+      id: n === 0 ? 'me' : n === 1 ? 'sibling' : `member-${n + 1}`,
+      name: n === 0 ? 'Me' : n === 1 ? 'Sibling' : `Family member ${n + 1}`,
+      sharePct: n === 0 ? Math.round((100 - share * (people - 1)) * 10) / 10 : share,
+    }));
+    return { ...s, contributors };
+  });
   const r = useMemo(() => caregivingPlan(state), [state]);
   const set = <K extends keyof CaregivingInputs>(key: K) => (v: CaregivingInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const updateContributor = (id: string, patch: Partial<Contributor>) => setState((s) => ({ ...s, contributors: s.contributors.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));

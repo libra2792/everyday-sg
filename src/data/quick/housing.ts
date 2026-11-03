@@ -90,6 +90,8 @@ export const HOUSING_EXTRAS: Record<string, GuideExtras> = {
         const price = Math.min(byLoan, byFunds);
         const limiter = byLoan <= byFunds ? 'repayments' : 'upfront';
         const repay = price > 0 ? pmt(price * 0.75, i, n) : 0;
+        // Rounded down, so the calculator never opens a few dollars over what the funds support.
+        const handoffPrice = price >= 5000 ? Math.floor(price / 5000) * 5000 : Math.round(price);
         const why: string[] = [];
         if (inc === 0) why.push('Enter your gross household income to see the band.');
         else if (price === 0) why.push('Add the cash and CPF you can commit: with none, no price works on paper.');
@@ -106,7 +108,24 @@ export const HOUSING_EXTRAS: Record<string, GuideExtras> = {
           stats: price > 0 ? [{ label: 'Comfortable price', value: sgd(price) }, { label: 'Repayment at that price', value: `${sgd(repay)}/mo` }] : undefined,
           why,
           next: [
-            tool('housing', price > 0 ? `Opens with ${sgd(price)}, ${rate.toFixed(1)}% and 25 years filled in.` : 'Model any price, rate and tenure.', { price: price > 0 ? Math.round(price / 5000) * 5000 : 620000, rate, tenure: 25, down: 25, income: inc, cash, cpf, limit: share }),
+            // Carries every assumption above into the calculator: household income entered as one
+            // buyer, 25% down with the CPF committed paid towards it first, and no renovation,
+            // stamp duty or running costs, so it opens agreeing with this pointer.
+            tool('housing', price > 0 ? `Opens with ${sgd(handoffPrice)}, ${rate.toFixed(1)}% and 25 years filled in.` : 'Model any price, rate and tenure.', {
+              price: price > 0 ? handoffPrice : 620000,
+              rate,
+              tenure: 25,
+              down: 25,
+              income: inc,
+              household: 1,
+              cash,
+              cpf,
+              cpfDown: Math.min(cpf, (price > 0 ? handoffPrice : 620000) * 0.25),
+              reno: 0,
+              upfront: 0,
+              recurring: 0,
+              limit: share,
+            }),
             guide('hdb-bto-vs-resale', 'Which route fits your timeline.'),
           ],
           fine: 'Planning maths only: 25-year tenure, 25% down, no stamp duty, grants or debt-servicing rules. Your lender and the HFE letter decide.',

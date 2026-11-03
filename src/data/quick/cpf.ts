@@ -97,7 +97,7 @@ export const CPF_EXTRAS: Record<string, GuideExtras> = {
           why,
           next: [
             official('cpf-payout-estimator', 'Get your CPF LIFE estimate.'),
-            tool('retirement', spend > 0 ? 'Opens with your age, spending and other income filled in.' : 'Project your savings through retirement.', spend > 0 ? { age, spend, other: income } : undefined),
+            tool('retirement', spend > 0 ? 'Opens with your age, spending and other income filled in.' : 'Project your savings through retirement.', spend > 0 ? { age, retire: Math.max(65, age), spend, other: income } : undefined),
             guide('start-investing', 'Closing the gap with savings outside CPF.'),
           ],
           fine: 'Today’s dollars throughout. CPF LIFE payouts depend on the plan, the sum set aside and the start age; CPF Board’s estimator is the authority.',
@@ -199,7 +199,7 @@ export const CPF_EXTRAS: Record<string, GuideExtras> = {
           verdict: !ready ? 'Not yet: foundations first' : a.horizon === 'short' ? 'Save, don’t invest, for this goal' : 'Ready: start small and automate',
           why,
           next: [
-            ready ? tool('retirement', monthly > 0 ? 'Opens with your monthly amount in the projection.' : 'See what regular investing adds over time.', monthly > 0 ? { monthly } : undefined) : guide('emergency-fund', 'The buffer that lets you stay invested.'),
+            ready ? tool('retirement', monthly > 0 ? 'Opens with your monthly amount in the projection.' : 'See what regular investing adds over time.', monthly > 0 ? { monthly, return: 5 } : undefined) : guide('emergency-fund', 'The buffer that lets you stay invested.'),
             ready ? guide('retirement-income-cpf-life', 'What CPF already provides, so you invest for the gap.') : guide('pay-down-debt', 'Clear the expensive debt first.'),
             official('moneysense', 'Government guides to investing basics and scams to avoid.'),
           ],
