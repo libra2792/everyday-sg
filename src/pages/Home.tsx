@@ -49,7 +49,8 @@ function NextSteps() {
           {profile ? 'Edit profile' : profileDismissed ? 'Set up profile' : 'Personalise'}
         </LinkButton>
       </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      {/* An odd last card spans the row rather than sitting alone. */}
+      <div className="mt-4 grid gap-3 md:grid-cols-2 md:[&>*:last-child:nth-child(odd)]:col-span-2">
         {recs.map((r) => (
           <Link key={`${r.type}-${r.id}`} to={r.path} className="group flex items-start gap-3 rounded-md border border-stone-200 bg-stone-50 p-4 transition-colors hover:border-sage-400">
             <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sage-100 text-sage-800">
@@ -159,7 +160,7 @@ export function Home() {
 
       <section aria-labelledby="stage-title">
         <SectionHeading title="Where are you in life?" description="Pick a stage to see the guides that usually matter most." />
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ul className="grid gap-3 sm:grid-cols-2 sm:max-lg:[&>*:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
           {LIFE_STAGES.map((s, i) => (
             <li key={s.id}>
               <Link to={`/guides?stage=${s.id}`} className={`block h-full rounded-lg border border-stone-200 p-4 transition-colors hover:border-sage-400 ${TILE_CLASSES[i % 3]}`}>
