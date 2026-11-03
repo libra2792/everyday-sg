@@ -6,13 +6,16 @@ import { UndoNotice } from '@/components/ui/Misc';
 import { ThemeMenu, ThemeOptions } from '@/components/ThemePicker';
 import { useDocumentHead } from '@/lib/useDocumentHead';
 
-/** `mobile: false` keeps an item out of the phone tab bar (it stays in the header and footer). */
-const NAV: { to: string; label: string; icon: IconName; end?: boolean; mobile?: false }[] = [
+/**
+ * `mobile: false` keeps an item out of the phone tab bar (it stays in the header and footer).
+ * `short` is the label where space is tight: the phone tab bar, and the header below `lg`.
+ */
+const NAV: { to: string; label: string; short?: string; icon: IconName; end?: boolean; mobile?: false }[] = [
   { to: '/', label: 'Home', icon: 'home', end: true },
-  { to: '/guides', label: 'Life Guides', icon: 'book-open' },
+  { to: '/guides', label: 'Life Guides', short: 'Guides', icon: 'book-open' },
   { to: '/calculators', label: 'Calculators', icon: 'calculator' },
   { to: '/plan', label: 'My Plan', icon: 'list-checks' },
-  { to: '/saved', label: 'Saved Items', icon: 'bookmark' },
+  { to: '/saved', label: 'Saved Items', short: 'Saved', icon: 'bookmark' },
   { to: '/creator', label: 'Who made this', icon: 'user', mobile: false },
 ];
 
@@ -24,7 +27,8 @@ function Wordmark() {
       </span>
       <span className="leading-tight">
         <span className="block text-[15px] font-semibold tracking-tight">Everyday SG</span>
-        <span className="hidden text-[11.5px] text-ink-faint sm:block">Your guide to adulting in Singapore</span>
+        {/* Hidden while the header nav needs the room. */}
+        <span className="hidden text-[11.5px] text-ink-faint sm:block md:hidden xl:block">Your guide to adulting in Singapore</span>
       </span>
     </Link>
   );
@@ -38,17 +42,25 @@ function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Wordmark />
         <nav aria-label="Main" className="hidden md:block">
-          <ul className="flex items-center gap-1">
+          {/* Tighter, with short labels, from md to lg, so every item stays on one line. */}
+          <ul className="flex items-center gap-0.5 lg:gap-1">
             {NAV.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${isActive ? 'bg-nav-active font-medium text-ink' : 'text-ink-muted hover:bg-stone-100 hover:text-ink'}`
+                    `inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2 text-[13px] transition-colors lg:gap-2 lg:px-3 lg:text-sm ${isActive ? 'bg-nav-active font-medium text-ink' : 'text-ink-muted hover:bg-stone-100 hover:text-ink'}`
                   }
                 >
-                  {item.label}
+                  {item.short ? (
+                    <>
+                      <span className="lg:hidden">{item.short}</span>
+                      <span className="hidden lg:inline">{item.label}</span>
+                    </>
+                  ) : (
+                    item.label
+                  )}
                   {item.to === '/saved' && saved.length > 0 && <span className="rounded-full bg-sage-100 px-1.5 text-[11px] font-medium text-sage-800 tabular-nums">{saved.length}</span>}
                 </NavLink>
               </li>
@@ -79,7 +91,7 @@ function MobileNav() {
                   <span className={`flex h-7 w-10 items-center justify-center rounded-full ${isActive ? 'bg-nav-active' : ''}`}>
                     <Icon name={item.icon} size={18} />
                   </span>
-                  <span className="truncate">{item.label === 'Saved Items' ? 'Saved' : item.label === 'Life Guides' ? 'Guides' : item.label}</span>
+                  <span className="truncate">{item.short ?? item.label}</span>
                 </>
               )}
             </NavLink>
