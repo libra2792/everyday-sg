@@ -35,7 +35,7 @@ export const INSURANCE_EXTRAS: Record<string, GuideExtras> = {
           next: [
             tool('insurance', need > 0 ? 'Opens with your years, debts and existing cover; add living expenses and commitments.' : 'Work out the need in full.', need > 0 ? { years, debts, existing } : undefined),
             guide('health-insurance-sg', 'How hospital bills are actually paid.'),
-            official('moneysense', 'Independent explanations of each type of cover.'),
+            official('moneysense', 'Government explanations of each type of cover.'),
           ],
           fine: 'A rule-of-thumb estimate, not a recommendation of any product. A licensed adviser can assess the full picture.',
           figure:

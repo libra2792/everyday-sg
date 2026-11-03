@@ -121,7 +121,7 @@ export const CREATOR = {
     },
   ] satisfies CreatorSection[],
   promises: [
-    { icon: 'shield-check', title: 'Independent', text: 'No agency, bank or insurer is behind this site, and nobody pays to be featured.' },
+    { icon: 'shield-check', title: 'Upfront about who I am', text: 'I work in financial advisory with an insurer. This is my personal project, built in my own time: it does not sell or recommend any product or company, and nobody pays to be featured.' },
     { icon: 'lock-keyhole', title: 'Private', text: 'Nothing you type leaves your browser. No accounts, no tracking, no servers.' },
     { icon: 'badge-check', title: 'Honest about numbers', text: 'Figures are labelled as official statistics or planning guides, with the date they were checked, and links go to the agency itself.' },
     { icon: 'compass', title: 'Not advice', text: 'This is general information, not financial, legal or tax advice. Use it to prepare, then confirm with the agency or a licensed professional.' },

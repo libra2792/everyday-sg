@@ -10,6 +10,7 @@ import { Checklist } from '@/components/Checklist';
 import { categoryTile } from '@/components/GuideCard';
 import { Figure } from '@/components/figures/Figures';
 import { Illustration } from '@/components/Illustration';
+import { ParentSupport } from '@/components/ParentSupport';
 import { GuideLinkCard, ToolTile, TrailBar, type FromRef } from '@/components/LinkTiles';
 import { QuickCheck } from '@/components/QuickCheck';
 import { SaveButton } from '@/components/SaveButton';
@@ -84,6 +85,7 @@ export function GuidePage() {
   const tile = categoryTile(guide.categoryId);
   const from: FromRef = { title: guide.title, path: `/guides/${guide.id}`, kind: 'guide' };
   const figure = result?.figure ?? extras?.figure;
+  const showParentSupport = guide.categoryId === 'parenting';
 
   const addReminder = () => {
     addTask({ title: `Work through “${guide.title}”`, dueDate: isValidISODate(dueDate) ? dueDate : undefined, path: `/guides/${guide.id}`, source: 'guide' });
@@ -97,6 +99,7 @@ export function GuidePage() {
     { id: 'checklist', label: 'Checklist' },
     ...(figure ? [{ id: 'how', label: 'How it works' }] : []),
     { id: 'steps', label: 'Steps' },
+    ...(showParentSupport ? [{ id: 'support', label: 'Support for parents' }] : []),
     { id: 'prepare', label: 'Prepare' },
     { id: 'tools', label: 'Run the numbers' },
     { id: 'reading', label: 'Keep reading' },
@@ -248,6 +251,14 @@ export function GuidePage() {
             ))}
           </ol>
         </section>
+
+        {/* Leave, grants and subsidies for parents */}
+        {showParentSupport && (
+          <section id="support" aria-labelledby="support-h" className="scroll-mt-24">
+            <SectionHead id="support" icon="gift" title="Leave, grants and subsidies for parents" lede="All schemes in one place" />
+            <ParentSupport />
+          </section>
+        )}
 
         {/* Prepare + watch out */}
         <section id="prepare" aria-label="Prepare and watch out" className="scroll-mt-24 grid gap-3 md:grid-cols-2">

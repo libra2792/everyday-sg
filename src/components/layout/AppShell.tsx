@@ -10,6 +10,7 @@ const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/calculators', label: 'Calculators', icon: 'calculator' },
   { to: '/plan', label: 'My Plan', icon: 'list-checks' },
   { to: '/saved', label: 'Saved Items', icon: 'bookmark' },
+  { to: '/creator', label: 'About Me', icon: 'user' },
 ];
 
 function Wordmark() {
@@ -66,7 +67,7 @@ function Header() {
 function MobileNav() {
   return (
     <nav aria-label="Main (mobile)" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-canvas/95 backdrop-blur md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-6">
         {NAV.map((item) => (
           <li key={item.to}>
             <NavLink to={item.to} end={item.end} className={({ isActive }) => `flex flex-col items-center gap-1 px-1 py-2 text-[11px] ${isActive ? 'font-medium text-ink' : 'text-ink-faint'}`}>
@@ -75,7 +76,7 @@ function MobileNav() {
                   <span className={`flex h-7 w-10 items-center justify-center rounded-full ${isActive ? 'bg-nav-active' : ''}`}>
                     <Icon name={item.icon} size={18} />
                   </span>
-                  <span className="truncate">{item.label === 'Saved Items' ? 'Saved' : item.label === 'Life Guides' ? 'Guides' : item.label}</span>
+                  <span className="truncate">{item.label === 'Saved Items' ? 'Saved' : item.label === 'Life Guides' ? 'Guides' : item.label === 'About Me' ? 'About' : item.label}</span>
                 </>
               )}
             </NavLink>
@@ -93,7 +94,7 @@ function Footer() {
         <div className="max-w-md">
           <div className="text-sm font-semibold text-ink">Everyday SG</div>
           <p className="mt-2 leading-6">
-            An independent, practical life-admin toolkit for adults living in Singapore. Not a government website and not affiliated with any agency. Guides and
+            A personal, practical life-admin toolkit for adults living in Singapore. Not a government website and not affiliated with any agency. Guides and
             calculators are general information and estimates based on your own inputs — not financial, legal, tax or medical advice.
           </p>
         </div>

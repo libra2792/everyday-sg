@@ -201,7 +201,7 @@ export const CPF_EXTRAS: Record<string, GuideExtras> = {
           next: [
             ready ? tool('retirement', monthly > 0 ? 'Opens with your monthly amount in the projection.' : 'See what regular investing adds over time.', monthly > 0 ? { monthly } : undefined) : guide('emergency-fund', 'The buffer that lets you stay invested.'),
             ready ? guide('retirement-income-cpf-life', 'What CPF already provides, so you invest for the gap.') : guide('pay-down-debt', 'Clear the expensive debt first.'),
-            official('moneysense', 'Independent guides to investing basics and scams to avoid.'),
+            official('moneysense', 'Government guides to investing basics and scams to avoid.'),
           ],
           fine: 'General principles, not a recommendation of any product. Returns are illustrative; markets fall as well as rise.',
         };

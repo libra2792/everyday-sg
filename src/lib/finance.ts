@@ -327,6 +327,21 @@ export interface HousingInputs {
   monthlyRecurringCosts: number; // conservancy / maintenance, property tax, fire insurance etc.
   monthlyCpfOaContribution: number; // user may use OA to service the loan
   affordabilityLimitPct: number; // user-defined share of gross income for housing
+  // Buying with a partner: their figures add to yours, and the costs are split between you.
+  withPartner?: boolean;
+  partnerGrossMonthlyIncome?: number;
+  partnerAvailableCash?: number;
+  partnerAvailableCpf?: number;
+  partnerMonthlyCpfOaContribution?: number;
+  splitMode?: 'income' | 'equal' | 'custom';
+  partnerSharePct?: number; // partner's share of the costs, used when splitMode is 'custom'
+}
+
+export interface HousingShare {
+  upfrontCash: number;
+  upfrontCpf: number;
+  monthlyCommitment: number;
+  shareOfOwnIncome: number; // fraction; 0 when that person's income is 0
 }
 
 export interface HousingResult {
@@ -344,6 +359,22 @@ export interface HousingResult {
   commitmentShareOfIncome: number; // fraction
   limitAmount: number;
   withinLimit: boolean;
+  // Combined figures (equal to yours alone when not buying with a partner)
+  householdIncome: number;
+  totalCash: number;
+  totalCpf: number;
+  totalCpfOa: number;
+  partnerShare: number; // fraction of costs the partner carries; 0 without a partner
+  you: HousingShare;
+  partner: HousingShare | null;
+}
+
+function partnerShareOf(i: HousingInputs, yourIncome: number, partnerIncome: number): number {
+  if (!i.withPartner) return 0;
+  if (i.splitMode === 'equal') return 0.5;
+  if (i.splitMode === 'custom') return Math.min(100, nonNeg(i.partnerSharePct ?? 50)) / 100;
+  const total = yourIncome + partnerIncome;
+  return total > 0 ? partnerIncome / total : 0.5;
 }
 
 export function housingAffordability(i: HousingInputs): HousingResult {
@@ -357,14 +388,34 @@ export function housingAffordability(i: HousingInputs): HousingResult {
   const upfrontFromCpf = cpfForDp;
   const upfrontFromCash = downPayment - cpfForDp + nonNeg(i.renovationBudget) + nonNeg(i.otherUpfrontCosts);
   const upfrontTotal = upfrontFromCpf + upfrontFromCash;
-  const cashShortfall = Math.max(0, upfrontFromCash - nonNeg(i.availableCash));
-  const cpfShortfall = Math.max(0, upfrontFromCpf - nonNeg(i.availableCpf));
+  const p = Boolean(i.withPartner);
+  const yourIncome = nonNeg(i.grossMonthlyIncome);
+  const partnerIncome = p ? nonNeg(i.partnerGrossMonthlyIncome ?? 0) : 0;
+  const totalCash = nonNeg(i.availableCash) + (p ? nonNeg(i.partnerAvailableCash ?? 0) : 0);
+  const totalCpf = nonNeg(i.availableCpf) + (p ? nonNeg(i.partnerAvailableCpf ?? 0) : 0);
+  const totalCpfOa = nonNeg(i.monthlyCpfOaContribution) + (p ? nonNeg(i.partnerMonthlyCpfOaContribution ?? 0) : 0);
+  const cashShortfall = Math.max(0, upfrontFromCash - totalCash);
+  const cpfShortfall = Math.max(0, upfrontFromCpf - totalCpf);
   const monthlyCommitment = monthlyLoan + nonNeg(i.monthlyRecurringCosts);
-  const monthlyCashNeeded = Math.max(0, monthlyCommitment - Math.min(monthlyLoan, nonNeg(i.monthlyCpfOaContribution)));
-  const income = nonNeg(i.grossMonthlyIncome);
+  const monthlyCashNeeded = Math.max(0, monthlyCommitment - Math.min(monthlyLoan, totalCpfOa));
+  const income = yourIncome + partnerIncome;
   const commitmentShareOfIncome = income > 0 ? monthlyCommitment / income : 0;
   const limitAmount = (income * nonNeg(i.affordabilityLimitPct)) / 100;
+  const partnerShare = partnerShareOf(i, yourIncome, partnerIncome);
+  const shareFor = (fraction: number, ownIncome: number): HousingShare => ({
+    upfrontCash: upfrontFromCash * fraction,
+    upfrontCpf: upfrontFromCpf * fraction,
+    monthlyCommitment: monthlyCommitment * fraction,
+    shareOfOwnIncome: ownIncome > 0 ? (monthlyCommitment * fraction) / ownIncome : 0,
+  });
   return {
+    householdIncome: income,
+    totalCash,
+    totalCpf,
+    totalCpfOa,
+    partnerShare,
+    you: shareFor(1 - partnerShare, yourIncome),
+    partner: p ? shareFor(partnerShare, partnerIncome) : null,
     downPayment,
     loanAmount,
     monthlyLoan,

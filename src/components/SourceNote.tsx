@@ -51,7 +51,7 @@ export function SourceNote({ sourceIds = [], sources, reviewedOn, infoType = 'of
         </ul>
       )}
       <p className="mt-4 text-[12.5px] leading-5 text-ink-faint">
-        Everyday SG is independent and not affiliated with any government agency. It cannot submit applications for you. Official requirements, amounts and
+        Everyday SG is a personal project and not affiliated with any government agency. It cannot submit applications for you. Official requirements, amounts and
         deadlines change: confirm current rules with the responsible agency before acting. Figures you enter are your own assumptions, not verified data.
       </p>
     </section>

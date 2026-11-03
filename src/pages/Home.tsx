@@ -137,7 +137,7 @@ export function Home() {
           <p className="mb-3 text-[12px] font-medium uppercase tracking-wider text-hero-eyebrow">Everyday SG</p>
           <h1 className="text-[30px] font-semibold leading-[1.15] text-hero-ink sm:text-[40px]">Your guide to adulting in Singapore.</h1>
           <p className="mt-4 text-[16px] leading-7 text-hero-muted">
-            Independent, practical help with money, housing, family, caregiving, insurance, CPF, careers and the admin in between. What applies to you, what to do,
+            Plain-English, practical help with money, housing, family, caregiving, insurance, CPF, careers and the admin in between. What applies to you, what to do,
             what it might cost, and where to get it done.
           </p>
         </div>
@@ -213,7 +213,7 @@ export function Home() {
       </section>
 
       <section className="rounded-lg border border-stone-200 bg-stone-100 p-5 text-[13.5px] leading-6 text-ink-muted sm:p-6">
-        <strong className="text-ink">Independent and private by design.</strong> Everyday SG is not a government website and cannot submit applications for you. Guides link to
+        <strong className="text-ink">Private by design.</strong> Everyday SG is a personal project, not a government website, and cannot submit applications for you. Guides link to
         the responsible agencies, where rules and amounts are kept current. Your profile, checklists and calculator inputs are stored only in this browser; you can export,
         import or erase them at any time from <Link to="/plan" className="link">My Plan</Link>. Made by one Singaporean figuring it out too:{' '}
         <Link to="/creator" className="link">read the story</Link>.

@@ -286,7 +286,7 @@ export function MyPlan() {
             <ThemeOptions />
           </Panel>
           <DataSection />
-          <Note>Everyday SG is independent and not affiliated with any government agency. It cannot submit applications for you; the guides link to the agencies that can.</Note>
+          <Note>Everyday SG is a personal project and not affiliated with any government agency. It cannot submit applications for you; the guides link to the agencies that can.</Note>
         </div>
       </div>
     </div>

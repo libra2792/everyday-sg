@@ -1,6 +1,6 @@
 # Everyday SG — Your guide to adulting in Singapore
 
-An independent, privacy-first life-admin toolkit for adults living in Singapore: plain-English guides, interactive calculators, persistent checklists and links to the agencies that run each process.
+A personal, privacy-first life-admin toolkit for adults living in Singapore: plain-English guides, interactive calculators, persistent checklists and links to the agencies that run each process.
 
 It is **not a government website**, is not affiliated with any agency, and cannot submit applications on anyone's behalf. Content is general information; calculators are estimates built from the user's own inputs.
 

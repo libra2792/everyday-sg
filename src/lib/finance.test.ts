@@ -207,6 +207,32 @@ describe('housingAffordability', () => {
     expect(r.loanAmount).toBe(0);
     expect(r.monthlyLoan).toBe(0);
   });
+  it('ignores partner figures unless buying with a partner', () => {
+    const r = housingAffordability({ ...inputs, partnerGrossMonthlyIncome: 6000, partnerAvailableCash: 40_000 });
+    expect(r.householdIncome).toBe(9000);
+    expect(r.cashShortfall).toBe(32_500);
+    expect(r.partner).toBeNull();
+    expect(r.you.monthlyCommitment).toBeCloseTo(r.monthlyCommitment, 6);
+  });
+  it('combines partner income, cash, CPF and OA, and splits costs by income', () => {
+    const r = housingAffordability({ ...inputs, withPartner: true, partnerGrossMonthlyIncome: 6000, partnerAvailableCash: 40_000, partnerAvailableCpf: 30_000, partnerMonthlyCpfOaContribution: 1000, splitMode: 'income' });
+    expect(r.householdIncome).toBe(15_000);
+    expect(r.totalCash).toBe(100_000);
+    expect(r.cashShortfall).toBe(0);
+    expect(r.totalCpf).toBe(150_000);
+    expect(r.totalCpfOa).toBe(2500);
+    expect(r.monthlyCashNeeded).toBeCloseTo(300, 6); // combined OA exceeds the instalment, so only recurring costs remain
+    expect(r.limitAmount).toBe(4500);
+    expect(r.partnerShare).toBeCloseTo(0.4, 6);
+    expect(r.partner!.upfrontCash).toBeCloseTo(r.upfrontFromCash * 0.4, 6);
+    expect(r.you.monthlyCommitment + r.partner!.monthlyCommitment).toBeCloseTo(r.monthlyCommitment, 6);
+    expect(r.partner!.shareOfOwnIncome).toBeCloseTo((r.monthlyCommitment * 0.4) / 6000, 6);
+  });
+  it('supports equal and custom splits', () => {
+    const base = { ...inputs, withPartner: true, partnerGrossMonthlyIncome: 3000 };
+    expect(housingAffordability({ ...base, splitMode: 'equal' }).partnerShare).toBe(0.5);
+    expect(housingAffordability({ ...base, splitMode: 'custom', partnerSharePct: 30 }).partnerShare).toBeCloseTo(0.3, 6);
+  });
 });
 
 describe('babyBudget', () => {

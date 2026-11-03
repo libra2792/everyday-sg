@@ -14,7 +14,7 @@ export function About() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="About Everyday SG" description="An independent, privacy-first toolkit for everyday life administration in Singapore." />
+      <PageHeader title="About Everyday SG" description="A personal, privacy-first toolkit for everyday life administration in Singapore." />
 
       <div className="prose-esg space-y-10">
         <section>
@@ -34,7 +34,8 @@ export function About() {
           <SectionHeading title="Who made it" />
           <p>
             Everyday SG is a personal project by one Singaporean working through the same life admin as everyone else: a newborn, parents in retirement, a home that is
-            still being built, and the paperwork that follows a death in the family. <Link to="/creator" className="link">Read the story behind the site</Link>.
+            still being built, and the paperwork that follows a death in the family. By day I work in financial advisory with an insurer; this site is built in my own time,
+            and it does not sell or recommend any product or company. <Link to="/creator" className="link">Read the story behind the site</Link>.
           </p>
         </section>
 

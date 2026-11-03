@@ -2,7 +2,7 @@
   "name": "everyday-sg",
   "private": true,
   "version": "0.2.0",
-  "description": "Everyday SG — your guide to adulting in Singapore. An independent, privacy-first life-admin toolkit.",
+  "description": "Everyday SG — your guide to adulting in Singapore. A personal, privacy-first life-admin toolkit.",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -32,7 +32,7 @@ export const PARENTING_GUIDES: Guide[] = [
     costs: ['Public vs private; ward class', 'Confinement nanny, helper or family', 'New vs second-hand gear'],
     watchOuts: ['Buying hospital cover after confirming the pregnancy', 'Budgeting delivery but not months of reduced income', 'Tip: ask the hospital for a financial counselling estimate', 'Tip: a shared note for appointments and costs'],
     eligibility: ['Leave depends on the child\'s citizenship, marital status and employment history (MOM)', 'MediSave maternity use has MOH limits'],
-    officialLinks: ['healthhub-pregnancy', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare', 'moh-bills'],
+    officialLinks: ['gpl-paternity', 'healthhub-pregnancy', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare', 'moh-bills'],
     relatedCalculators: ['baby', 'insurance', 'budget'],
     relatedGuides: ['newborn-first-year', 'childcare-and-preschool', 'health-insurance-sg'],
     checklist: [
@@ -77,7 +77,7 @@ export const PARENTING_GUIDES: Guide[] = [
     costs: ['Infant care vs family care vs helper', 'Integrated Shield Plan or riders for the child', 'How to use CDA funds'],
     watchOuts: ['Missing registration or enrolment windows', 'Relying on Baby Bonus rules from years ago', 'Tip: one folder for birth certificate, CDA, insurance, vaccination record'],
     eligibility: ['Benefits depend on the child\'s citizenship, date of birth and parents\' status (LifeSG)', 'Leave depends on MOM eligibility'],
-    officialLinks: ['lifesg-sg-child-support', 'lifesg-baby-bonus', 'lifesg-bb-overview', 'msf-baby-bonus', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-medishield', 'healthhub-parent-hub'],
+    officialLinks: ['gpl-paternity', 'lifesg-sg-child-support', 'lifesg-baby-bonus', 'lifesg-bb-overview', 'msf-baby-bonus', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-medishield', 'healthhub-parent-hub'],
     relatedCalculators: ['baby', 'insurance'],
     relatedGuides: ['preparing-for-pregnancy', 'childcare-and-preschool', 'family-changes-and-reviews'],
     checklist: [
@@ -122,7 +122,7 @@ export const PARENTING_GUIDES: Guide[] = [
     costs: ['Net fees after subsidies, deposit, extras', 'Near home vs near work'],
     watchOuts: ['Assuming a subsidy figure before assessment', 'Not reading withdrawal and deposit terms', 'Tip: ask about recent fee increases'],
     eligibility: ['Generally a Singapore Citizen child in an eligible centre; extra support is income-assessed (ECDA)'],
-    officialLinks: ['ecda-subsidies', 'ecda-income', 'ecda-search', 'ecda-choosing', 'moe-preschool'],
+    officialLinks: ['gpl-paternity', 'ecda-subsidies', 'ecda-income', 'ecda-search', 'ecda-choosing', 'moe-preschool'],
     relatedCalculators: ['baby', 'budget'],
     relatedGuides: ['newborn-first-year', 'preparing-for-pregnancy', 'build-a-budget'],
     checklist: [

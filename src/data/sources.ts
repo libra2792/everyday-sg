@@ -8,7 +8,7 @@ import type { Source } from './types';
  *   - 'link'      the URL was confirmed to exist (returned by an official page or search)
  *   - 'unchecked' listed from general knowledge only; confirm before relying on it
  *
- * Everyday SG is independent and not affiliated with any agency. Rules change; always
+ * Everyday SG is a personal project and not affiliated with any agency. Rules change; always
  * confirm current requirements on the agency's own website.
  */
 const CHECKED = '2026-10-24';
@@ -64,6 +64,7 @@ export const SOURCES: Source[] = [
   { id: 'mom-maternity', agency: 'MOM', title: 'Maternity leave', url: 'https://www.mom.gov.sg/employment-practices/leave/maternity-leave', check: 'content', checkedOn: CHECKED },
   { id: 'mom-paternity', agency: 'MOM', title: 'Paternity leave', url: 'https://www.mom.gov.sg/employment-practices/leave/paternity-leave', check: 'link', checkedOn: CHECKED },
   { id: 'mom-shared-parental', agency: 'MOM', title: 'Shared parental leave', url: 'https://www.mom.gov.sg/employment-practices/leave/shared-parental-leave', check: 'link', checkedOn: CHECKED },
+  { id: 'gpl-paternity', agency: 'MSF', title: 'Government-Paid Leave Portal — apply for paternity and parental leave', url: 'https://www.profamilyleave.msf.gov.sg/schemes/paternity-leave', check: 'content', checkedOn: '2026-11-03' },
   { id: 'mom-childcare-leave', agency: 'MOM', title: 'Childcare leave', url: 'https://www.mom.gov.sg/employment-practices/leave/childcare-leave', check: 'link', checkedOn: CHECKED },
   { id: 'mom-infant-care-leave', agency: 'MOM', title: 'Unpaid infant care leave', url: 'https://www.mom.gov.sg/employment-practices/leave/unpaid-infant-care-leave', check: 'link', checkedOn: CHECKED },
   { id: 'mom-annual-leave', agency: 'MOM', title: 'Annual leave', url: 'https://www.mom.gov.sg/employment-practices/leave/annual-leave', check: 'link', checkedOn: CHECKED },
