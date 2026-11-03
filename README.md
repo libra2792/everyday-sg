@@ -8,7 +8,7 @@ It is **not a government website**, is not affiliated with any agency, and canno
 
 | Area | Details |
 | --- | --- |
-| **Home** | Search, quick actions, life-stage selector, popular calculators, featured guides, personalised "Your next steps", "Due soon" tasks |
+| **Home** | Search, quick-start chips (each opens a hub at `/start/:intent` with the 3 to 5 most relevant guides and calculators, defined in `src/data/intents.ts`), life-stage selector, popular calculators, featured guides, personalised "Your next steps", "Due soon" tasks |
 | **Life Guides** | 41 guides across 12 categories in a card layout with a category illustration and short bullet points: at a glance (what it means, who it's for, when to act), a **"Your situation" quick check** (a few questions or numbers → a tailored pointer, reasons, and "do next" links that open a calculator pre-filled), the persistent checklist, a **"How it works" diagram** (timeline, gauge, price band, stacked bar, flowchart or comparison, many drawn from the answers), numbered steps, what to prepare, watch-outs, then **Run the numbers** (dark calculator tiles) and **Keep reading** (tinted guide cards), official links and sources |
 | **Calculators** | Household budget · Emergency fund and debt repayment · Housing affordability and mortgage · Baby and childcare budget · Retirement projection · Insurance needs organiser · Caregiving and eldercare cost planner · Car ownership total cost. Inputs show an indicative figure (an official median/average with its source and check date, or a labelled planning guide) with a one-tap **Use** button |
 | **Tools** | Annual tax preparation checklist (organiser + IRAS links; deliberately no tax-rate engine) · Annual life-admin checklist (8 sections) |

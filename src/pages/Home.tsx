@@ -3,25 +3,20 @@ import { Link } from 'react-router-dom';
 import { CALCULATORS } from '@/data/calculators';
 import { CATEGORY_MAP, LIFE_STAGES } from '@/data/categories';
 import { FEATURED_GUIDE_IDS, GUIDE_MAP, GUIDES } from '@/data/guides';
+import { INTENTS } from '@/data/intents';
 import { recommend } from '@/lib/recommend';
 import { daysUntil, describeDue } from '@/lib/dates';
 import { useAppState } from '@/state/AppState';
 import { SearchBox } from '@/components/SearchBox';
 import { GuideCard } from '@/components/GuideCard';
-import { Icon, type IconName } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { LinkButton } from '@/components/ui/Button';
 import { SectionHeading } from '@/components/ui/Misc';
 
 const TILE_CLASSES = ['bg-tile-1', 'bg-tile-2', 'bg-tile-3'];
 
-const QUICK_ACTIONS: { label: string; to: string; icon: IconName }[] = [
-  { label: 'Plan my finances', to: '/calculators/budget', icon: 'wallet' },
-  { label: 'Buy a home', to: '/guides/home-affordability-and-loans', icon: 'home' },
-  { label: 'Prepare for a baby', to: '/guides/preparing-for-pregnancy', icon: 'baby' },
-  { label: 'Support my parents', to: '/guides/caregiving-plan', icon: 'heart-handshake' },
-  { label: 'Plan my retirement', to: '/calculators/retirement', icon: 'sunrise' },
-  { label: 'Sort out my life admin', to: '/tools/annual-admin', icon: 'calendar-check' },
-];
+// Each quick-start chip opens a hub of guides and calculators for that intent.
+const QUICK_ACTIONS = INTENTS.map((i) => ({ label: i.label, to: `/start/${i.id}`, icon: i.icon }));
 
 function NextSteps() {
   const { profile, profileDismissed, progress, tasks } = useAppState();

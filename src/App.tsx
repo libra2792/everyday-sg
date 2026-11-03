@@ -12,6 +12,7 @@ import { SearchPage } from './pages/SearchPage';
 import { About } from './pages/About';
 import { Creator } from './pages/Creator';
 import { NotFound } from './pages/NotFound';
+import { IntentHub } from './pages/IntentHub';
 
 const BudgetCalculator = lazy(() => import('./pages/calculators/BudgetCalculator'));
 const EmergencyDebtCalculator = lazy(() => import('./pages/calculators/EmergencyDebtCalculator'));
@@ -38,6 +39,7 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/start/:intentId" element={<IntentHub />} />
           <Route path="/guides" element={<Guides />} />
           <Route path="/guides/:guideId" element={<GuidePage />} />
           <Route path="/calculators" element={<Calculators />} />
