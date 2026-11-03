@@ -22,6 +22,8 @@ export function SearchBox({ placeholder = 'What are you trying to figure out?', 
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const results = query.trim().length > 1 ? search(query, 6) : [];
+  // Two or more characters and nothing found: say so rather than closing silently.
+  const noMatches = open && query.trim().length > 1 && results.length === 0;
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -115,6 +117,18 @@ export function SearchBox({ placeholder = 'What are you trying to figure out?', 
           </li>
         </ul>
       )}
+      {/* Not a listbox (nothing to choose), so the combobox stays collapsed and this is announced instead. */}
+      <div role="status" aria-live="polite" className={noMatches ? 'absolute z-20 mt-2 w-full rounded-lg border border-stone-300 bg-stone-50 px-4 py-3 text-sm text-ink-muted shadow-soft' : 'sr-only'}>
+        {noMatches && (
+          <>
+            No matches for “{query.trim()}” — press Enter to search, or{' '}
+            <Link to="/guides" className="link" onClick={() => setOpen(false)}>
+              browse all guides
+            </Link>
+            .
+          </>
+        )}
+      </div>
     </div>
   );
 }

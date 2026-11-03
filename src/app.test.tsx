@@ -124,6 +124,16 @@ describe('pages render', () => {
     }
   });
 
+  it('the inline search says when nothing matches instead of closing', async () => {
+    renderAt('/');
+    const box = screen.getAllByRole('combobox')[0];
+    fireEvent.focus(box);
+    fireEvent.change(box, { target: { value: 'qwzxv' } });
+    expect(await screen.findByText(/no matches for “qwzxv”/i)).toBeTruthy();
+    expect(box.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.getByRole('link', { name: /browse all guides/i })).toBeTruthy();
+  });
+
   it('shows search results and a 404', async () => {
     renderAt('/search?q=lpa');
     expect(await screen.findByText(/results? for “lpa”/i)).toBeTruthy();
