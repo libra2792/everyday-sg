@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CATEGORY_MAP } from '@/data/categories';
 import { GUIDE_MAP } from '@/data/guides';
 import { GUIDE_EXTRAS } from '@/data/quick';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { NotFound } from './NotFound';
 import { isValidISODate } from '@/lib/dates';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDayMonth } from '@/lib/format';
 import { answersWithDefaults } from '@/lib/quick';
 import { usePersistentState } from '@/lib/usePersistentState';
 
@@ -73,9 +73,11 @@ export function GuidePage() {
   const { guideId = '' } = useParams();
   const guide = GUIDE_MAP[guideId];
   const extras = GUIDE_EXTRAS[guideId];
-  const { addTask } = useAppState();
+  const { addTask, tasks } = useAppState();
+  const navigate = useNavigate();
   const [dueDate, setDueDate] = useState('');
-  const [added, setAdded] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  const addedAt = useRef(0);
   const [answers, setAnswers] = usePersistentState<QuickAnswers>(`quick:${guideId}`, {});
   const result = useMemo(() => (extras ? extras.quick.evaluate(answersWithDefaults(extras.quick.fields, answers)) : null), [extras, answers]);
   if (!guide) return <NotFound />;
@@ -87,10 +89,15 @@ export function GuidePage() {
   const figure = result?.figure ?? extras?.figure;
   const showParentSupport = guide.categoryId === 'parenting';
 
+  // The button's added state comes from the plan itself, so it survives a reload and
+  // clears if the task is removed.
+  const planTask = tasks.find((t) => t.source === 'guide' && t.path === from.path);
+  const addedLabel = (due?: string) => `Added to My Plan${due ? ` · due ${formatDayMonth(due)}` : ''}`;
   const addReminder = () => {
-    addTask({ title: `Work through “${guide.title}”`, dueDate: isValidISODate(dueDate) ? dueDate : undefined, path: `/guides/${guide.id}`, source: 'guide' });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2500);
+    const due = isValidISODate(dueDate) ? dueDate : undefined;
+    addTask({ title: `Work through “${guide.title}”`, dueDate: due, path: from.path, source: 'guide' });
+    addedAt.current = Date.now();
+    setAnnouncement(addedLabel(due));
   };
 
   const nav: { id: string; label: string }[] = [
@@ -215,15 +222,31 @@ export function GuidePage() {
           <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 sm:p-5">
             <Checklist listId={guide.id} items={guide.checklist} description="Essential items first; the rest are optional." />
             <div className="no-print mt-4 flex flex-wrap items-end gap-3 border-t border-stone-200 pt-4">
-              <div>
-                <label htmlFor="guide-due" className="mb-1 block text-[12.5px] text-ink-muted">
-                  Add to My Plan with a target date (optional)
-                </label>
-                <input id="guide-due" type="date" className="field-input !w-auto !py-1.5 text-sm" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-              </div>
-              <Button size="sm" variant="secondary" icon={added ? 'check' : 'plus'} onClick={addReminder}>
-                {added ? 'Added to My Plan' : 'Add to My Plan'}
-              </Button>
+              {planTask ? (
+                <>
+                  <p className="text-[12.5px] text-ink-muted">This guide is in your plan{planTask.done ? ' and marked done' : ''}.</p>
+                  {/* Same element as the add button, so keyboard focus stays put after adding;
+                      the second click of a double-click is ignored rather than leaving the page. */}
+                  <Button size="sm" variant="secondary" icon="check" onClick={() => Date.now() - addedAt.current > 600 && navigate('/plan')} aria-label={`${addedLabel(planTask.dueDate)}. Open My Plan`}>
+                    {addedLabel(planTask.dueDate)}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="guide-due" className="mb-1 block text-[12.5px] text-ink-muted">
+                      Add to My Plan with a target date (optional)
+                    </label>
+                    <input id="guide-due" type="date" className="field-input !w-auto !py-1.5 text-sm" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                  </div>
+                  <Button size="sm" variant="secondary" icon="plus" onClick={addReminder}>
+                    Add to My Plan
+                  </Button>
+                </>
+              )}
+              <span role="status" aria-live="polite" className="sr-only">
+                {announcement}
+              </span>
             </div>
           </div>
         </section>

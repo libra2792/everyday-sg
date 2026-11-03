@@ -81,6 +81,13 @@ export function toNumber(input: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** "15 Dec": day and month only, for short confirmations and snapshot titles. */
+export function formatDayMonth(iso: string | Date): string {
+  const d = typeof iso === 'string' ? new Date(iso.length === 10 ? `${iso}T00:00:00` : iso) : iso;
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' });
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);

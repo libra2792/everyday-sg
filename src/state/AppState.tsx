@@ -78,6 +78,21 @@ export interface PlanTask {
 
 export type ChecklistProgress = Record<string, Record<string, boolean>>;
 
+type NewTask = Omit<PlanTask, 'id' | 'createdAt' | 'done'> & { done?: boolean };
+
+/**
+ * A task is already in the plan when a guide's reminder points at the same guide, or when
+ * any task has the same title (ignoring case and spacing) and the same date.
+ */
+export function findDuplicateTask(tasks: PlanTask[], task: Pick<PlanTask, 'title' | 'dueDate' | 'path' | 'source'>): PlanTask | undefined {
+  const title = task.title.trim().replace(/\s+/g, ' ').toLowerCase();
+  return tasks.find(
+    (t) =>
+      (task.source === 'guide' && t.source === 'guide' && task.path !== undefined && t.path === task.path) ||
+      (t.title.trim().replace(/\s+/g, ' ').toLowerCase() === title && (t.dueDate ?? '') === (task.dueDate ?? '')),
+  );
+}
+
 interface AppState {
   profile: Profile | null;
   profileDismissed: boolean;
@@ -99,7 +114,8 @@ interface AppState {
   removeSaved: (id: string) => void;
 
   tasks: PlanTask[];
-  addTask: (task: Omit<PlanTask, 'id' | 'createdAt' | 'done'> & { done?: boolean }) => void;
+  /** Adds the task unless it is already in the plan; returns whether it was added. */
+  addTask: (task: NewTask) => boolean;
   updateTask: (id: string, patch: Partial<PlanTask>) => void;
   removeTask: (id: string) => void;
 
@@ -179,9 +195,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const removeSaved = useCallback((id: string) => setSaved((prev) => prev.filter((s) => s.id !== id)), [setSaved]);
 
   const addTask = useCallback(
-    (task: Omit<PlanTask, 'id' | 'createdAt' | 'done'> & { done?: boolean }) =>
-      setTasks((prev) => [...prev, { ...task, done: task.done ?? false, id: uid(), createdAt: new Date().toISOString() }]),
-    [setTasks],
+    (task: NewTask) => {
+      if (findDuplicateTask(tasks, task)) return false;
+      // Checked again against the latest list, in case two adds land in the same render.
+      setTasks((prev) => (findDuplicateTask(prev, task) ? prev : [...prev, { ...task, done: task.done ?? false, id: uid(), createdAt: new Date().toISOString() }]));
+      return true;
+    },
+    [tasks, setTasks],
   );
   const updateTask = useCallback((id: string, patch: Partial<PlanTask>) => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t))), [setTasks]);
   const removeTask = useCallback((id: string) => setTasks((prev) => prev.filter((t) => t.id !== id)), [setTasks]);

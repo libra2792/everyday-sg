@@ -48,6 +48,7 @@ function TasksSection() {
   const { tasks, addTask, updateTask, removeTask } = useAppState();
   const [title, setTitle] = useState('');
   const [due, setDue] = useState('');
+  const [formMessage, setFormMessage] = useState('');
   const sorted = useMemo(() => {
     return [...tasks].sort((a, b) => {
       if (a.done !== b.done) return a.done ? 1 : -1;
@@ -60,7 +61,12 @@ function TasksSection() {
   const submit = () => {
     const t = title.trim();
     if (!t) return;
-    addTask({ title: t, dueDate: isValidISODate(due) ? due : undefined, source: 'manual' });
+    const dueDate = isValidISODate(due) ? due : undefined;
+    if (!addTask({ title: t, dueDate, source: 'manual' })) {
+      setFormMessage(`“${t}”${dueDate ? ` on ${formatDate(dueDate)}` : ''} is already in your plan.`);
+      return;
+    }
+    setFormMessage(`Added “${t}” to My Plan.`);
     setTitle('');
     setDue('');
   };
@@ -79,6 +85,9 @@ function TasksSection() {
         <Button type="submit" variant="primary" icon="plus" className="sm:mb-0">
           Add
         </Button>
+        <p role="status" aria-live="polite" className={formMessage ? 'text-[13px] text-ink-muted sm:col-span-3' : 'sr-only'}>
+          {formMessage}
+        </p>
       </form>
       {sorted.length === 0 ? (
         <p className="text-[13.5px] text-ink-faint">No tasks yet. Add your own, or use “Add to My Plan” on any guide, the tax tool or the annual checklist.</p>
