@@ -140,7 +140,7 @@ export function GuidePage() {
       <TrailBar nowTitle={guide.title} nowKind="guide" categoryId={guide.categoryId} />
 
       {/* Header band in the category's colour, with its illustration */}
-      <header className={`grid items-center gap-5 rounded-lg border border-stone-200 ${tile} px-5 py-5 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto]`}>
+      <header className={`grid items-center gap-5 rounded-lg border border-stone-200 ${tile} px-4 py-4 sm:px-6 sm:py-5 md:grid-cols-[minmax(0,1fr)_auto]`}>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-sage-800">
             <span className="inline-flex items-center gap-1.5 rounded border border-stone-300 bg-stone-50 px-1.5 py-0.5 text-ink">
@@ -152,7 +152,11 @@ export function GuidePage() {
           </div>
           <h1 className="mt-2.5 text-[28px] font-semibold leading-tight text-ink sm:text-[34px]">{guide.title}</h1>
           <p className="mt-2 max-w-[58ch] text-[16px] leading-6 text-ink-muted">{guide.summary}</p>
-          <div className="mt-3.5 flex flex-wrap gap-1.5 text-[12px]">
+          {/* Phones: the three facts on one line, so the guide itself starts on the first screen. */}
+          <p className="mt-2.5 text-[12.5px] text-ink-muted sm:hidden">
+            {[guide.estimatedMinutes ? `~${guide.estimatedMinutes} min` : null, `${guide.checklist.length} items`, guide.reviewedOn ? `Reviewed ${formatDayMonth(guide.reviewedOn)}` : 'General guide'].filter(Boolean).join(' · ')}
+          </p>
+          <div className="mt-3.5 hidden flex-wrap gap-1.5 text-[12px] sm:flex">
             {guide.estimatedMinutes && (
               <span className="inline-flex items-center gap-1 rounded-full border border-stone-300 bg-stone-50 px-2.5 py-1 text-ink-muted">
                 <Icon name="clock" size={12} /> ~{guide.estimatedMinutes} min
@@ -171,14 +175,15 @@ export function GuidePage() {
               </span>
             )}
           </div>
-          <div className="no-print mt-4 flex flex-wrap items-center gap-2">
+          <div className="no-print mt-3 flex flex-wrap items-center gap-2 sm:mt-4">
             <SaveButton type="guide" refId={guide.id} title={guide.title} subtitle={guide.summary} path={`/guides/${guide.id}`} size="sm" />
             <Button size="sm" variant="ghost" icon="printer" onClick={() => window.print()}>
               Print
             </Button>
           </div>
         </div>
-        <div className="order-first w-24 md:order-none md:w-[150px]">
+        {/* Hidden on phones: the category icon beside the category name stands in for it. */}
+        <div className="order-first hidden w-24 sm:block md:order-none md:w-[150px]">
           <Illustration category={guide.categoryId} className="block h-auto w-full" />
         </div>
       </header>
