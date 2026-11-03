@@ -189,7 +189,7 @@ export function Home() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15px] font-medium text-ink group-hover:text-sage-900">{c.name}</span>
-                  <span className="block truncate text-[13px] text-ink-faint">{c.description}</span>
+                  <span className="line-clamp-2 text-[13px] leading-5 text-ink-faint">{c.summary ?? c.description}</span>
                 </span>
                 <Icon name="chevron-right" size={16} className="shrink-0 text-stone-400 group-hover:text-sage-700" />
               </Link>

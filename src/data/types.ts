@@ -104,6 +104,8 @@ export interface CalculatorMeta {
   name: string;
   shortName: string;
   description: string;
+  /** A shorter line for the home page's "Popular calculators" list, which has room for one. */
+  summary?: string;
   categoryId: CategoryId;
   path: string;
   icon: string;
