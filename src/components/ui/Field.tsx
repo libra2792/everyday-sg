@@ -36,13 +36,29 @@ export function formatWithUnits(n: number, prefix?: string, suffix?: string, for
 /** Default ceiling for typed numbers when a field sets none (S$1 billion, or 1e9 of anything). */
 const NUMBER_CEILING = 1_000_000_000;
 
-function useNumberText(value: number, format?: (n: number) => string) {
-  const [text, setText] = useState(() => (format ? format(value) : String(value)));
+/**
+ * The text shown in a number box. S$ amounts read with thousands separators ("80,000")
+ * while the box is not being edited, and as plain digits while it is, so typing is never
+ * fighting the commas. Other units stay plain.
+ */
+function useNumberText(value: number, money: boolean) {
+  const display = (n: number) => (money ? n.toLocaleString('en-SG', { maximumFractionDigits: 2 }) : String(n));
+  const [text, setText] = useState(() => display(value));
   const focused = useRef(false);
   useEffect(() => {
-    if (!focused.current) setText(format ? format(value) : String(value));
-  }, [value, format]);
-  return { text, setText, focused };
+    if (!focused.current) setText(display(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, money]);
+  const onFocus = () => {
+    focused.current = true;
+    setText(String(value));
+  };
+  return { text, setText, focused, display, onFocus };
+}
+
+/** Typed text to a number, ignoring thousands separators. */
+function parseTyped(raw: string): number {
+  return Number(raw.replace(/,/g, '').trim());
 }
 
 /* ---------------------------------------------------------------------- */
@@ -75,11 +91,12 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
   const autoId = useId();
   const fieldId = id || autoId;
   const helpId = `${fieldId}-help`;
-  const { text, setText, focused } = useNumberText(value);
+  const money = prefix === 'S$';
+  const { text, setText, focused, display, onFocus } = useNumberText(value, money);
   const lower = min ?? (allowNegative ? Number.NEGATIVE_INFINITY : 0);
   // A finite ceiling everywhere: no typed value should be able to produce nonsense figures.
   const upper = max ?? NUMBER_CEILING;
-  const invalid = text.trim() !== '' && !Number.isFinite(Number(text));
+  const invalid = text.trim() !== '' && !Number.isFinite(parseTyped(text));
 
   const commit = (raw: string) => {
     setText(raw);
@@ -87,7 +104,7 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
       onChange(lower === Number.NEGATIVE_INFINITY ? 0 : Math.max(0, lower));
       return;
     }
-    const n = Number(raw);
+    const n = parseTyped(raw);
     if (Number.isFinite(n)) onChange(clamp(n, lower, upper));
   };
 
@@ -98,23 +115,21 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
         {prefix && <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-ink-faint">{prefix}</span>}
         <input
           id={fieldId}
-          type="number"
+          type={money ? 'text' : 'number'}
           inputMode="decimal"
           className={`field-input tabular-nums ${prefix ? 'pl-9' : ''} ${suffix ? 'pr-12' : ''}`}
           value={text}
-          min={Number.isFinite(lower) ? lower : undefined}
-          max={Number.isFinite(upper) ? upper : undefined}
-          step={step}
+          min={!money && Number.isFinite(lower) ? lower : undefined}
+          max={!money && Number.isFinite(upper) ? upper : undefined}
+          step={money ? undefined : step}
           placeholder={placeholder}
           aria-label={compact ? (typeof label === 'string' ? label : undefined) : undefined}
           aria-describedby={help ? helpId : undefined}
           aria-invalid={invalid ? 'true' : undefined}
-          onFocus={() => {
-            focused.current = true;
-          }}
+          onFocus={onFocus}
           onBlur={() => {
             focused.current = false;
-            setText(String(value));
+            setText(display(value));
           }}
           onChange={(e) => commit(e.target.value)}
         />
@@ -160,7 +175,8 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
   const fieldId = id || autoId;
   const sliderId = `${fieldId}-slider`;
   const helpId = `${fieldId}-help`;
-  const { text, setText, focused } = useNumberText(value);
+  const money = prefix === 'S$';
+  const { text, setText, focused, display: displayText, onFocus } = useNumberText(value, money);
   const lower = hardMin ?? Math.min(0, min);
   const upper = hardMax ?? (allowAboveMax ? max * 10 : max);
   const display = formatWithUnits(value, prefix, suffix, format);
@@ -174,7 +190,7 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
       onChange(hardMin !== undefined ? Math.min(0, hardMin) : Math.max(0, min));
       return;
     }
-    const n = Number(raw);
+    const n = parseTyped(raw);
     if (!Number.isFinite(n)) return;
     onChange(hardMin !== undefined && n < hardMin ? Math.max(Math.min(0, hardMin), n) : clamp(n, lower, upper));
   };
@@ -184,7 +200,8 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
       <FieldLabel htmlFor={fieldId} hint={display}>
         {label}
       </FieldLabel>
-      <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] items-center gap-3">
+      {/* S$ boxes are a little wider so separated amounts up to S$20,000,000 fit. */}
+      <div className={`grid ${money ? 'grid-cols-[minmax(0,1fr)_8.5rem]' : 'grid-cols-[minmax(0,1fr)_7.5rem]'} items-center gap-3`}>
         <input
           id={sliderId}
           type="range"
@@ -201,21 +218,19 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
           {prefix && <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-ink-faint">{prefix}</span>}
           <input
             id={fieldId}
-            type="number"
+            type={money ? 'text' : 'number'}
             inputMode="decimal"
             className={`field-input !py-1.5 text-sm tabular-nums ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-8' : ''}`}
             value={text}
-            min={lower}
-            max={upper}
-            step={step}
+            min={money ? undefined : lower}
+            max={money ? undefined : upper}
+            step={money ? undefined : step}
             aria-describedby={help ? helpId : undefined}
-            onFocus={() => {
-              focused.current = true;
-            }}
+            onFocus={onFocus}
             onBlur={() => {
               focused.current = false;
               if (hardMin !== undefined && value < hardMin) onChange(hardMin);
-              else setText(String(value));
+              else setText(displayText(value));
             }}
             onChange={(e) => commitText(e.target.value)}
           />

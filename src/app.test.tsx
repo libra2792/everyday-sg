@@ -106,7 +106,7 @@ describe('pages render', () => {
     fireEvent.click(within(doNext).getByRole('link', { name: /housing affordability and mortgage/i }));
     expect(await screen.findByRole('heading', { level: 1, name: /housing affordability and mortgage/i })).toBeTruthy();
     expect(await screen.findByText(/filled in from your answers in the guide/i)).toBeTruthy();
-    await waitFor(() => expect((screen.getByLabelText(/^Estimated property price$/i) as HTMLInputElement).value).toBe('600000'));
+    await waitFor(() => expect((screen.getByLabelText(/^Estimated property price$/i) as HTMLInputElement).value).toBe('600,000'));
     expect(screen.getByText(/you are now in a/i)).toBeTruthy();
   });
 
@@ -329,7 +329,7 @@ describe('calculators recompute from inputs', () => {
     const use = await screen.findByRole('button', { name: /^Use S\$3,950$/ });
     fireEvent.click(use);
     const income = screen.getByLabelText(/^Monthly take-home income$/i) as HTMLInputElement;
-    expect(income.value).toBe('3950');
+    expect(income.value).toBe('3,950');
     expect(screen.getByRole('button', { name: /S\$3,950 applied/i })).toBeTruthy();
     expect(screen.getAllByText(/official figure/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/planning guide/i).length).toBeGreaterThan(0);
@@ -342,10 +342,22 @@ describe('calculators recompute from inputs', () => {
     expect(screen.queryByRole('button', { name: /^Use S\$3,950$/ })).toBeNull();
   });
 
+  it('S$ inputs show thousands separators except while being edited', async () => {
+    renderAt('/calculators/housing');
+    const price = (await screen.findByLabelText(/^Estimated property price$/i)) as HTMLInputElement;
+    expect(price.value).toBe('500,000');
+    fireEvent.focus(price);
+    expect(price.value).toBe('500000');
+    fireEvent.change(price, { target: { value: '1,250,000' } });
+    fireEvent.blur(price);
+    expect(price.value).toBe('1,250,000');
+    expect(price.getAttribute('inputmode')).toBe('decimal');
+  });
+
   it('a snapshot link reopens the calculator with its saved inputs', async () => {
     renderAt(snapshotHref('/calculators/insurance', { yearsOfIncomeReplacement: 10, annualHouseholdExpenses: 60000, outstandingDebts: 0, futureCommitments: 0, existingLifeCoverage: 0, liquidAssetsToCount: 0, dependants: 2 }, 'Insurance — 3 Nov'));
     expect(await screen.findByText(/loaded from your snapshot “insurance — 3 nov”/i)).toBeTruthy();
-    await waitFor(() => expect((screen.getByLabelText(/^Annual household living expenses$/i) as HTMLInputElement).value).toBe('60000'));
+    await waitFor(() => expect((screen.getByLabelText(/^Annual household living expenses$/i) as HTMLInputElement).value).toBe('60,000'));
     fireEvent.click(screen.getByRole('button', { name: /reset inputs/i }));
     await waitFor(() => expect(screen.queryByText(/loaded from your snapshot/i)).toBeNull());
   });
