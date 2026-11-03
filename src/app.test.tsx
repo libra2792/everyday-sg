@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import App from './App';
+import App, { preloadPage } from './App';
 import { AppStateProvider } from './state/AppState';
 import { GUIDES } from './data/guides';
 import { CALCULATORS } from './data/calculators';
@@ -121,6 +121,16 @@ describe('pages render', () => {
       cleanup();
       renderAt(`/guides/${g.id}`);
       expect(screen.getByRole('heading', { level: 1, name: g.title })).toBeTruthy();
+    }
+  });
+
+  it('a calculator whose code is loaded ahead renders at once, without "Loading…"', async () => {
+    for (const c of CALCULATORS) {
+      cleanup();
+      await preloadPage(c.path);
+      renderAt(c.path);
+      expect(screen.queryByText('Loading…')).toBeNull();
+      expect(screen.getByRole('heading', { level: 1, name: c.name })).toBeTruthy();
     }
   });
 

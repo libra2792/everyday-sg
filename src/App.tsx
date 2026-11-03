@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, type ComponentType } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { Home } from './pages/Home';
@@ -14,16 +14,47 @@ import { Creator } from './pages/Creator';
 import { NotFound } from './pages/NotFound';
 import { IntentHub } from './pages/IntentHub';
 
-const BudgetCalculator = lazy(() => import('./pages/calculators/BudgetCalculator'));
-const EmergencyDebtCalculator = lazy(() => import('./pages/calculators/EmergencyDebtCalculator'));
-const HousingCalculator = lazy(() => import('./pages/calculators/HousingCalculator'));
-const BabyCalculator = lazy(() => import('./pages/calculators/BabyCalculator'));
-const RetirementCalculator = lazy(() => import('./pages/calculators/RetirementCalculator'));
-const InsuranceCalculator = lazy(() => import('./pages/calculators/InsuranceCalculator'));
-const CaregivingCalculator = lazy(() => import('./pages/calculators/CaregivingCalculator'));
-const CarCalculator = lazy(() => import('./pages/calculators/CarCalculator'));
-const TaxPrepTool = lazy(() => import('./pages/tools/TaxPrepTool'));
-const AnnualAdminTool = lazy(() => import('./pages/tools/AnnualAdminTool'));
+/**
+ * A page whose code loads on demand, like React.lazy, that can also be loaded ahead of
+ * time and then renders straight away. The browser loads the current page's code before
+ * the first render, so the prerendered HTML is replaced without a "Loading…" in between.
+ */
+function lazyPage(load: () => Promise<{ default: ComponentType }>) {
+  let loaded: ComponentType | null = null;
+  const preload = () =>
+    load().then((m) => {
+      loaded = m.default;
+      return m;
+    });
+  const Lazy = lazy(preload);
+  return Object.assign(
+    function Page() {
+      const Loaded = loaded ?? Lazy;
+      return <Loaded />;
+    },
+    { preload },
+  );
+}
+
+/** Calculators and tools, by path: each is its own chunk. */
+const LAZY_PAGES: Record<string, ReturnType<typeof lazyPage>> = {
+  '/calculators/budget': lazyPage(() => import('./pages/calculators/BudgetCalculator')),
+  '/calculators/emergency-debt': lazyPage(() => import('./pages/calculators/EmergencyDebtCalculator')),
+  '/calculators/housing': lazyPage(() => import('./pages/calculators/HousingCalculator')),
+  '/calculators/baby': lazyPage(() => import('./pages/calculators/BabyCalculator')),
+  '/calculators/retirement': lazyPage(() => import('./pages/calculators/RetirementCalculator')),
+  '/calculators/insurance': lazyPage(() => import('./pages/calculators/InsuranceCalculator')),
+  '/calculators/caregiving': lazyPage(() => import('./pages/calculators/CaregivingCalculator')),
+  '/calculators/car': lazyPage(() => import('./pages/calculators/CarCalculator')),
+  '/tools/tax-prep': lazyPage(() => import('./pages/tools/TaxPrepTool')),
+  '/tools/annual-admin': lazyPage(() => import('./pages/tools/AnnualAdminTool')),
+};
+
+/** Load the code for the page at `pathname`, if it is loaded on demand. */
+export function preloadPage(pathname: string): Promise<unknown> {
+  const page = LAZY_PAGES[pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname];
+  return page ? page.preload() : Promise.resolve();
+}
 
 function Loading() {
   return (
@@ -43,16 +74,9 @@ export default function App() {
           <Route path="/guides" element={<Guides />} />
           <Route path="/guides/:guideId" element={<GuidePage />} />
           <Route path="/calculators" element={<Calculators />} />
-          <Route path="/calculators/budget" element={<BudgetCalculator />} />
-          <Route path="/calculators/emergency-debt" element={<EmergencyDebtCalculator />} />
-          <Route path="/calculators/housing" element={<HousingCalculator />} />
-          <Route path="/calculators/baby" element={<BabyCalculator />} />
-          <Route path="/calculators/retirement" element={<RetirementCalculator />} />
-          <Route path="/calculators/insurance" element={<InsuranceCalculator />} />
-          <Route path="/calculators/caregiving" element={<CaregivingCalculator />} />
-          <Route path="/calculators/car" element={<CarCalculator />} />
-          <Route path="/tools/tax-prep" element={<TaxPrepTool />} />
-          <Route path="/tools/annual-admin" element={<AnnualAdminTool />} />
+          {Object.entries(LAZY_PAGES).map(([path, Page]) => (
+            <Route key={path} path={path} element={<Page />} />
+          ))}
           <Route path="/plan" element={<MyPlan />} />
           <Route path="/plan/profile" element={<ProfilePage />} />
           <Route path="/saved" element={<Saved />} />

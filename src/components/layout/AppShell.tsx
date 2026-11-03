@@ -269,11 +269,14 @@ function LoadSweep() {
 function PageFrame({ children }: { children: ReactNode }) {
   // Keyed by path, not location key, so clearing a query string does not re-mount the page.
   const { pathname: key } = useLocation();
+  // The first page is often on screen already, prerendered: only pages navigated to slide in.
+  const first = useRef<string | null>(key);
+  if (key !== first.current) first.current = null;
   useEffect(() => {
     if (typeof (document as Document & { startViewTransition?: unknown }).startViewTransition !== 'function') document.documentElement.classList.add('no-vt');
   }, []);
   return (
-    <main id="main" key={key} className="page-enter mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:px-6 md:pb-12">
+    <main id="main" key={key} className={`${first.current === null ? 'page-enter ' : ''}mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:px-6 md:pb-12`}>
       {children}
     </main>
   );

@@ -50,12 +50,13 @@ everyday-sg/
 ├── index.html
 ├── netlify.toml                 # build command, publish dir, SPA redirect, headers
 ├── package.json
-├── vite.config.ts               # React + Tailwind plugins, @ alias, Vitest config
+├── vite.config.ts               # React + Tailwind plugins, prerendering, @ alias, Vitest config
 ├── tsconfig.json
 ├── public/                      # favicon, robots.txt, _redirects, creator/ photos
 └── src/
-    ├── main.tsx                 # entry: BrowserRouter + AppStateProvider
-    ├── App.tsx                  # routes (calculators/tools are lazy-loaded)
+    ├── main.tsx                 # entry: BrowserRouter + AppStateProvider, replaces the prerendered page
+    ├── entry-server.tsx         # build-time render of a route to HTML (StaticRouter + prerender)
+    ├── App.tsx                  # routes (calculators/tools are lazy-loaded, preloadPage)
     ├── index.css                # Tailwind theme tokens, base styles, print styles
     ├── app.test.tsx             # DOM smoke tests (pages, calculators, persistence)
     ├── components/
@@ -98,7 +99,13 @@ everyday-sg/
 
 ### Page titles and link previews
 
-`src/lib/head.ts` maps every route to a `<title>` ("{Page} · Everyday SG") and description (a guide's or calculator's one-line summary). In the browser, `useDocumentHead` keeps the title, description, Open Graph tags and canonical link current. At build time a small Vite plugin in `vite.config.ts` writes a copy of `index.html` for each public route (`dist/guides/<id>.html` and so on) with those tags filled in, so WhatsApp, Telegram and search engines see the right title without running JavaScript. Canonical and `og:url` use Netlify's build-time `URL`; set it yourself for other hosts. The share image is `public/og-image.png`. The page body is still rendered in the browser; prerendering content as well would need server rendering and is not done.
+`src/lib/head.ts` maps every route to a `<title>` ("{Page} · Everyday SG") and description (a guide's or calculator's one-line summary). In the browser, `useDocumentHead` keeps the title, description, Open Graph tags and canonical link current. Canonical and `og:url` use Netlify's build-time `URL`; set it yourself for other hosts. The share image is `public/og-image.png`.
+
+Public pages are prerendered, head and body. After `vite build`, a small Vite plugin in `vite.config.ts` writes one HTML file per public route (`dist/guides/<id>.html`, `dist/calculators/<id>.html`, the tools, hubs, guide library and static pages, 62 in all). Each has that route's tags filled in and the page itself rendered into `#root` by `src/entry-server.tsx`: React's `prerender` with a `StaticRouter`, waiting for the calculators' lazily loaded code. So search engines, WhatsApp, Telegram and other link unfurlers see a guide's title, summary, checklist and steps, or a calculator with its default inputs, without running JavaScript. The HTML is what a first-time visitor sees: nothing saved, the Sage theme (the saved or system theme still applies before first paint), and charts and figures at their wide layout. The build fails if a page would need a script to show its content.
+
+In the browser, `src/main.tsx` replaces that markup with `createRoot` rather than hydrating it. The first render reads what this browser saved (theme, ticks, inputs, profile), which the build's HTML cannot match, so hydrating would mean mismatches for every returning visitor. React swaps old markup for new in one commit, and the current page's code is loaded before that render (`preloadPage` in `src/App.tsx`), so a calculator never passes through "Loading…" on the way. Nothing about the privacy model changes: there is no server at run time, and saved data still lives only in `localStorage`.
+
+Every other path (My Plan, Saved, search, unknown URLs; none of them indexed) gets `dist/app.html`, the empty app shell with `noindex`, through the SPA redirect in `netlify.toml` and `public/_redirects`. `npm run preview` does the same locally. `index.html` is the prerendered home page, so it must not be the fallback. On another host, point the fallback at `/app.html` and serve `guides/x.html` at `/guides/x`.
 
 ### Themes
 
@@ -159,7 +166,7 @@ git push -u origin main
    - Build command: `npm run build`
    - Publish directory: `dist`
    - Node version: 22 (from `[build.environment]`)
-3. Click **Deploy site**. The SPA redirect (`/* → /index.html 200`) and security headers are already in `netlify.toml`, so deep links such as `/calculators/housing` work after deployment.
+3. Click **Deploy site**. The SPA redirect (`/* → /app.html 200`, after the prerendered pages) and security headers are already in `netlify.toml`, so deep links such as `/calculators/housing` work after deployment.
 
 ### 3. Deploy without GitHub (optional)
 
@@ -182,7 +189,8 @@ None are required. The site is entirely static and all user data stays in the br
 
 - `src/lib/finance.test.ts` — 35 tests covering mortgage/flat-rate maths against known values, budget totals, emergency fund, debt payoff (avalanche vs snowball, insufficient payments, zero-rate), housing splits, baby budget scaling, retirement projection (closed-form future value, growing annuity, funds-run-out detection), insurance need, caregiving shares and inflation, car cash-vs-economic cost — including zero/empty/negative/extreme inputs.
 - `src/data/quick/quick.test.ts` — every guide has a quick check and a figure; every quick check evaluates with defaults and with blanks; every "do next" link points at an existing calculator, guide or source; sample answers produce the expected pointers.
-- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM, walks the guide → related guide (trail bar) → back → calculator (pre-filled) flow, checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404.
+- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM, walks the guide → related guide (trail bar) → back → calculator (pre-filled) flow, checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404, and that a preloaded calculator renders without "Loading…".
+- `src/entry-server.test.tsx` — the build-time render: every guide's HTML carries its title, summary, checklist and steps, every calculator and tool arrives complete, and no public page needs a script to show its content.
 
 ## Known limitations (first version)
 
