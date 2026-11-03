@@ -1,5 +1,6 @@
 import { CALCULATOR_MAP } from '@/data/calculators';
 import { GUIDE_MAP } from '@/data/guides';
+import type { LifeStageId } from '@/data/types';
 import type { ChecklistProgress, Profile } from '@/state/AppState';
 
 export interface Recommendation {
@@ -130,4 +131,16 @@ export function recommend(profile: Profile | null, progress: ChecklistProgress, 
   for (const a of ALWAYS) push({ ...a, priority: 9 });
 
   return [...out.values()].sort((a, b) => a.priority - b.priority).slice(0, limit);
+}
+
+/** The life stage a profile most likely sits in, used to open the guide library on it. */
+export function likelyLifeStage(p: Profile | null): LifeStageId | null {
+  if (!p) return null;
+  if (p.ageRange === '65+' || (p.ageRange === '55-64' && p.employment === 'retired')) return 'later-life';
+  if (p.household.includes('parent') || p.priorities.includes('baby')) return 'family';
+  if (p.ageRange === '45-54' || p.ageRange === '55-64') return 'midlife';
+  if (p.household.includes('supporting-parents') && p.ageRange === '35-44') return 'midlife';
+  if (p.ageRange === '18-24') return 'starting-out';
+  if (p.ageRange === '25-34' || p.ageRange === '35-44' || p.household.includes('married') || p.household.includes('partnered')) return 'building';
+  return null;
 }

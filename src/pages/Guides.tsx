@@ -1,19 +1,47 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CATEGORIES, CATEGORY_MAP, LIFE_STAGES, LIFE_STAGE_MAP } from '@/data/categories';
 import { GUIDES } from '@/data/guides';
-import type { LifeStageId } from '@/data/types';
+import type { Guide, LifeStageId } from '@/data/types';
 import { search } from '@/lib/search';
+import { likelyLifeStage } from '@/lib/recommend';
+import { usePersistentState } from '@/lib/usePersistentState';
+import { useAppState } from '@/state/AppState';
 import { GuideCard } from '@/components/GuideCard';
 import { Icon } from '@/components/ui/Icon';
-import { EmptyState, PageHeader } from '@/components/ui/Misc';
+import { Disclosure, EmptyState, Note, PageHeader } from '@/components/ui/Misc';
 import { Button } from '@/components/ui/Button';
+
+function GuideGrid({ guides, showCategory }: { guides: Guide[]; showCategory: boolean }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      {guides.map((g) => (
+        <GuideCard key={g.id} guide={g} showCategory={showCategory} />
+      ))}
+    </div>
+  );
+}
 
 export function Guides() {
   const [params, setParams] = useSearchParams();
   const category = params.get('category') || '';
   const stage = (params.get('stage') || '') as LifeStageId | '';
   const q = params.get('q') || '';
+  const { profile } = useAppState();
+
+  // First visit with a profile: open on the stage the profile suggests. Done once, so
+  // choosing "All stages" afterwards sticks.
+  const [stageSuggested, setStageSuggested] = usePersistentState<boolean>('guides-stage-suggested', false);
+  const [suggestedNow, setSuggestedNow] = useState(false);
+  useEffect(() => {
+    if (stageSuggested || !profile) return;
+    setStageSuggested(true);
+    const likely = likelyLifeStage(profile);
+    if (!likely || [...params.keys()].length > 0) return;
+    setParams({ stage: likely }, { replace: true });
+    setSuggestedNow(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (key: string, value: string) => {
     const next = new URLSearchParams(params);
@@ -32,13 +60,23 @@ export function Guides() {
       list = [...list].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
     }
     if (category) list = list.filter((g) => g.categoryId === category);
-    if (stage) list = list.filter((g) => g.lifeStages.includes(stage));
     return list;
-  }, [q, category, stage]);
+  }, [q, category]);
 
   const activeCategory = category ? CATEGORY_MAP[category] : null;
   const activeStage = stage ? LIFE_STAGE_MAP[stage] : null;
   const anyFilter = Boolean(q || category || stage);
+
+  // A life stage sorts rather than filters: guides tagged for the stage in its focus areas
+  // come first (8 to 15 of them), everything else stays one click away.
+  const byStage = useMemo(() => {
+    if (!activeStage) return null;
+    const focus = activeStage.categories as string[];
+    const relevant = results.filter((g) => g.lifeStages.includes(activeStage.id) && focus.includes(g.categoryId));
+    if (!q) relevant.sort((a, b) => focus.indexOf(a.categoryId) - focus.indexOf(b.categoryId));
+    const ids = new Set(relevant.map((g) => g.id));
+    return { relevant, rest: results.filter((g) => !ids.has(g.id)) };
+  }, [activeStage, results, q]);
 
   return (
     <div>
@@ -92,9 +130,10 @@ export function Guides() {
         <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[13.5px] text-ink-faint" aria-live="polite">
-              {results.length} {results.length === 1 ? 'guide' : 'guides'}
+              {byStage && activeStage
+                ? `${byStage.relevant.length} most relevant for “${activeStage.name}”, ${byStage.rest.length} more`
+                : `${results.length} ${results.length === 1 ? 'guide' : 'guides'}`}
               {activeCategory ? ` in ${activeCategory.shortName}` : ''}
-              {activeStage ? ` for “${activeStage.name}”` : ''}
               {q ? ` matching “${q}”` : ''}
             </p>
             {anyFilter && (
@@ -119,6 +158,12 @@ export function Guides() {
                 ))}
               </div>
             </div>
+          )}
+
+          {suggestedNow && activeStage && (
+            <Note className="mb-5" icon="user" title={`Showing “${activeStage.name}” first, from your profile`}>
+              Pick another life stage, or All stages, to change it.
+            </Note>
           )}
 
           {results.length === 0 ? (
@@ -148,12 +193,27 @@ export function Guides() {
                 );
               })}
             </div>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {results.map((g) => (
-                <GuideCard key={g.id} guide={g} showCategory={!activeCategory} />
-              ))}
+          ) : byStage && activeStage ? (
+            <div className="space-y-6">
+              <section aria-labelledby="stage-relevant">
+                <h2 id="stage-relevant" className="text-[17px] font-semibold text-ink">
+                  Most relevant for {activeStage.name}
+                </h2>
+                <p className="mb-3 mt-1 text-[13.5px] text-ink-muted">{activeStage.description}</p>
+                {byStage.relevant.length > 0 ? (
+                  <GuideGrid guides={byStage.relevant} showCategory={!activeCategory} />
+                ) : (
+                  <p className="text-[13.5px] text-ink-faint">None of these guides is tagged for this stage; the rest are below.</p>
+                )}
+              </section>
+              {byStage.rest.length > 0 && (
+                <Disclosure summary={`Everything else (${byStage.rest.length} ${byStage.rest.length === 1 ? 'guide' : 'guides'})`} icon="book-open" defaultOpen={byStage.relevant.length === 0}>
+                  <GuideGrid guides={byStage.rest} showCategory={!activeCategory} />
+                </Disclosure>
+              )}
             </div>
+          ) : (
+            <GuideGrid guides={results} showCategory={!activeCategory} />
           )}
         </div>
       </div>

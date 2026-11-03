@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_PROFILE, migrateProfile } from '@/state/AppState';
-import { recommend } from './recommend';
+import { likelyLifeStage, recommend } from './recommend';
 
 describe('profile housing', () => {
   it('reads a profile saved with a single housing answer as a one-item list', () => {
@@ -15,5 +15,16 @@ describe('profile housing', () => {
     expect(ids).toContain('renting-in-singapore');
     expect(ids).toContain('home-affordability-and-loans');
     expect(ids).toContain('hdb-bto-vs-resale');
+  });
+});
+
+describe('likelyLifeStage', () => {
+  it('reads the stage from age and household', () => {
+    expect(likelyLifeStage(null)).toBeNull();
+    expect(likelyLifeStage({ ...EMPTY_PROFILE, ageRange: '18-24' })).toBe('starting-out');
+    expect(likelyLifeStage({ ...EMPTY_PROFILE, ageRange: '25-34' })).toBe('building');
+    expect(likelyLifeStage({ ...EMPTY_PROFILE, ageRange: '25-34', household: ['parent'] })).toBe('family');
+    expect(likelyLifeStage({ ...EMPTY_PROFILE, ageRange: '45-54' })).toBe('midlife');
+    expect(likelyLifeStage({ ...EMPTY_PROFILE, ageRange: '65+' })).toBe('later-life');
   });
 });

@@ -110,6 +110,12 @@ describe('pages render', () => {
     expect(screen.getByText(/you are now in a/i)).toBeTruthy();
   });
 
+  it('a life stage puts its most relevant guides first and keeps the rest one click away', async () => {
+    renderAt('/guides?stage=family');
+    expect(await screen.findByRole('heading', { level: 2, name: /most relevant for growing a family/i })).toBeTruthy();
+    expect(screen.getByText(/everything else \(\d+ guides\)/i)).toBeTruthy();
+  });
+
   it('renders every guide page without crashing', () => {
     for (const g of GUIDES) {
       cleanup();
