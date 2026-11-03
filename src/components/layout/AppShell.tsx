@@ -12,7 +12,7 @@ const NAV: { to: string; label: string; icon: IconName; end?: boolean; mobile?: 
   { to: '/calculators', label: 'Calculators', icon: 'calculator' },
   { to: '/plan', label: 'My Plan', icon: 'list-checks' },
   { to: '/saved', label: 'Saved Items', icon: 'bookmark' },
-  { to: '/creator', label: 'About Me', icon: 'user', mobile: false },
+  { to: '/creator', label: 'Who made this', icon: 'user', mobile: false },
 ];
 
 function Wordmark() {
