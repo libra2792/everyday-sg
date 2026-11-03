@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { Link, NavLink, useLocation, useNavigationType } from 'react-router-dom';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { useAppState } from '@/state/AppState';
 import { ThemeMenu, ThemeOptions } from '@/components/ThemePicker';
@@ -155,11 +155,89 @@ function Footer() {
   );
 }
 
+/**
+ * Every new page opens at the top, like a full page load. `behavior: 'instant'` matters:
+ * 'auto' inherits the global `scroll-behavior: smooth`, and a smooth scroll is cut short
+ * when the new page renders. A URL with a hash scrolls to that element instead.
+ *
+ * Back/Forward (POP) returns to where that page was left. The browser's own restoration
+ * runs before React has rendered the previous page, so positions are remembered here, in
+ * memory only, per history entry (never in storage).
+ */
+const scrollPositions = new Map<string, number>();
+
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  // Entries the browser creates itself (a full load, an anchor jump) all share the key
+  // 'default', so the path and hash are part of the id.
+  const entry = `${key}|${pathname}${hash}`;
+  // Read, not a dependency: a filter or prefill that only REPLACEs the query string must not jump.
+  const type = useNavigationType();
+  const navType = useRef(type);
+  navType.current = type;
+  const entryKey = useRef(entry);
+  const last = useRef({ pathname, hash });
+
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [pathname]);
+    // The browser would otherwise restore against the old page and record a clamped position.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // Recorded on scroll, and again just before a navigation can change the page: a click
+    // (links and buttons that navigate) or Back/Forward. Capture phase, so this runs before
+    // the router's own popstate listener re-renders the page.
+    const remember = () => scrollPositions.set(entryKey.current, window.scrollY);
+    window.addEventListener('scroll', remember, { passive: true });
+    window.addEventListener('click', remember, { capture: true });
+    window.addEventListener('popstate', remember, { capture: true });
+    return () => {
+      window.removeEventListener('scroll', remember);
+      window.removeEventListener('click', remember, { capture: true });
+      window.removeEventListener('popstate', remember, { capture: true });
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    entryKey.current = entry;
+    const samePage = last.current.pathname === pathname;
+    const sameHash = last.current.hash === hash;
+    last.current = { pathname, hash };
+    let timer = 0;
+    let tries = 0;
+    // Lazily loaded pages may not be tall enough (or have the target) straight away.
+    const retry = (attempt: () => boolean) => {
+      const run = () => {
+        if (!attempt() && tries++ < 40) timer = window.setTimeout(run, 16);
+      };
+      run();
+    };
+    const toHash = (behavior: ScrollBehavior = 'instant') => {
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)));
+      el?.scrollIntoView({ behavior, block: 'start' });
+      return Boolean(el);
+    };
+    if (navType.current === 'POP') {
+      // An in-page anchor (a click, or Back over one): glide to that section, as the
+      // section tabs always have, unless the reader prefers reduced motion.
+      if (samePage && hash) {
+        if (!sameHash) toHash(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth');
+        return;
+      }
+      const saved = scrollPositions.get(entry);
+      if (saved === undefined) return;
+      retry(() => {
+        window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
+        return Math.abs(window.scrollY - saved) < 2;
+      });
+    } else if (samePage && sameHash) {
+      // Only the query string changed (a filter, or a calculator clearing its prefill): stay put.
+      return;
+    } else if (hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      retry(() => toHash());
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+    return () => window.clearTimeout(timer);
+  }, [pathname, hash, entry]);
   return null;
 }
 
