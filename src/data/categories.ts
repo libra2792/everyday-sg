@@ -5,8 +5,8 @@ export const CATEGORIES: Category[] = [
     id: 'money',
     name: 'Money and everyday finances',
     shortName: 'Money',
-    description: 'Budgeting, emergency savings, debt, credit cards, cash flow, bills and subscriptions.',
-    topics: ['Budgeting', 'Emergency savings', 'Debt repayment', 'Credit cards', 'Cash flow', 'Bills and subscriptions', 'Irregular expenses'],
+    description: 'Budgeting, emergency savings, debt, credit cards, cash flow, bills, subscriptions and filing income tax.',
+    topics: ['Budgeting', 'Emergency savings', 'Debt repayment', 'Credit cards', 'Cash flow', 'Bills and subscriptions', 'Irregular expenses', 'Income tax'],
     icon: 'wallet',
   },
   {
@@ -46,7 +46,7 @@ export const CATEGORIES: Category[] = [
     name: 'CPF, tax, investing and retirement',
     shortName: 'CPF and retirement',
     description: 'CPF accounts and CPF LIFE, retirement savings, SRS, tax filing and reliefs, investing and inflation.',
-    topics: ['CPF accounts', 'CPF LIFE', 'Retirement savings', 'SRS', 'Tax filing', 'Tax reliefs', 'Investing', 'Inflation'],
+    topics: ['CPF accounts', 'CPF LIFE', 'Retirement savings', 'SRS', 'Tax reliefs', 'Investing', 'Inflation'],
     icon: 'piggy-bank',
   },
   {

@@ -105,7 +105,7 @@ export const CALCULATORS: CalculatorMeta[] = [
     name: 'Annual tax preparation checklist',
     shortName: 'Tax prep',
     description: 'Collect income documents, review relief categories and track what is done before you file with IRAS.',
-    categoryId: 'cpf-tax-retirement',
+    categoryId: 'money',
     path: '/tools/tax-prep',
     icon: 'receipt',
     tags: ['tax', 'IRAS', 'income tax', 'reliefs', 'filing', 'year of assessment', 'IR8A'],

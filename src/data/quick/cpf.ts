@@ -135,40 +135,6 @@ export const CPF_EXTRAS: Record<string, GuideExtras> = {
     },
   },
 
-  'tax-filing-prep': {
-    quick: {
-      intro: 'Your employment type decides how much IRAS already has. Three answers list what you still need to gather.',
-      fields: [
-        { id: 'work', label: 'Your income is from', type: 'choice', options: [{ value: 'ais', label: 'An employer on the Auto-Inclusion Scheme' }, { value: 'nonais', label: 'An employer not on AIS' }, { value: 'self', label: 'Self-employment or freelance' }], default: 'ais' },
-        { id: 'reliefs', label: 'Reliefs you might claim', type: 'choice', options: [{ value: 'none', label: 'None that I know of' }, { value: 'some', label: 'Parent, child, course fees, CPF top-ups, donations' }, { value: 'unsure', label: 'Not sure' }], default: 'unsure' },
-        { id: 'nfs', label: 'Received a No-Filing Service notice?', type: 'choice', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'unsure', label: 'Not sure' }], default: 'unsure' },
-      ],
-      evaluate: (a) => {
-        const why: string[] = [];
-        if (a.work === 'ais') why.push('Your employer submits your income to IRAS; you only confirm it and add anything else (rental, side income) and reliefs.');
-        if (a.work === 'nonais') why.push('You need the IR8A from your employer and must enter the income yourself.');
-        if (a.work === 'self') why.push('Keep a simple income and expense record; you declare net profit, and MediSave contributions are compulsory on it.');
-        if (a.reliefs === 'some') why.push('Gather the proof: parent relief needs the parent’s details, course fees need receipts, CPF top-ups and donations are usually auto-included but check they appear.');
-        if (a.reliefs === 'unsure') why.push('Run through IRAS’s relief list once; parent, spouse, child and course-fee reliefs are the ones most often missed.');
-        if (a.nfs === 'yes') why.push('No-Filing Service: check the pre-filled figures and reliefs on myTax Portal; you only act if something is wrong or missing.');
-        else why.push('Filing opens on 1 March; the e-filing deadline is 18 April. The Notice of Assessment follows from May, and payment is due within a month unless you use GIRO.');
-        return {
-          label: 'Pointer',
-          verdict: a.nfs === 'yes' ? 'Check, do not file' : a.work === 'self' ? 'Prepare your income record' : 'Confirm income, add reliefs',
-          why,
-          next: [tool('tax-prep', 'The document checklist, saved in this browser.'), official('iras-filing', 'How filing works and the dates.'), guide('freelance-variable-income', 'Setting money aside for tax when income varies.')],
-          fine: 'This site has no tax calculator on purpose; rates and reliefs change and IRAS’s own calculator is the authority.',
-        };
-      },
-    },
-    figure: {
-      type: 'timeline',
-      lanes: [{ label: 'Tax year', nodes: ['Jan to Feb: gather documents', '1 Mar: filing opens', '18 Apr: e-filing deadline', 'From May: Notice of Assessment', 'Pay within a month or by GIRO'], wait: { from: 1, to: 2, label: 'filing season' } }],
-      caption: 'The yearly rhythm of personal income tax in Singapore. Most of the work is in the first six weeks of the year, before the portal opens.',
-      aria: 'Timeline of the tax year from gathering documents in January to payment after the Notice of Assessment.',
-    },
-  },
-
   'start-investing': {
     quick: {
       intro: 'Order matters more than product choice. Three answers say whether you are ready to invest or what to do first.',
