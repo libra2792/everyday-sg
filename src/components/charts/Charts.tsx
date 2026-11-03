@@ -5,7 +5,7 @@ import { sgd } from '@/lib/format';
  * Measure the rendered width of a chart container so the SVG viewBox can match it.
  * Keeps text at a readable size on narrow screens instead of scaling a fixed-width drawing down.
  */
-function useContainerWidth(fallback = 640): [React.RefObject<HTMLElement | null>, number] {
+export function useContainerWidth(fallback = 640): [React.RefObject<HTMLElement | null>, number] {
   const ref = useRef<HTMLElement | null>(null);
   const [width, setWidth] = useState(fallback);
   useEffect(() => {
