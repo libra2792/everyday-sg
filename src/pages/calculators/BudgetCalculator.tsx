@@ -82,6 +82,7 @@ export default function BudgetCalculator() {
     <CalculatorShell
       id="budget"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['moneysense', 'moneysense-decisions', 'mom-labour-force-2025', 'singstat-income-2025', 'singstat-hes-2023']}
       relatedGuides={['build-a-budget', 'emergency-fund', 'subscriptions-and-bills']}

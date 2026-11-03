@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { CALCULATOR_MAP } from '@/data/calculators';
 import { GUIDE_MAP } from '@/data/guides';
 import { useAppState } from '@/state/AppState';
@@ -25,6 +25,8 @@ interface CalculatorShellProps {
   caveat?: ReactNode;
   /** True when inputs were filled from a guide's quick check; shows a note under the header. */
   prefilled?: boolean;
+  /** The calculator's current inputs, so the shell can tell when prefilled values were changed. */
+  inputs?: unknown;
   /**
    * Set when a required input is missing or out of range (e.g. a tenure of 0). The results
    * are replaced by this neutral message, so nothing is computed from a degenerate state.
@@ -37,11 +39,19 @@ interface CalculatorShellProps {
  * results near the inputs (sticky on wide screens), then assumptions, methodology,
  * sources and related guides.
  */
-export function CalculatorShell({ id, children, results, assumptions, methodology, onReset, snapshot, headline, sourceIds = [], relatedGuides = [], intro, caveat, prefilled, blocked }: CalculatorShellProps) {
+export function CalculatorShell({ id, children, results, assumptions, methodology, onReset, snapshot, headline, sourceIds = [], relatedGuides = [], intro, caveat, prefilled, inputs, blocked }: CalculatorShellProps) {
   const meta = CALCULATOR_MAP[id];
   const { addSnapshot } = useAppState();
   const [savedFlash, setSavedFlash] = useState(false);
   const [resetFlash, setResetFlash] = useState(false);
+  // The banner belongs to the prefilled values: Reset clears it, and once anything is changed
+  // it no longer claims the inputs came from the guide. Reloading never brings it back, because
+  // the query string that prefilled the page has already been removed.
+  const [prefillCleared, setPrefillCleared] = useState(false);
+  const prefillBaseline = useRef<string | null>(null);
+  if (prefilled && prefillBaseline.current === null) prefillBaseline.current = JSON.stringify(inputs);
+  const showPrefill = Boolean(prefilled) && !prefillCleared;
+  const prefillEdited = showPrefill && JSON.stringify(inputs) !== prefillBaseline.current;
   const strip = (headline ?? snapshot ?? []).slice(0, 2).map((s) => (blocked ? { ...s, value: '—' } : s));
 
   const saveSnapshot = () => {
@@ -52,6 +62,7 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
   };
   const handleReset = () => {
     onReset();
+    setPrefillCleared(true);
     setResetFlash(true);
     setTimeout(() => setResetFlash(false), 2000);
   };
@@ -81,8 +92,8 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
           </>
         }
       />
-      {prefilled && (
-        <Note className="mb-6" icon="sliders-horizontal" title="Filled in from your answers in the guide">
+      {showPrefill && (
+        <Note className="mb-6" icon="sliders-horizontal" title={prefillEdited ? 'Started from your answers in the guide' : 'Filled in from your answers in the guide'}>
           Adjust anything below; the results update as you type. Reset inputs clears the lot.
         </Note>
       )}

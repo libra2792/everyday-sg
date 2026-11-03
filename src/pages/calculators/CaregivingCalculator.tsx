@@ -70,6 +70,7 @@ export default function CaregivingCalculator() {
     <CalculatorShell
       id="caregiving"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['aic', 'aic-financial', 'aic-hcg', 'moh-ltc', 'moh-aged-care', 'cpf-careshield', 'mom-mdw']}
       relatedGuides={['caregiving-plan', 'eldercare-costs-and-support', 'hiring-a-helper']}

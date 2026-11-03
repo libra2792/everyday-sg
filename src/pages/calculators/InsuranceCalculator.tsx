@@ -58,6 +58,7 @@ export default function InsuranceCalculator() {
     <CalculatorShell
       id="insurance"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['moneysense', 'cpf-medishield', 'cpf-careshield', 'singstat-hes-2023']}
       relatedGuides={['insurance-basics', 'review-coverage-and-claims', 'health-insurance-sg']}

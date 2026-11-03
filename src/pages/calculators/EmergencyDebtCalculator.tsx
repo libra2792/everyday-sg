@@ -64,6 +64,7 @@ export default function EmergencyDebtCalculator() {
     <CalculatorShell
       id="emergency-debt"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['moneysense', 'singstat-hes-2023']}
       relatedGuides={['emergency-fund', 'pay-down-debt', 'build-a-budget']}

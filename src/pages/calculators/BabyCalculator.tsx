@@ -77,6 +77,7 @@ export default function BabyCalculator() {
     <CalculatorShell
       id="baby"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['lifesg-sg-child-support', 'lifesg-baby-bonus', 'ecda-subsidies', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare', 'ecda-aop', 'singstat-income-2025']}
       relatedGuides={['preparing-for-pregnancy', 'newborn-first-year', 'childcare-and-preschool']}

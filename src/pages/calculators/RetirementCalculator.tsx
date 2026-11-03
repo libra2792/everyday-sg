@@ -64,6 +64,7 @@ export default function RetirementCalculator() {
     <CalculatorShell
       id="retirement"
       prefilled={prefilled}
+      inputs={state}
       blocked={blocked}
       onReset={reset}
       sourceIds={['cpf-life', 'cpf-payout-estimator', 'cpf-planner', 'cpf-retirement-planning', 'moneysense', 'singstat-hes-2023']}

@@ -48,6 +48,7 @@ export default function CarCalculator() {
     <CalculatorShell
       id="car"
       prefilled={prefilled}
+      inputs={state}
       blocked={blocked}
       onReset={reset}
       sourceIds={['onemotoring', 'onemotoring-upfront', 'onemotoring-coe', 'onemotoring-coe-results', 'onemotoring-ongoing', 'onemotoring-road-tax', 'lta-fares']}

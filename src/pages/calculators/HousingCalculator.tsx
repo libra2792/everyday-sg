@@ -99,6 +99,7 @@ export default function HousingCalculator() {
     <CalculatorShell
       id="housing"
       prefilled={prefilled}
+      inputs={state}
       blocked={blocked}
       onReset={reset}
       sourceIds={['hdb-loan', 'hdb-hfe', 'cpf-housing', 'moneysense-decisions', 'hdb-median-resale', 'singstat-income-2025']}
