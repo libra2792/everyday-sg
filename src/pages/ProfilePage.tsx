@@ -51,7 +51,7 @@ export function ProfilePage() {
   const { profile, setProfile, clearProfile, dismissProfile } = useAppState();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<Profile>(profile ?? EMPTY_PROFILE);
-  const answered = [draft.ageRange, draft.residency, draft.housing, draft.employment, draft.horizon].filter(Boolean).length + (draft.household.length > 0 ? 1 : 0) + (draft.priorities.length > 0 ? 1 : 0);
+  const answered = [draft.ageRange, draft.residency, draft.employment, draft.horizon].filter(Boolean).length + (draft.household.length > 0 ? 1 : 0) + (draft.housing.length > 0 ? 1 : 0) + (draft.priorities.length > 0 ? 1 : 0);
 
   const save = () => {
     setProfile(draft);
@@ -103,9 +103,10 @@ export function ProfilePage() {
             { value: 'supporting-parents', label: 'Supporting parents' },
           ]}
         />
-        <OptionGroup<HousingSituation>
+        <MultiGroup<HousingSituation>
           label="Housing"
-          value={draft.housing}
+          help="Pick everything that applies, for example renting and planning to buy."
+          values={draft.housing}
           onChange={(v) => setDraft({ ...draft, housing: v })}
           options={[
             { value: 'with-family', label: 'Living with family' },

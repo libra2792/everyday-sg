@@ -10,7 +10,7 @@ import { applyTheme, currentTheme, readStoredTheme, saveTheme, systemDefaultThem
 export type AgeRange = '' | '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+';
 export type Residency = '' | 'citizen' | 'pr' | 'other';
 export type Household = '' | 'single' | 'partnered' | 'married' | 'parent' | 'supporting-parents';
-export type HousingSituation = '' | 'with-family' | 'renting' | 'hdb-owner' | 'private-owner' | 'planning-to-buy';
+export type HousingSituation = 'with-family' | 'renting' | 'hdb-owner' | 'private-owner' | 'planning-to-buy';
 export type Employment = '' | 'employed' | 'self-employed' | 'studying' | 'between-jobs' | 'retired';
 export type Horizon = '' | 'next-3-months' | 'this-year' | '2-5-years' | 'long-term';
 
@@ -33,7 +33,8 @@ export interface Profile {
   ageRange: AgeRange;
   residency: Residency;
   household: Household[];
-  housing: HousingSituation;
+  /** Several can apply, most often renting and planning to buy. */
+  housing: HousingSituation[];
   employment: Employment;
   priorities: PriorityId[];
   horizon: Horizon;
@@ -44,12 +45,23 @@ export const EMPTY_PROFILE: Profile = {
   ageRange: '',
   residency: '',
   household: [],
-  housing: '',
+  housing: [],
   employment: '',
   priorities: [],
   horizon: '',
   updatedAt: '',
 };
+
+/**
+ * Profiles saved before Housing allowed several answers stored a single string; read those
+ * (and any import of them) as a one-item list.
+ */
+export function migrateProfile(saved: unknown): Profile | null {
+  if (!saved || typeof saved !== 'object') return null;
+  const p = saved as Partial<Profile> & { housing?: unknown };
+  const list = (v: unknown) => (Array.isArray(v) ? v : typeof v === 'string' && v ? [v] : []);
+  return { ...EMPTY_PROFILE, ...p, housing: list(p.housing) as HousingSituation[], household: list(p.household) as Household[], priorities: list(p.priorities) as PriorityId[] };
+}
 
 export type SavedItemType = 'guide' | 'calculator' | 'tool' | 'snapshot';
 
@@ -131,7 +143,7 @@ const AppStateContext = createContext<AppState | null>(null);
 /* ---------------------------------------------------------------------- */
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = usePersistentState<Profile | null>('profile', null);
+  const [profile, setProfileState] = usePersistentState<Profile | null>('profile', null, migrateProfile);
   const [profileDismissed, setProfileDismissed] = usePersistentState<boolean>('profile-dismissed', false);
   const [progress, setProgress] = usePersistentState<ChecklistProgress>('checklists', {});
   const [saved, setSaved] = usePersistentState<SavedItem[]>('saved', []);

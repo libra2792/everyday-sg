@@ -223,7 +223,7 @@ export function MyPlan() {
                   ['Age range', LABELS[profile.ageRange]],
                   ['Residency', LABELS[profile.residency]],
                   ['Household', profile.household.map((h) => LABELS[h]).join(', ')],
-                  ['Housing', LABELS[profile.housing]],
+                  ['Housing', profile.housing.map((h) => LABELS[h]).join(', ')],
                   ['Employment', LABELS[profile.employment]],
                   ['Horizon', LABELS[profile.horizon]],
                   ['Priorities', profile.priorities.map((p) => PRIORITY_OPTIONS.find((o) => o.id === p)?.label).filter(Boolean).join(', ')],

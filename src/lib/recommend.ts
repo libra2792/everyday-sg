@@ -41,9 +41,11 @@ const RULES: Rule[] = [
   { when: (p) => p.household.includes('single'), reason: 'Foundations that matter when it is just you', guides: ['emergency-fund', 'insurance-basics'], priority: 3 },
 
   // Housing
-  { when: (p) => p.housing === 'planning-to-buy', reason: 'You are planning to buy', guides: ['hdb-bto-vs-resale', 'home-affordability-and-loans'], calculators: ['housing'], priority: 2 },
-  { when: (p) => p.housing === 'renting', reason: 'You are renting', guides: ['renting-in-singapore'], priority: 3 },
-  { when: (p) => p.housing === 'hdb-owner' || p.housing === 'private-owner', reason: 'You own your home', guides: ['renovation-and-moving', 'annual-life-admin'], priority: 3 },
+  // Renting while saving to buy: the most common combination in the late twenties and thirties.
+  { when: (p) => p.housing.includes('renting') && p.housing.includes('planning-to-buy'), reason: 'You are renting while planning to buy', guides: ['home-affordability-and-loans', 'renting-in-singapore', 'hdb-bto-vs-resale'], calculators: ['housing'], priority: 2 },
+  { when: (p) => p.housing.includes('planning-to-buy'), reason: 'You are planning to buy', guides: ['hdb-bto-vs-resale', 'home-affordability-and-loans'], calculators: ['housing'], priority: 2 },
+  { when: (p) => p.housing.includes('renting'), reason: 'You are renting', guides: ['renting-in-singapore'], priority: 3 },
+  { when: (p) => p.housing.includes('hdb-owner') || p.housing.includes('private-owner'), reason: 'You own your home', guides: ['renovation-and-moving', 'annual-life-admin'], priority: 3 },
 
   // Employment
   { when: (p) => p.employment === 'self-employed', reason: 'You are self-employed', guides: ['freelance-variable-income', 'tax-filing-prep'], calculators: ['tax-prep'], priority: 2 },
