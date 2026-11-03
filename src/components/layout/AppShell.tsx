@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigationType } from 'react-router-dom';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { useAppState } from '@/state/AppState';
+import { useAppState, useStorageControl } from '@/state/AppState';
+import { UndoNotice } from '@/components/ui/Misc';
 import { ThemeMenu, ThemeOptions } from '@/components/ThemePicker';
 import { useDocumentHead } from '@/lib/useDocumentHead';
 
@@ -266,6 +267,24 @@ function PageFrame({ children }: { children: ReactNode }) {
   );
 }
 
+/** The Undo offered after erasing all saved data; it outlives the reload of state from storage. */
+function StorageUndo() {
+  const { pendingUndo, clearUndo } = useStorageControl();
+  if (!pendingUndo) return null;
+  return (
+    <UndoNotice
+      key={pendingUndo.id}
+      floating
+      message={pendingUndo.message}
+      onUndo={() => {
+        clearUndo();
+        pendingUndo.restore();
+      }}
+      onExpire={clearUndo}
+    />
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   useDocumentHead();
   return (
@@ -278,6 +297,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <PageFrame>{children}</PageFrame>
       <Footer />
       <MobileNav />
+      <StorageUndo />
     </div>
   );
 }

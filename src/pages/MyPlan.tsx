@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { savedItemHref, useAppState, PRIORITY_OPTIONS } from '@/state/AppState';
+import { savedItemHref, useAppState, useStorageControl, PRIORITY_OPTIONS } from '@/state/AppState';
 import { GUIDES } from '@/data/guides';
 import { recommend } from '@/lib/recommend';
 import { daysUntil, describeDue, isValidISODate } from '@/lib/dates';
@@ -121,6 +121,7 @@ function TasksSection() {
 }
 
 function DataSection() {
+  const { reloadFromStorage, offerUndo } = useStorageControl();
   const [message, setMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const footprint = storageFootprintBytes();
@@ -144,11 +145,15 @@ function DataSection() {
       setMessage('That file could not be read as JSON.');
     }
   };
+  // One click erases; a copy is held in memory for five seconds so Undo can put it all back.
   const doReset = () => {
-    if (!window.confirm('Erase everything Everyday SG has saved in this browser? This cannot be undone unless you exported a copy.')) return;
+    const copy = exportAll();
     const n = clearAll();
-    setMessage(`Removed ${n} saved items. Reloading…`);
-    setTimeout(() => window.location.reload(), 600);
+    reloadFromStorage();
+    offerUndo(`Removed ${n} saved ${n === 1 ? 'item' : 'items'} from this browser.`, () => {
+      importAll(copy);
+      reloadFromStorage();
+    });
   };
 
   return (

@@ -3,7 +3,8 @@ import { readJSON, removeKey, writeJSON } from './storage';
 
 /**
  * useState that mirrors its value into localStorage under an Everyday SG key.
- * Returns [value, setValue, reset]. `reset` restores the initial value and clears the key.
+ * Returns [value, setValue, reset]. `reset` restores the initial value and clears the key,
+ * and returns a function that puts the previous value back (for an Undo).
  *
  * A `merge` function can migrate older saved shapes (e.g. when new fields are added).
  */
@@ -11,7 +12,7 @@ export function usePersistentState<T>(
   key: string,
   initial: T | (() => T),
   merge?: (saved: unknown, fallback: T) => T,
-): [T, Dispatch<SetStateAction<T>>, () => void] {
+): [T, Dispatch<SetStateAction<T>>, () => () => void] {
   const initialRef = useRef<T | null>(null);
   const getInitial = (): T => {
     if (initialRef.current === null) {
@@ -47,9 +48,13 @@ export function usePersistentState<T>(
     writeJSON(key, value);
   }, [key, value]);
 
+  const latest = useRef(value);
+  latest.current = value;
   const reset = useCallback(() => {
+    const previous = latest.current;
     removeKey(key);
     setValue(getInitial());
+    return () => setValue(previous);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 

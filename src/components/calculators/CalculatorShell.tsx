@@ -5,7 +5,7 @@ import { useAppState } from '@/state/AppState';
 import { formatDayMonth } from '@/lib/format';
 import type { PrefillSource } from '@/lib/usePrefill';
 import { Button } from '@/components/ui/Button';
-import { Disclosure, Note, PageHeader, SectionHeading } from '@/components/ui/Misc';
+import { Disclosure, Note, PageHeader, SectionHeading, UndoNotice } from '@/components/ui/Misc';
 import { GuideCard } from '@/components/GuideCard';
 import { SaveButton } from '@/components/SaveButton';
 import { SourceNote } from '@/components/SourceNote';
@@ -17,7 +17,8 @@ interface CalculatorShellProps {
   results: ReactNode;
   assumptions?: ReactNode;
   methodology?: ReactNode;
-  onReset: () => void;
+  /** Resets the inputs; may return a function that restores them, which turns on Undo. */
+  onReset: () => void | (() => void);
   snapshot?: { label: string; value: string }[];
   /** One or two headline figures shown in a compact strip on small screens while editing inputs. Defaults to the first two snapshot rows. */
   headline?: { label: string; value: string }[];
@@ -75,11 +76,20 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 2000);
   };
+  // One click resets; the previous inputs are kept in memory for five seconds in case it was a slip.
+  const [undoReset, setUndoReset] = useState<(() => void) | null>(null);
+  const [resets, setResets] = useState(0);
   const handleReset = () => {
-    onReset();
+    const restore = onReset();
     setPrefillCleared(true);
-    setResetFlash(true);
-    setTimeout(() => setResetFlash(false), 2000);
+    if (typeof restore === 'function') {
+      setUndoReset(() => restore);
+      setResets((n) => n + 1);
+      setAnnouncement('Inputs reset');
+    } else {
+      setResetFlash(true);
+      setTimeout(() => setResetFlash(false), 2000);
+    }
   };
 
   return (
@@ -110,6 +120,19 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
       <span role="status" aria-live="polite" className="sr-only">
         {announcement}
       </span>
+      {undoReset && (
+        <UndoNotice
+          key={resets}
+          className="mb-6"
+          message="Inputs reset."
+          onUndo={() => {
+            undoReset();
+            setUndoReset(null);
+            setAnnouncement('Inputs restored');
+          }}
+          onExpire={() => setUndoReset(null)}
+        />
+      )}
       {showPrefill && (
         <Note className="mb-6" icon="sliders-horizontal" title={prefillTitle}>
           Adjust anything below; the results update as you type. Reset inputs clears the lot.

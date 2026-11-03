@@ -362,6 +362,15 @@ describe('calculators recompute from inputs', () => {
     await waitFor(() => expect(screen.queryByText(/loaded from your snapshot/i)).toBeNull());
   });
 
+  it('reset inputs offers an Undo that restores them', async () => {
+    renderAt('/calculators/insurance');
+    await setNumber(/^Annual household living expenses$/i, 50000);
+    fireEvent.click(screen.getByRole('button', { name: /reset inputs/i }));
+    await waitFor(() => expect(window.localStorage.getItem('everydaysg:calc:insurance')).toBeNull());
+    fireEvent.click(await screen.findByRole('button', { name: /undo/i }));
+    await waitFor(() => expect(window.localStorage.getItem('everydaysg:calc:insurance')).toContain('50000'));
+  });
+
   it('reset clears saved inputs', async () => {
     renderAt('/calculators/insurance');
     await setNumber(/^Annual household living expenses$/i, 50000);
@@ -383,6 +392,23 @@ describe('appearance', () => {
     await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBe('professional'));
     fireEvent.click(screen.getAllByRole('radio', { name: /sage/i })[0]);
     await waitFor(() => expect(document.documentElement.getAttribute('data-theme')).toBeNull());
+  });
+});
+
+describe('your data', () => {
+  it('erases everything in one click, with no confirm dialog, and Undo puts it back', async () => {
+    window.localStorage.setItem('everydaysg:tasks', JSON.stringify([{ id: 't1', title: 'Renew passport', done: false, source: 'manual', createdAt: '2026-11-01T00:00:00Z' }]));
+    const confirm = vi.spyOn(window, 'confirm');
+    renderAt('/plan');
+    expect(screen.getByText('Renew passport')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /reset all saved data/i }));
+    expect(confirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByText('Renew passport')).toBeNull());
+    expect(window.localStorage.getItem('everydaysg:tasks')).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: /undo/i }));
+    expect(await screen.findByText('Renew passport')).toBeTruthy();
+    expect(window.localStorage.getItem('everydaysg:tasks')).toContain('Renew passport');
+    confirm.mockRestore();
   });
 });
 

@@ -125,6 +125,8 @@ interface AppState {
   toggleItem: (listId: string, itemId: string) => void;
   setItems: (listId: string, itemIds: string[], value: boolean) => void;
   resetList: (listId: string) => void;
+  /** Put a list's ticks back exactly as they were (used by Undo). */
+  restoreList: (listId: string, items: Record<string, boolean> | undefined) => void;
   listCompletion: (listId: string, itemIds: string[]) => { done: number; total: number };
 
   saved: SavedItem[];
@@ -150,7 +152,40 @@ const AppStateContext = createContext<AppState | null>(null);
 /* Provider                                                                */
 /* ---------------------------------------------------------------------- */
 
+/**
+ * Everything that has to outlive a reload of the state from storage: the reload itself
+ * (bumping the store's key re-reads every saved value) and an Undo offered across it.
+ */
+interface StorageControl {
+  reloadFromStorage: () => void;
+  pendingUndo: { id: number; message: string; restore: () => void } | null;
+  offerUndo: (message: string, restore: () => void) => void;
+  clearUndo: () => void;
+}
+
+const StorageControlContext = createContext<StorageControl | null>(null);
+
 export function AppStateProvider({ children }: { children: ReactNode }) {
+  const [generation, setGeneration] = useState(0);
+  const [pendingUndo, setPendingUndo] = useState<StorageControl['pendingUndo']>(null);
+  const reloadFromStorage = useCallback(() => setGeneration((g) => g + 1), []);
+  const offerUndo = useCallback((message: string, restore: () => void) => setPendingUndo({ id: Date.now(), message, restore }), []);
+  const clearUndo = useCallback(() => setPendingUndo(null), []);
+  const control = useMemo(() => ({ reloadFromStorage, pendingUndo, offerUndo, clearUndo }), [reloadFromStorage, pendingUndo, offerUndo, clearUndo]);
+  return (
+    <StorageControlContext.Provider value={control}>
+      <AppStateStore key={generation}>{children}</AppStateStore>
+    </StorageControlContext.Provider>
+  );
+}
+
+export function useStorageControl(): StorageControl {
+  const ctx = useContext(StorageControlContext);
+  if (!ctx) throw new Error('useStorageControl must be used within AppStateProvider');
+  return ctx;
+}
+
+function AppStateStore({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = usePersistentState<Profile | null>('profile', null, migrateProfile);
   const [profileDismissed, setProfileDismissed] = usePersistentState<boolean>('profile-dismissed', false);
   const [progress, setProgress] = usePersistentState<ChecklistProgress>('checklists', {});
@@ -185,6 +220,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setProgress((prev) => {
         const next = { ...prev };
         delete next[listId];
+        return next;
+      }),
+    [setProgress],
+  );
+  const restoreList = useCallback(
+    (listId: string, items: Record<string, boolean> | undefined) =>
+      setProgress((prev) => {
+        const next = { ...prev };
+        if (items) next[listId] = items;
+        else delete next[listId];
         return next;
       }),
     [setProgress],
@@ -257,6 +302,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       toggleItem,
       setItems,
       resetList,
+      restoreList,
       listCompletion,
       saved,
       isSaved,
@@ -271,7 +317,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       themeIsExplicit,
       setTheme,
     }),
-    [profile, profileDismissed, setProfile, clearProfile, dismissProfile, progress, isChecked, toggleItem, setItems, resetList, listCompletion, saved, isSaved, toggleSaved, addSnapshot, removeSaved, tasks, addTask, updateTask, removeTask, theme, themeIsExplicit, setTheme],
+    [profile, profileDismissed, setProfile, clearProfile, dismissProfile, progress, isChecked, toggleItem, setItems, resetList, restoreList, listCompletion, saved, isSaved, toggleSaved, addSnapshot, removeSaved, tasks, addTask, updateTask, removeTask, theme, themeIsExplicit, setTheme],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

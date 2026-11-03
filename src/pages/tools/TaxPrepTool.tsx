@@ -36,7 +36,7 @@ function defaultState(): TaxState {
 
 export default function TaxPrepTool() {
   const [state, setState, reset] = usePersistentState<TaxState>('tool:tax-prep', defaultState);
-  const { addTask, tasks, resetList, listCompletion } = useAppState();
+  const { addTask, tasks, resetList, restoreList, progress, listCompletion } = useAppState();
   const [added, setAdded] = useState(false);
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
@@ -58,8 +58,13 @@ export default function TaxPrepTool() {
   };
 
   const handleReset = () => {
+    const ticks = progress[listId];
     resetList(listId);
-    reset();
+    const undo = reset();
+    return () => {
+      undo();
+      restoreList(listId, ticks);
+    };
   };
 
   return (

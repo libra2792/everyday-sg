@@ -21,7 +21,7 @@ const LIST_ID = 'tool-annual-admin';
 
 export default function AnnualAdminTool() {
   const [state, setState, reset] = usePersistentState<AdminState>('tool:annual-admin', { reviewDate: '', lastCompleted: '' });
-  const { listCompletion, resetList, addTask, tasks } = useAppState();
+  const { listCompletion, resetList, restoreList, progress, addTask, tasks } = useAppState();
   const [added, setAdded] = useState(false);
   const total = ANNUAL_ADMIN_ALL_ITEMS.length;
   const completion = listCompletion(LIST_ID, ANNUAL_ADMIN_ALL_ITEMS.map((i) => i.id));
@@ -44,8 +44,13 @@ export default function AnnualAdminTool() {
     <CalculatorShell
       id="annual-admin"
       onReset={() => {
+        const ticks = progress[LIST_ID];
         resetList(LIST_ID);
-        reset();
+        const undo = reset();
+        return () => {
+          undo();
+          restoreList(LIST_ID, ticks);
+        };
       }}
       sourceIds={['moneysense', 'cpf', 'iras', 'healthhub', 'scamshield', 'ica-passport']}
       relatedGuides={['annual-life-admin', 'review-coverage-and-claims', 'document-renewals', 'subscriptions-and-bills']}
