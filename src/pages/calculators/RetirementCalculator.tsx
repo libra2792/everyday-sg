@@ -57,10 +57,14 @@ export default function RetirementCalculator() {
 
   const activeScenario = SCENARIOS.find((s) => s.returnPct === state.nominalReturnPct && s.inflationPct === state.inflationPct);
 
+  const blocked =
+    state.retirementAge < state.currentAge ? 'Set a retirement age no earlier than your current age to see the projection.' : state.planToAge <= state.retirementAge ? 'Set the age to plan to after your retirement age to see the projection.' : null;
+
   return (
     <CalculatorShell
       id="retirement"
       prefilled={prefilled}
+      blocked={blocked}
       onReset={reset}
       sourceIds={['cpf-life', 'cpf-payout-estimator', 'cpf-planner', 'cpf-retirement-planning', 'moneysense', 'singstat-hes-2023']}
       relatedGuides={['retirement-income-cpf-life', 'cpf-basics', 'start-investing']}
@@ -115,9 +119,9 @@ export default function RetirementCalculator() {
       }
     >
       <InputGroup title="Ages">
-        <SliderField label="Current age" min={18} max={80} step={1} value={state.currentAge} onChange={set('currentAge')} allowAboveMax={false} />
-        <SliderField label="Intended retirement age" benchmark={BENCHMARKS.retirementAge} min={40} max={80} step={1} value={state.retirementAge} onChange={set('retirementAge')} allowAboveMax={false} help="CPF LIFE payouts can start from 65 and be deferred up to 70; your own savings can start earlier or later." />
-        <SliderField label="Plan to age" benchmark={BENCHMARKS.planToAge} min={70} max={105} step={1} value={state.planToAge} onChange={set('planToAge')} allowAboveMax={false} help="How long your own savings should last. Planning to 90 or beyond is common because of longevity." />
+        <SliderField label="Current age" min={18} max={80} hardMin={18} hardMax={100} step={1} value={state.currentAge} onChange={set('currentAge')} allowAboveMax={false} />
+        <SliderField label="Intended retirement age" benchmark={BENCHMARKS.retirementAge} min={40} max={80} hardMin={18} hardMax={100} step={1} value={state.retirementAge} onChange={set('retirementAge')} allowAboveMax={false} help="CPF LIFE payouts can start from 65 and be deferred up to 70; your own savings can start earlier or later." />
+        <SliderField label="Plan to age" benchmark={BENCHMARKS.planToAge} min={70} max={105} hardMin={19} hardMax={105} step={1} value={state.planToAge} onChange={set('planToAge')} allowAboveMax={false} help="How long your own savings should last. Planning to 90 or beyond is common because of longevity." />
       </InputGroup>
 
       <InputGroup title="Savings and spending" description="Today's dollars. Exclude CPF balances that will become CPF LIFE payouts; add those payouts as other income instead.">
@@ -135,35 +139,39 @@ export default function RetirementCalculator() {
             </Button>
           ))}
         </div>
-        <SliderField label="Assumed nominal investment return" benchmark={BENCHMARKS.nominalReturn} suffix="% p.a." min={0} max={10} step={0.1} value={state.nominalReturnPct} onChange={set('nominalReturnPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Before inflation. Cash-like savings earn less; diversified portfolios have historically earned more over long periods, with volatility." />
-        <SliderField label="Assumed annual inflation" benchmark={BENCHMARKS.inflation} suffix="% p.a." min={0} max={6} step={0.1} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} />
+        <SliderField label="Assumed nominal investment return" benchmark={BENCHMARKS.nominalReturn} suffix="% p.a." min={0} max={10} hardMax={15} step={0.1} value={state.nominalReturnPct} onChange={set('nominalReturnPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Before inflation. Cash-like savings earn less; diversified portfolios have historically earned more over long periods, with volatility." />
+        <SliderField label="Assumed annual inflation" benchmark={BENCHMARKS.inflation} suffix="% p.a." min={0} max={6} hardMax={15} step={0.1} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} />
         <p className="text-[13px] text-ink-faint">Real return implied by these assumptions: {(((1 + state.nominalReturnPct / 100) / (1 + state.inflationPct / 100) - 1) * 100).toFixed(2)}% p.a.</p>
       </InputGroup>
 
-      <InputGroup title="Savings trajectory" description="Nominal balance and its value in today's dollars, through accumulation and drawdown.">
-        <LineChart
-          ariaLabel="Projected savings by age, nominal and in today's dollars"
-          series={[
-            { name: 'Nominal balance', points: r.trajectory.map((p) => ({ x: p.age, y: p.nominal })) },
-            { name: "Today's dollars", points: r.trajectory.map((p) => ({ x: p.age, y: p.real })), dashed: true },
-          ]}
-          xLabel="Age"
-          markerX={state.retirementAge}
-          markerLabel="Retire"
-          height={240}
-        />
-      </InputGroup>
+      {!blocked && (
+        <>
+          <InputGroup title="Savings trajectory" description="Nominal balance and its value in today's dollars, through accumulation and drawdown.">
+            <LineChart
+              ariaLabel="Projected savings by age, nominal and in today's dollars"
+              series={[
+                { name: 'Nominal balance', points: r.trajectory.map((p) => ({ x: p.age, y: p.nominal })) },
+                { name: "Today's dollars", points: r.trajectory.map((p) => ({ x: p.age, y: p.real })), dashed: true },
+              ]}
+              xLabel="Age"
+              markerX={state.retirementAge}
+              markerLabel="Retire"
+              height={240}
+            />
+          </InputGroup>
 
-      <InputGroup title="What would change the picture" description="Each row re-runs the projection with one change, holding everything else constant.">
-        <div>
-          <div className="mb-2 text-[13.5px] font-medium text-ink">Contributing more each month</div>
-          <DefinitionList dense rows={contributionScenarios.map((s) => ({ label: `${s.delta === 0 ? 'Current' : `+${sgd(s.delta)} / month`} → ${sgd(s.savings)} at retirement`, value: s.shortfall > 0 ? `short ${sgd(s.shortfall)}` : `surplus ${sgd(-s.shortfall)}`, tone: s.shortfall > 0 ? 'caution' : 'positive', emphasis: s.delta === 0 }))} />
-        </div>
-        <div>
-          <div className="mb-2 text-[13.5px] font-medium text-ink">Retiring at a different age</div>
-          <DefinitionList dense rows={ageScenarios.map((s) => ({ label: `Retire at ${s.age} → ${sgd(s.savings)}`, value: s.shortfall > 0 ? `short ${sgd(s.shortfall)}` : `surplus ${sgd(-s.shortfall)}`, tone: s.shortfall > 0 ? 'caution' : 'positive', emphasis: s.age === state.retirementAge }))} />
-        </div>
-      </InputGroup>
+          <InputGroup title="What would change the picture" description="Each row re-runs the projection with one change, holding everything else constant.">
+            <div>
+              <div className="mb-2 text-[13.5px] font-medium text-ink">Contributing more each month</div>
+              <DefinitionList dense rows={contributionScenarios.map((s) => ({ label: `${s.delta === 0 ? 'Current' : `+${sgd(s.delta)} / month`} → ${sgd(s.savings)} at retirement`, value: s.shortfall > 0 ? `short ${sgd(s.shortfall)}` : `surplus ${sgd(-s.shortfall)}`, tone: s.shortfall > 0 ? 'caution' : 'positive', emphasis: s.delta === 0 }))} />
+            </div>
+            <div>
+              <div className="mb-2 text-[13.5px] font-medium text-ink">Retiring at a different age</div>
+              <DefinitionList dense rows={ageScenarios.map((s) => ({ label: `Retire at ${s.age} → ${sgd(s.savings)}`, value: s.shortfall > 0 ? `short ${sgd(s.shortfall)}` : `surplus ${sgd(-s.shortfall)}`, tone: s.shortfall > 0 ? 'caution' : 'positive', emphasis: s.age === state.retirementAge }))} />
+            </div>
+          </InputGroup>
+        </>
+      )}
     </CalculatorShell>
   );
 }

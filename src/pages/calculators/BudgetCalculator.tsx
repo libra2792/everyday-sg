@@ -138,8 +138,8 @@ export default function BudgetCalculator() {
       }
     >
       <InputGroup title="Income" description="Monthly figures, after CPF and tax.">
-        <SliderField label="Monthly take-home income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={20000} step={100} value={state.takeHomeIncome} onChange={(v) => setState((s) => ({ ...s, takeHomeIncome: v }))} />
-        <SliderField label="Other household income" benchmark={BENCHMARKS.householdIncomeContext} prefix="S$" min={0} max={20000} step={100} value={state.otherIncome} onChange={(v) => setState((s) => ({ ...s, otherIncome: v }))} help="A partner's take-home pay, rental income, regular allowances." />
+        <SliderField label="Monthly take-home income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={20000} hardMax={200000} step={100} value={state.takeHomeIncome} onChange={(v) => setState((s) => ({ ...s, takeHomeIncome: v }))} />
+        <SliderField label="Other household income" benchmark={BENCHMARKS.householdIncomeContext} prefix="S$" min={0} max={20000} hardMax={200000} step={100} value={state.otherIncome} onChange={(v) => setState((s) => ({ ...s, otherIncome: v }))} help="A partner's take-home pay, rental income, regular allowances." />
         <SliderField label="Desired monthly savings" benchmark={BENCHMARKS.savingsTarget} benchmarkValue={state.takeHomeIncome > 0 ? Math.round((state.takeHomeIncome + state.otherIncome) * 0.2 / 50) * 50 : undefined} prefix="S$" min={0} max={10000} step={50} value={state.desiredMonthlySavings} onChange={(v) => setState((s) => ({ ...s, desiredMonthlySavings: v }))} help="What you would like to put away each month. The results compare this with what the budget actually allows." />
       </InputGroup>
 
@@ -157,7 +157,7 @@ export default function BudgetCalculator() {
                 <label htmlFor={`cat-amount-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">
                   Monthly amount
                 </label>
-                <NumberField id={`cat-amount-${c.id}`} compact label={`${c.name} amount`} prefix="S$" value={c.amount} onChange={(v) => updateCategory(c.id, { amount: v })} min={0} step={10} />
+                <NumberField id={`cat-amount-${c.id}`} compact label={`${c.name} amount`} prefix="S$" value={c.amount} onChange={(v) => updateCategory(c.id, { amount: v })} min={0} max={1000000} step={10} />
               </div>
               <div>
                 <label htmlFor={`cat-kind-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">

@@ -91,7 +91,7 @@ export default function InsuranceCalculator() {
           <StatGrid>
             <Stat label="Illustrative income-protection need" value={sgd(r.totalNeed)} size="lg" className="col-span-2 sm:col-span-3" hint={`${sgd(r.incomeReplacement)} income replacement + ${sgd(state.outstandingDebts)} debts + ${sgd(state.futureCommitments)} commitments`} />
             <Stat label="Existing cover and assets" value={sgd(r.resources)} />
-            <Stat label={r.gap > 0 ? 'Difference (shortfall)' : 'Difference (surplus)'} value={sgd(Math.abs(r.gap))} tone={r.gap > 0 ? 'caution' : 'positive'} />
+            <Stat label={r.gap > 0 ? 'Difference (shortfall)' : 'Difference (surplus)'} value={sgd(Math.abs(r.gap))} tone={r.totalNeed === 0 ? 'neutral' : r.gap > 0 ? 'caution' : 'positive'} />
             <Stat label="Dependants" value={`${state.dependants}`} />
           </StatGrid>
           {r.totalNeed > 0 && (

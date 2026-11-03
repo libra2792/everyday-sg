@@ -25,6 +25,11 @@ interface CalculatorShellProps {
   caveat?: ReactNode;
   /** True when inputs were filled from a guide's quick check; shows a note under the header. */
   prefilled?: boolean;
+  /**
+   * Set when a required input is missing or out of range (e.g. a tenure of 0). The results
+   * are replaced by this neutral message, so nothing is computed from a degenerate state.
+   */
+  blocked?: string | null;
 }
 
 /**
@@ -32,15 +37,15 @@ interface CalculatorShellProps {
  * results near the inputs (sticky on wide screens), then assumptions, methodology,
  * sources and related guides.
  */
-export function CalculatorShell({ id, children, results, assumptions, methodology, onReset, snapshot, headline, sourceIds = [], relatedGuides = [], intro, caveat, prefilled }: CalculatorShellProps) {
+export function CalculatorShell({ id, children, results, assumptions, methodology, onReset, snapshot, headline, sourceIds = [], relatedGuides = [], intro, caveat, prefilled, blocked }: CalculatorShellProps) {
   const meta = CALCULATOR_MAP[id];
   const { addSnapshot } = useAppState();
   const [savedFlash, setSavedFlash] = useState(false);
   const [resetFlash, setResetFlash] = useState(false);
-  const strip = (headline ?? snapshot ?? []).slice(0, 2);
+  const strip = (headline ?? snapshot ?? []).slice(0, 2).map((s) => (blocked ? { ...s, value: '—' } : s));
 
   const saveSnapshot = () => {
-    if (!snapshot || snapshot.length === 0) return;
+    if (!snapshot || snapshot.length === 0 || blocked) return;
     addSnapshot({ refId: id, title: `${meta.shortName} — ${new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'short' })}`, subtitle: meta.name, path: meta.path, snapshot });
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 2000);
@@ -63,7 +68,7 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
           <>
             <SaveButton type={meta.kind} refId={id} title={meta.name} subtitle={meta.description} path={meta.path} size="sm" />
             {snapshot && (
-              <Button size="sm" variant="ghost" icon="save" onClick={saveSnapshot}>
+              <Button size="sm" variant="ghost" icon="save" onClick={saveSnapshot} disabled={Boolean(blocked)} title={blocked ?? undefined}>
                 {savedFlash ? 'Saved to My Plan' : 'Save results'}
               </Button>
             )}
@@ -85,7 +90,13 @@ export function CalculatorShell({ id, children, results, assumptions, methodolog
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
         <div className="order-2 min-w-0 space-y-6 lg:order-none">{children}</div>
         <aside className="order-1 min-w-0 lg:order-none lg:sticky lg:top-24" aria-label="Results">
-          {results}
+          {blocked ? (
+            <ResultsPanel>
+              <Note icon="sliders-horizontal">{blocked}</Note>
+            </ResultsPanel>
+          ) : (
+            results
+          )}
         </aside>
       </div>
       {strip.length > 0 && (

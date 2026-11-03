@@ -33,6 +33,9 @@ export function formatWithUnits(n: number, prefix?: string, suffix?: string, for
   return `${prefix ?? ''}${n.toLocaleString('en-SG')}${suffix ? `${tight ? '' : ' '}${suffix}` : ''}`;
 }
 
+/** Default ceiling for typed numbers when a field sets none (S$1 billion, or 1e9 of anything). */
+const NUMBER_CEILING = 1_000_000_000;
+
 function useNumberText(value: number, format?: (n: number) => string) {
   const [text, setText] = useState(() => (format ? format(value) : String(value)));
   const focused = useRef(false);
@@ -74,7 +77,8 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
   const helpId = `${fieldId}-help`;
   const { text, setText, focused } = useNumberText(value);
   const lower = min ?? (allowNegative ? Number.NEGATIVE_INFINITY : 0);
-  const upper = max ?? Number.POSITIVE_INFINITY;
+  // A finite ceiling everywhere: no typed value should be able to produce nonsense figures.
+  const upper = max ?? NUMBER_CEILING;
   const invalid = text.trim() !== '' && !Number.isFinite(Number(text));
 
   const commit = (raw: string) => {
@@ -139,31 +143,40 @@ interface SliderFieldProps {
   help?: ReactNode;
   format?: (n: number) => string;
   className?: string;
-  /** Allow typing values above the slider's max (slider pins at max). */
+  /** Allow typing values above the slider's max (slider pins at max), up to `hardMax`. */
   allowAboveMax?: boolean;
+  /** Lowest value that can be typed. Defaults to 0 (or the slider's min if negative). */
+  hardMin?: number;
+  /** Highest value that can be typed. Defaults to the slider's max, or 10 × it with `allowAboveMax`. */
+  hardMax?: number;
   /** An indicative figure shown under the field, with a one-tap "Use" button. */
   benchmark?: Benchmark;
   /** Overrides the benchmark's value, e.g. when it is derived from another input. */
   benchmarkValue?: number;
 }
 
-export function SliderField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, format, className = '', allowAboveMax = true, benchmark, benchmarkValue }: SliderFieldProps) {
+export function SliderField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, format, className = '', allowAboveMax = true, hardMin, hardMax, benchmark, benchmarkValue }: SliderFieldProps) {
   const autoId = useId();
   const fieldId = id || autoId;
   const sliderId = `${fieldId}-slider`;
   const helpId = `${fieldId}-help`;
   const { text, setText, focused } = useNumberText(value);
-  const upper = allowAboveMax ? Number.POSITIVE_INFINITY : max;
+  const lower = hardMin ?? Math.min(0, min);
+  const upper = hardMax ?? (allowAboveMax ? max * 10 : max);
   const display = formatWithUnits(value, prefix, suffix, format);
 
+  // Typed values are clamped to [lower, upper], not only the slider. Above the maximum is
+  // capped at once. Below a hard minimum (or blank) is let through while typing, so the
+  // results can say what is missing, and raised to the minimum when the field is left.
   const commitText = (raw: string) => {
     setText(raw);
     if (raw.trim() === '' || raw === '-' || raw === '.') {
-      onChange(Math.max(0, min));
+      onChange(hardMin !== undefined ? Math.min(0, hardMin) : Math.max(0, min));
       return;
     }
     const n = Number(raw);
-    if (Number.isFinite(n)) onChange(clamp(n, Math.min(0, min), upper));
+    if (!Number.isFinite(n)) return;
+    onChange(hardMin !== undefined && n < hardMin ? Math.max(Math.min(0, hardMin), n) : clamp(n, lower, upper));
   };
 
   return (
@@ -192,7 +205,8 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
             inputMode="decimal"
             className={`field-input !py-1.5 text-sm tabular-nums ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-8' : ''}`}
             value={text}
-            min={Math.min(0, min)}
+            min={lower}
+            max={upper}
             step={step}
             aria-describedby={help ? helpId : undefined}
             onFocus={() => {
@@ -200,7 +214,8 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
             }}
             onBlur={() => {
               focused.current = false;
-              setText(String(value));
+              if (hardMin !== undefined && value < hardMin) onChange(hardMin);
+              else setText(String(value));
             }}
             onChange={(e) => commitText(e.target.value)}
           />
@@ -213,7 +228,7 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
           benchmark={benchmark}
           value={benchmarkValue}
           current={value}
-          onUse={(n) => onChange(allowAboveMax ? Math.max(Math.min(0, min), n) : clamp(n, min, max))}
+          onUse={(n) => onChange(clamp(n, Math.max(lower, allowAboveMax ? lower : min), upper))}
           format={(n) => formatWithUnits(n, prefix, suffix, format)}
         />
       )}
