@@ -8,7 +8,7 @@ import { Icon } from '@/components/ui/Icon';
 import { uid } from '@/lib/storage';
 import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
-import { NumberField, SelectField, SliderField } from '@/components/ui/Field';
+import { NameInput, NumberField, SelectField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { BarList, StackedBar } from '@/components/charts/Charts';
@@ -23,7 +23,7 @@ interface BudgetState {
 }
 
 const DEFAULT_CATEGORIES: BudgetCategory[] = [
-  { id: 'housing', name: 'Housing (rent, mortgage, conservancy)', amount: 0, kind: 'essential' },
+  { id: 'housing', name: 'Housing (rent/mortgage/S&CC)', amount: 0, kind: 'essential' },
   { id: 'food', name: 'Food and groceries', amount: 0, kind: 'essential' },
   { id: 'transport', name: 'Transport', amount: 0, kind: 'essential' },
   { id: 'insurance', name: 'Insurance premiums', amount: 0, kind: 'essential' },
@@ -147,12 +147,13 @@ export default function BudgetCalculator() {
       <InputGroup title="Monthly spending and savings" description="Edit names, amounts and types. Add or remove categories to match your life.">
         <div className="space-y-3">
           {state.categories.map((c) => (
-            <div key={c.id} className="relative grid grid-cols-2 gap-2 rounded-md border border-stone-200 bg-stone-100 p-3 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] sm:items-end">
-              <div className="col-span-2 pr-10 sm:col-span-1 sm:pr-0">
+            <div key={c.id} className="relative grid grid-cols-2 gap-2 rounded-md border border-stone-200 bg-stone-100 p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] sm:items-end">
+              {/* On phones the remove button sits beside the label, so the name gets the full width. */}
+              <div className="col-span-2 sm:col-span-1">
                 <label htmlFor={`cat-name-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">
-                  Category
+                  Category name
                 </label>
-                <input id={`cat-name-${c.id}`} className="field-input !py-1.5 text-sm" value={c.name} onChange={(e) => updateCategory(c.id, { name: e.target.value })} maxLength={60} />
+                <NameInput id={`cat-name-${c.id}`} value={c.name} onChange={(name) => updateCategory(c.id, { name })} maxLength={60} />
               </div>
               <div>
                 <label htmlFor={`cat-amount-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">
@@ -166,7 +167,7 @@ export default function BudgetCalculator() {
                 </label>
                 <SelectField id={`cat-kind-${c.id}`} compact label={`${c.name} type`} value={c.kind} onChange={(v) => updateCategory(c.id, { kind: v })} options={KIND_OPTIONS} />
               </div>
-              <Button size="sm" variant="ghost" icon="trash-2" aria-label={`Remove ${c.name}`} onClick={() => removeCategory(c.id)} className="absolute right-2 top-2 sm:static sm:mb-0.5">
+              <Button size="sm" variant="ghost" icon="trash-2" aria-label={`Remove ${c.name}`} onClick={() => removeCategory(c.id)} className="absolute right-2 top-1 sm:static sm:mb-0.5">
                 <span className="sr-only">Remove</span>
               </Button>
             </div>

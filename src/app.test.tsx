@@ -202,7 +202,7 @@ describe('calculators recompute from inputs', () => {
   it('budget: surplus and savings rate update, categories can be added and removed', async () => {
     renderAt('/calculators/budget');
     await setNumber(/^Monthly take-home income$/i, 5000);
-    await setNumber(/^Housing \(rent, mortgage, conservancy\) amount$/i, 1500);
+    await setNumber(/^Housing \(rent\/mortgage\/S&CC\) amount$/i, 1500);
     await setNumber(/^Savings and investments amount$/i, 1000);
     const results = screen.getByRole('complementary', { name: /results/i });
     await waitFor(() => expect(within(results).getByText(/monthly surplus/i)).toBeTruthy());

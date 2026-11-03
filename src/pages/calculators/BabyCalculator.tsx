@@ -7,7 +7,7 @@ import { uid } from '@/lib/storage';
 import { BENCHMARKS } from '@/data/benchmarks';
 import { BenchmarkHint } from '@/components/ui/BenchmarkHint';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
-import { NumberField, SliderField } from '@/components/ui/Field';
+import { NameInput, NumberField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { ColumnChart } from '@/components/charts/Charts';
@@ -158,7 +158,7 @@ export default function BabyCalculator() {
                   <label htmlFor={`sc-name-${s.id}`} className="mb-1 block text-[12px] text-ink-faint">
                     Arrangement
                   </label>
-                  <input id={`sc-name-${s.id}`} className="field-input !py-1.5 text-sm" value={s.name} onChange={(e) => updateScenario(s.id, { name: e.target.value })} maxLength={40} />
+                  <NameInput id={`sc-name-${s.id}`} value={s.name} onChange={(name) => updateScenario(s.id, { name })} maxLength={40} />
                 </div>
                 <div>
                   <label htmlFor={`sc-fee-${s.id}`} className="mb-1 block text-[12px] text-ink-faint">

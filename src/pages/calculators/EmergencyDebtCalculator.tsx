@@ -7,7 +7,7 @@ import { uid } from '@/lib/storage';
 import { BENCHMARKS } from '@/data/benchmarks';
 import { BenchmarkHint } from '@/components/ui/BenchmarkHint';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
-import { NumberField, Segmented, SliderField } from '@/components/ui/Field';
+import { NameInput, NumberField, Segmented, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { ColumnChart, LineChart } from '@/components/charts/Charts';
@@ -139,7 +139,7 @@ export default function EmergencyDebtCalculator() {
                 <label htmlFor={`debt-name-${d.id}`} className="mb-1 block text-[12px] text-ink-faint">
                   Name
                 </label>
-                <input id={`debt-name-${d.id}`} className="field-input !py-1.5 text-sm" value={d.name} onChange={(e) => updateDebt(d.id, { name: e.target.value })} maxLength={40} />
+                <NameInput id={`debt-name-${d.id}`} value={d.name} onChange={(name) => updateDebt(d.id, { name })} maxLength={40} />
               </div>
               <div>
                 <label htmlFor={`debt-bal-${d.id}`} className="mb-1 block text-[12px] text-ink-faint">

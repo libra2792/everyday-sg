@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { clamp } from '@/lib/format';
 import type { Benchmark } from '@/data/benchmarks';
 import { BenchmarkHint } from './BenchmarkHint';
+import { Icon } from './Icon';
 
 /* ---------------------------------------------------------------------- */
 /* Shared pieces                                                           */
@@ -333,6 +334,20 @@ export function TextField({ id, label, value, onChange, type = 'text', placehold
         onChange={(e) => onChange(e.target.value)}
       />
       {help && <FieldHelp id={helpId}>{help}</FieldHelp>}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* NameInput — a row's editable name (budget category, debt, arrangement)  */
+/* ---------------------------------------------------------------------- */
+
+/** A text box for a row's own name, with a pencil so it reads as something you can rename. */
+export function NameInput({ id, value, onChange, maxLength }: { id: string; value: string; onChange: (v: string) => void; maxLength?: number }) {
+  return (
+    <div className="relative">
+      <input id={id} className="field-input !py-1.5 pr-8 text-sm" value={value} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} title={value} />
+      <Icon name="pencil" size={14} aria-hidden className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-faint" />
     </div>
   );
 }
