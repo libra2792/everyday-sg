@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { savedItemHref, useAppState, PRIORITY_OPTIONS } from '@/state/AppState';
 import { GUIDES } from '@/data/guides';
 import { recommend } from '@/lib/recommend';
@@ -193,6 +193,15 @@ function DataSection() {
 
 export function MyPlan() {
   const { profile, progress, saved } = useAppState();
+  // Arriving from "Save profile": confirm it once. The flag is cleared from history at once,
+  // so a reload or coming Back later does not repeat the message.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [profileSaved] = useState(() => Boolean((location.state as { profileSaved?: boolean } | null)?.profileSaved));
+  useEffect(() => {
+    if (profileSaved) navigate('.', { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const recs = useMemo(() => recommend(profile, progress, 8), [profile, progress]);
   const checklistSummary = useMemo(
     () =>
@@ -207,6 +216,14 @@ export function MyPlan() {
   return (
     <div>
       <PageHeader title="My Plan" description="Your profile, next steps, dates and checklist progress — and full control over the data behind them." actions={<LinkButton to="/plan/profile" size="sm" icon="pencil">{profile ? 'Edit profile' : 'Set up profile'}</LinkButton>} />
+
+      {profileSaved && (
+        <div role="status" className="no-print mb-6">
+          <Note icon="circle-check" title="Profile saved — your suggestions are updated">
+            Your next steps below and on the home page now follow your answers.
+          </Note>
+        </div>
+      )}
 
       <div className="print-only mb-6">
         <h2 className="text-lg font-semibold">Everyday SG — plan summary ({formatDate(new Date().toISOString())})</h2>

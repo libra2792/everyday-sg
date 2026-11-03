@@ -55,7 +55,7 @@ export function ProfilePage() {
 
   const save = () => {
     setProfile(draft);
-    navigate('/plan');
+    navigate('/plan', { state: { profileSaved: true } });
   };
 
   return (

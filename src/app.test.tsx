@@ -395,6 +395,7 @@ describe('profile and recommendations', () => {
       fireEvent.click(screen.getByRole('button', { name: /save profile/i }));
     });
     expect(await screen.findByText(/suggested next steps/i)).toBeTruthy();
+    expect(screen.getByText(/profile saved — your suggestions are updated/i)).toBeTruthy();
     expect(screen.getAllByText(/preparing for a baby/i).length).toBeGreaterThan(0);
     expect(window.localStorage.getItem('everydaysg:profile')).toContain('baby');
   });
