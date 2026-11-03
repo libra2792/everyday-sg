@@ -5,13 +5,14 @@ import { useAppState } from '@/state/AppState';
 import { ThemeMenu, ThemeOptions } from '@/components/ThemePicker';
 import { useDocumentHead } from '@/lib/useDocumentHead';
 
-const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+/** `mobile: false` keeps an item out of the phone tab bar (it stays in the header and footer). */
+const NAV: { to: string; label: string; icon: IconName; end?: boolean; mobile?: false }[] = [
   { to: '/', label: 'Home', icon: 'home', end: true },
   { to: '/guides', label: 'Life Guides', icon: 'book-open' },
   { to: '/calculators', label: 'Calculators', icon: 'calculator' },
   { to: '/plan', label: 'My Plan', icon: 'list-checks' },
   { to: '/saved', label: 'Saved Items', icon: 'bookmark' },
-  { to: '/creator', label: 'About Me', icon: 'user' },
+  { to: '/creator', label: 'About Me', icon: 'user', mobile: false },
 ];
 
 function Wordmark() {
@@ -68,8 +69,8 @@ function Header() {
 function MobileNav() {
   return (
     <nav aria-label="Main (mobile)" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-canvas/95 backdrop-blur md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <ul className="grid grid-cols-6">
-        {NAV.map((item) => (
+      <ul className="grid grid-cols-5">
+        {NAV.filter((item) => item.mobile !== false).map((item) => (
           <li key={item.to}>
             <NavLink to={item.to} end={item.end} className={({ isActive }) => `flex flex-col items-center gap-1 px-1 py-2 text-[11px] ${isActive ? 'font-medium text-ink' : 'text-ink-faint'}`}>
               {({ isActive }) => (
@@ -77,7 +78,7 @@ function MobileNav() {
                   <span className={`flex h-7 w-10 items-center justify-center rounded-full ${isActive ? 'bg-nav-active' : ''}`}>
                     <Icon name={item.icon} size={18} />
                   </span>
-                  <span className="truncate">{item.label === 'Saved Items' ? 'Saved' : item.label === 'Life Guides' ? 'Guides' : item.label === 'About Me' ? 'About' : item.label}</span>
+                  <span className="truncate">{item.label === 'Saved Items' ? 'Saved' : item.label === 'Life Guides' ? 'Guides' : item.label}</span>
                 </>
               )}
             </NavLink>
