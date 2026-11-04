@@ -85,16 +85,6 @@ const DRAWINGS: Record<CategoryId, ReactElement> = {
       <rect x="44" y="100" width="32" height="7" rx="3.5" style={S.coin} />
     </>
   ),
-  careers: (
-    <>
-      <rect x="8" y="104" width="104" height="3" rx="1.5" style={S.ground} />
-      <rect x="20" y="44" width="72" height="50" rx="8" style={S.light} />
-      <path d="M44 44v-8a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v8" style={S.line} />
-      <rect x="20" y="62" width="72" height="4" style={S.solid} />
-      <rect x="50" y="58" width="12" height="12" rx="2" style={S.coin} />
-      <path d="M98 70V30M86 42l12-12 12 12" style={{ ...S.line, stroke: 'var(--clay-500)', strokeWidth: 3 }} />
-    </>
-  ),
   marriage: (
     <>
       <rect x="8" y="104" width="104" height="3" rx="1.5" style={S.ground} />
@@ -124,15 +114,6 @@ const DRAWINGS: Record<CategoryId, ReactElement> = {
       <circle cx="36" cy="84" r="3" style={S.solid} />
       <circle cx="88" cy="84" r="3" style={S.solid} />
       <rect x="20" y="66" width="10" height="6" rx="2" style={S.coin} />
-    </>
-  ),
-  digital: (
-    <>
-      <path d="M60 10 98 26v30c0 24-16 40-38 50C38 96 22 80 22 56V26Z" style={S.tint} />
-      <rect x="44" y="52" width="32" height="26" rx="5" style={S.light} />
-      <path d="M50 52v-8a10 10 0 0 1 20 0v8" style={S.line} />
-      <circle cx="60" cy="65" r="3.5" style={S.solid} />
-      <path d="M60 68v5" style={S.line} />
     </>
   ),
   wellbeing: (

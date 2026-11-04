@@ -31,9 +31,8 @@ const RULES: Rule[] = [
   { when: (p) => p.priorities.includes('parents'), reason: 'You are supporting your parents', guides: ['caregiving-plan', 'eldercare-costs-and-support'], calculators: ['caregiving'], priority: 1 },
   { when: (p) => p.priorities.includes('insurance'), reason: 'You want to sort out insurance', guides: ['insurance-basics', 'review-coverage-and-claims'], calculators: ['insurance'], priority: 1 },
   { when: (p) => p.priorities.includes('retirement'), reason: 'You are planning for retirement', guides: ['retirement-income-cpf-life', 'cpf-basics'], calculators: ['retirement'], priority: 1 },
-  { when: (p) => p.priorities.includes('career'), reason: 'You are thinking about a job change or upskilling', guides: ['changing-jobs', 'upskilling-skillsfuture'], priority: 1 },
   { when: (p) => p.priorities.includes('estate'), reason: 'You want wills, LPA and nominations in place', guides: ['make-a-will', 'lasting-power-of-attorney', 'advance-care-planning'], priority: 1 },
-  { when: (p) => p.priorities.includes('admin'), reason: 'You want to sort out your life admin', guides: ['annual-life-admin', 'document-renewals'], calculators: ['annual-admin'], priority: 1 },
+  { when: (p) => p.priorities.includes('admin'), reason: 'You want to sort out your life admin', guides: ['annual-life-admin', 'tax-filing-prep'], calculators: ['annual-admin'], priority: 1 },
 
   // Household
   { when: (p) => p.household.includes('supporting-parents'), reason: 'You support ageing parents', guides: ['caregiving-plan', 'hiring-a-helper'], calculators: ['caregiving'], priority: 2 },
@@ -49,21 +48,21 @@ const RULES: Rule[] = [
   { when: (p) => p.housing.includes('hdb-owner') || p.housing.includes('private-owner'), reason: 'You own your home', guides: ['renovation-and-moving', 'annual-life-admin'], priority: 3 },
 
   // Employment
-  { when: (p) => p.employment === 'self-employed', reason: 'You are self-employed', guides: ['freelance-variable-income', 'tax-filing-prep'], calculators: ['tax-prep'], priority: 2 },
-  { when: (p) => p.employment === 'between-jobs', reason: 'You are between jobs', guides: ['retrenchment-and-job-loss', 'emergency-fund'], calculators: ['emergency-debt'], priority: 1 },
+  { when: (p) => p.employment === 'self-employed', reason: 'You are self-employed', guides: ['tax-filing-prep', 'emergency-fund'], calculators: ['tax-prep'], priority: 2 },
+  { when: (p) => p.employment === 'between-jobs', reason: 'You are between jobs', guides: ['emergency-fund', 'build-a-budget'], calculators: ['emergency-debt'], priority: 1 },
   { when: (p) => p.employment === 'retired', reason: 'You are retired', guides: ['retirement-income-cpf-life', 'advance-care-planning', 'healthcare-navigation'], priority: 2 },
-  { when: (p) => p.employment === 'studying', reason: 'You are studying', guides: ['build-a-budget', 'account-security'], calculators: ['budget'], priority: 3 },
+  { when: (p) => p.employment === 'studying', reason: 'You are studying', guides: ['build-a-budget'], calculators: ['budget'], priority: 3 },
   { when: (p) => p.employment === 'employed', reason: 'Annual essentials for employees', guides: ['tax-filing-prep', 'cpf-basics'], priority: 4 },
 
   // Age
-  { when: (p) => p.ageRange === '18-24', reason: 'Good foundations in your twenties', guides: ['build-a-budget', 'emergency-fund', 'account-security'], priority: 3 },
+  { when: (p) => p.ageRange === '18-24', reason: 'Good foundations in your twenties', guides: ['build-a-budget', 'emergency-fund', 'cpf-basics'], priority: 3 },
   { when: (p) => p.ageRange === '25-34', reason: 'Common decisions in this decade', guides: ['insurance-basics', 'home-affordability-and-loans'], priority: 3 },
   { when: (p) => p.ageRange === '35-44', reason: 'Mid-career review', guides: ['retirement-income-cpf-life', 'review-coverage-and-claims', 'make-a-will'], priority: 3 },
   { when: (p) => p.ageRange === '45-54', reason: 'Planning for the next stage', guides: ['retirement-income-cpf-life', 'caregiving-plan', 'lasting-power-of-attorney'], calculators: ['retirement'], priority: 3 },
   { when: (p) => p.ageRange === '55-64' || p.ageRange === '65+', reason: 'Decisions around 55 and 65', guides: ['retirement-income-cpf-life', 'advance-care-planning', 'healthcare-navigation'], calculators: ['retirement'], priority: 2 },
 
   // Horizon
-  { when: (p) => p.horizon === 'next-3-months', reason: 'Quick wins for the next few months', guides: ['subscriptions-and-bills', 'scam-protection'], priority: 4 },
+  { when: (p) => p.horizon === 'next-3-months', reason: 'Quick wins for the next few months', guides: ['subscriptions-and-bills'], priority: 4 },
 ];
 
 const ALWAYS: Omit<Recommendation, 'priority'>[] = [

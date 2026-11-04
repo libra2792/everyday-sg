@@ -23,7 +23,6 @@ export const PRIORITY_OPTIONS = [
   { id: 'parents', label: 'Support my parents' },
   { id: 'insurance', label: 'Sort out insurance' },
   { id: 'retirement', label: 'Plan for retirement' },
-  { id: 'career', label: 'Change jobs or upskill' },
   { id: 'estate', label: 'Wills, LPA and nominations' },
   { id: 'admin', label: 'Sort out my life admin' },
 ] as const;
@@ -55,13 +54,15 @@ export const EMPTY_PROFILE: Profile = {
 
 /**
  * Profiles saved before Housing allowed several answers stored a single string; read those
- * (and any import of them) as a one-item list.
+ * (and any import of them) as a one-item list. Priorities that are no longer offered (such
+ * as the retired 'career') are dropped.
  */
 export function migrateProfile(saved: unknown): Profile | null {
   if (!saved || typeof saved !== 'object') return null;
   const p = saved as Partial<Profile> & { housing?: unknown };
   const list = (v: unknown) => (Array.isArray(v) ? v : typeof v === 'string' && v ? [v] : []);
-  return { ...EMPTY_PROFILE, ...p, housing: list(p.housing) as HousingSituation[], household: list(p.household) as Household[], priorities: list(p.priorities) as PriorityId[] };
+  const priorities = list(p.priorities).filter((id): id is PriorityId => PRIORITY_OPTIONS.some((o) => o.id === id));
+  return { ...EMPTY_PROFILE, ...p, housing: list(p.housing) as HousingSituation[], household: list(p.household) as Household[], priorities };
 }
 
 export type SavedItemType = 'guide' | 'calculator' | 'tool' | 'snapshot';

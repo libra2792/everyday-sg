@@ -53,7 +53,7 @@ export default function AnnualAdminTool() {
         };
       }}
       sourceIds={['moneysense', 'cpf', 'iras', 'healthhub', 'scamshield', 'ica-passport']}
-      relatedGuides={['annual-life-admin', 'review-coverage-and-claims', 'document-renewals', 'subscriptions-and-bills']}
+      relatedGuides={['annual-life-admin', 'review-coverage-and-claims', 'subscriptions-and-bills']}
       intro="A reusable yearly review across eight areas. Tick items as you go — progress is saved in this browser — then reset it for next year."
       results={
         <ResultsPanel title="This year's review">

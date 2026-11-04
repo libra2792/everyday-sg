@@ -9,6 +9,7 @@ import { CALCULATORS } from './data/calculators';
 import { SOURCES } from './data/sources';
 import { CATEGORIES } from './data/categories';
 import { CREATOR } from './data/creator';
+import { TAX_RELIEF_CATEGORIES } from './data/checklists';
 import { BENCHMARKS, type Benchmark } from './data/benchmarks';
 import { snapshotHref } from './lib/usePrefill';
 
@@ -48,7 +49,7 @@ describe('content integrity', () => {
       expect(g.keyPoints.length).toBeGreaterThan(1);
       expect(g.icon).toBeTruthy();
     }
-    expect(GUIDES.length).toBeGreaterThanOrEqual(36);
+    expect(GUIDES.length).toBeGreaterThanOrEqual(33);
     // every category has at least two guides
     for (const c of CATEGORIES) expect(GUIDES.filter((g) => g.categoryId === c.id).length).toBeGreaterThanOrEqual(2);
   });
@@ -58,6 +59,15 @@ describe('content integrity', () => {
       expect(s.url.startsWith('https://')).toBe(true);
       if (s.check === 'unchecked') expect(s.checkedOn).toBeUndefined();
       else expect(s.checkedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it('every tax relief has a note and links to its IRAS page', () => {
+    const sourceIds = new Set(SOURCES.map((s) => s.id));
+    for (const r of TAX_RELIEF_CATEGORIES) {
+      for (const text of [r.name, r.what, r.who, r.claim]) expect(text.length, r.id).toBeGreaterThan(5);
+      expect(r.sourceIds.length, r.id).toBeGreaterThan(0);
+      for (const id of r.sourceIds) expect(sourceIds.has(id), `${r.id} references unknown source ${id}`).toBe(true);
     }
   });
 });
@@ -313,12 +323,42 @@ describe('calculators recompute from inputs', () => {
     await waitFor(() => expect(within(results).getByText(/car costs more by/i)).toBeTruthy());
   });
 
+  it('feedback: needs a message, checks contact details if given, then thanks', async () => {
+    renderAt('/feedback');
+    expect(screen.getByRole('heading', { level: 1, name: /tell me what to fix/i })).toBeTruthy();
+    // Netlify finds the form by these attributes in the prerendered page.
+    expect(document.querySelector('form[name="feedback"]')?.getAttribute('data-netlify')).toBe('true');
+    const send = screen.getByRole('button', { name: 'Send feedback' });
+    fireEvent.click(send);
+    expect(await screen.findByText(/write a few words/i)).toBeTruthy();
+    expect(document.activeElement?.id).toBe('fb-message');
+    fireEvent.change(screen.getByLabelText(/your feedback/i), { target: { value: 'The Parent Relief note helped, thank you.' } });
+    fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'nigel@' } });
+    fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '9123' } });
+    fireEvent.click(send);
+    expect(await screen.findByText(/email address looks incomplete/i)).toBeTruthy();
+    expect(screen.getByText(/8 to 15 digits/i)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'reader@example.com' } });
+    fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '+65 9123 4567' } });
+    fireEvent.click(send);
+    expect(await screen.findByText(/get back to you at reader@example.com/i)).toBeTruthy();
+  });
+
   it('tools: tax prep and annual admin render with persistent checklists', async () => {
     renderAt('/tools/tax-prep');
     expect(await screen.findByRole('heading', { level: 1, name: /tax preparation/i })).toBeTruthy();
     const boxes = screen.getAllByRole('checkbox');
     fireEvent.click(boxes[0]);
     expect((boxes[0] as HTMLInputElement).checked).toBe(true);
+    // Each relief explains itself behind an info button; a tap pins it open, Escape closes it.
+    const about = screen.getByRole('button', { name: 'About Parent Relief' });
+    const note = document.getElementById(about.getAttribute('aria-controls')!)!;
+    expect(note.hidden).toBe(true);
+    fireEvent.click(about);
+    expect(note.hidden).toBe(false);
+    expect(within(note).getByText(/55 or older/)).toBeTruthy();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(note.hidden).toBe(true);
     cleanup();
     renderAt('/tools/annual-admin');
     expect(await screen.findByRole('heading', { level: 1, name: /annual life-admin/i })).toBeTruthy();

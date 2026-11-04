@@ -6,13 +6,13 @@ import { INTENTS, INTENT_MAP } from '@/data/intents';
 /**
  * Per-route <title> and description. Used in the browser (useDocumentHead) and at build
  * time, where each route gets its own copy of index.html with these tags filled in, so
- * link previews and search engines can tell 41 guides apart without running JavaScript.
+ * link previews and search engines can tell the guides apart without running JavaScript.
  */
 
 export const SITE_NAME = 'Everyday SG';
 export const HOME_TITLE = 'Everyday SG — Your guide to adulting in Singapore';
 export const DEFAULT_DESCRIPTION =
-  'Everyday SG — your guide to adulting in Singapore. Plain-English guides, calculators and checklists for money, housing, family, caregiving, insurance, CPF, careers and life admin.';
+  'Everyday SG — your guide to adulting in Singapore. Plain-English guides, calculators and checklists for money, housing, family, caregiving, insurance, CPF, tax and life admin.';
 /** Default share image, in public/. */
 export const OG_IMAGE_PATH = '/og-image.png';
 
@@ -27,13 +27,14 @@ const page = (title: string, description: string, index = true): HeadInfo => ({ 
 
 const STATIC: Record<string, HeadInfo> = {
   '/': { title: HOME_TITLE, description: DEFAULT_DESCRIPTION, index: true },
-  '/guides': page('Life Guides', `${GUIDES.length} plain-English guides to money, housing, family, caregiving, insurance, CPF, careers and life admin in Singapore, each with steps and a checklist.`),
+  '/guides': page('Life Guides', `${GUIDES.length} plain-English guides to money, housing, family, caregiving, insurance, CPF, tax and life admin in Singapore, each with steps and a checklist.`),
   '/calculators': page('Calculators and tools', 'Budget, emergency fund, housing, baby, retirement, insurance, caregiving and car calculators, plus tax and life-admin checklists. Your figures stay in your browser.'),
   '/plan': page('My Plan', 'Your profile, suggested next steps, dated tasks and checklist progress, stored only in this browser.', false),
   '/plan/profile': page('Your profile', 'A few optional questions that tailor the suggestions. Answers stay in this browser.', false),
   '/saved': page('Saved Items', 'Your bookmarked guides, calculators and tools, and calculator snapshots, stored only in this browser.', false),
   '/about': page('About Everyday SG', 'What Everyday SG is and is not, how your data stays in your browser, and the official sources behind the guides.'),
   '/creator': page('Who made this', 'Why an ordinary Singaporean built Everyday SG, and the life admin behind it.'),
+  '/feedback': page('Send feedback', 'Tell the maker of Everyday SG what is wrong, missing or useful, and leave a name, email or number if you would like a reply.'),
 };
 
 /** Title and description for a path (and its query string, for search and filters). */

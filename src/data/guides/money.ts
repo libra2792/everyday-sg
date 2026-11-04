@@ -73,7 +73,7 @@ export const MONEY_GUIDES: Guide[] = [
     watchOuts: ['Mixing it with daily spending', 'Locking it in products with penalties', 'Treating credit cards as the fund', 'Tip: start with one month, then extend'],
     officialLinks: ['moneysense'],
     relatedCalculators: ['emergency-debt', 'budget'],
-    relatedGuides: ['build-a-budget', 'pay-down-debt', 'retrenchment-and-job-loss'],
+    relatedGuides: ['build-a-budget', 'pay-down-debt', 'insurance-basics'],
     checklist: [
       { id: 'essentials', text: 'Calculate essential monthly expenses', essential: true },
       { id: 'target', text: 'Choose a 3 to 6 month target', essential: true },
@@ -153,7 +153,7 @@ export const MONEY_GUIDES: Guide[] = [
     watchOuts: ['Cancelling in-app but not the payment', 'Switching on headline rates alone', 'Tip: one card for all subscriptions', 'Tip: screenshot cancellation confirmations'],
     officialLinks: ['moneysense'],
     relatedCalculators: ['budget'],
-    relatedGuides: ['build-a-budget', 'document-renewals', 'annual-life-admin'],
+    relatedGuides: ['build-a-budget', 'annual-life-admin'],
     checklist: [
       { id: 'list', text: 'List every recurring charge from the last 12 months', essential: true },
       { id: 'decide', text: 'Mark each keep, downgrade or cancel, and act', essential: true },
@@ -194,7 +194,7 @@ export const MONEY_GUIDES: Guide[] = [
     eligibility: ['Residency, thresholds and relief eligibility are set by IRAS'],
     officialLinks: ['iras-filing', 'iras-file', 'iras-reliefs', 'iras-rates', 'iras-mytax'],
     relatedCalculators: ['tax-prep', 'annual-admin'],
-    relatedGuides: ['cpf-basics', 'freelance-variable-income', 'annual-life-admin'],
+    relatedGuides: ['cpf-basics', 'retirement-income-cpf-life', 'annual-life-admin'],
     checklist: [
       { id: 'status', text: 'Check filing status and deadline on myTax Portal', essential: true },
       { id: 'income', text: 'Gather all income records', essential: true },

@@ -82,7 +82,7 @@ export function Guides() {
     <div>
       <PageHeader
         title="Life Guides"
-        description={`${GUIDES.length} plain-English guides across 12 areas of life in Singapore. Each one explains what the topic means, who it applies to, what to do and in what order, what to prepare, and where to complete the task — with a checklist that remembers your progress.`}
+        description={`${GUIDES.length} plain-English guides across ${CATEGORIES.length} areas of life in Singapore. Each one explains what the topic means, who it applies to, what to do and in what order, what to prepare, and where to complete the task — with a checklist that remembers your progress.`}
       />
 
       <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">

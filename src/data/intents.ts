@@ -70,7 +70,7 @@ export const INTENTS: Intent[] = [
     label: 'Sort out my life admin',
     icon: 'calendar-check',
     lede: 'One yearly sweep of documents, renewals, tax and contracts.',
-    guides: ['annual-life-admin', 'document-renewals', 'tax-filing-prep'],
+    guides: ['annual-life-admin', 'tax-filing-prep', 'subscriptions-and-bills'],
     tools: ['annual-admin', 'tax-prep'],
     browse: { label: 'All guides', to: '/guides' },
   },

@@ -12,6 +12,9 @@ import type { Source } from './types';
  * confirm current requirements on the agency's own website.
  */
 const CHECKED = '2026-10-24';
+/** When IRAS's page for each personal relief was read, for the tax tool's notes. */
+const RELIEFS_CHECKED = '2026-11-04';
+const IRAS_RELIEFS = 'https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs';
 
 export const SOURCES: Source[] = [
   // ---- Portals (as provided in the product brief) ------------------------------------
@@ -57,7 +60,21 @@ export const SOURCES: Source[] = [
   { id: 'iras-filing', agency: 'IRAS', title: 'Understanding my income tax filing', url: 'https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/understanding-my-income-tax-filing', check: 'link', checkedOn: CHECKED },
   { id: 'iras-file', agency: 'IRAS', title: 'File income tax return (digital service)', url: 'https://www.iras.gov.sg/digital-services/employees/file-income-tax-return', check: 'link', checkedOn: CHECKED },
   { id: 'iras-mytax', agency: 'IRAS', title: 'Managing your myTax Portal account', url: 'https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/managing-mytax-portal-account', check: 'link', checkedOn: CHECKED },
-  { id: 'iras-srs', agency: 'IRAS', title: 'SRS contributions and tax relief', url: 'https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/supplementary-retirement-scheme-(srs)-relief', check: 'link', checkedOn: CHECKED },
+  { id: 'iras-srs', agency: 'IRAS', title: 'SRS contributions and tax relief', url: 'https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/supplementary-retirement-scheme-(srs)-relief', check: 'content', checkedOn: RELIEFS_CHECKED },
+  // One page per relief, for the tax tool's "about this relief" notes.
+  { id: 'iras-relief-earned', agency: 'IRAS', title: 'Earned Income Relief', url: `${IRAS_RELIEFS}/earned-income-relief`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-spouse', agency: 'IRAS', title: 'Spouse Relief and Spouse Relief (Disability)', url: `${IRAS_RELIEFS}/spouse-relief-spouse-relief-(disability)`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-child', agency: 'IRAS', title: 'Qualifying Child Relief and Child Relief (Disability)', url: `${IRAS_RELIEFS}/qualifying-child-relief-(qcr)-child-relief-(disability)`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-wmcr', agency: 'IRAS', title: 'Working Mother’s Child Relief', url: `${IRAS_RELIEFS}/working-mother's-child-relief-(wmcr)`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-parent', agency: 'IRAS', title: 'Parent Relief and Parent Relief (Disability)', url: `${IRAS_RELIEFS}/parent-relief-parent-relief-(disability)`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-grandparent', agency: 'IRAS', title: 'Grandparent Caregiver Relief', url: `${IRAS_RELIEFS}/grandparent-caregiver-relief`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-cpf', agency: 'IRAS', title: 'CPF Relief for employees', url: `${IRAS_RELIEFS}/central-provident-fund(cpf)-relief-for-employees`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-cpf-topup', agency: 'IRAS', title: 'CPF Cash Top-up Relief', url: `${IRAS_RELIEFS}/central-provident-fund-(cpf)-cash-top-up-relief`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-life', agency: 'IRAS', title: 'Life Insurance Relief', url: `${IRAS_RELIEFS}/life-insurance-relief`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-course', agency: 'IRAS', title: 'Course Fees Relief', url: `${IRAS_RELIEFS}/course-fees-relief`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-nsman', agency: 'IRAS', title: 'NSman Relief (self, wife and parent)', url: `${IRAS_RELIEFS}/nsman-relief-(self-wife-and-parent)`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-relief-fdwl', agency: 'IRAS', title: 'Foreign Domestic Worker Levy Relief', url: `${IRAS_RELIEFS}/foreign-domestic-worker-levy-(fdwl)-relief`, check: 'content', checkedOn: RELIEFS_CHECKED },
+  { id: 'iras-donations', agency: 'IRAS', title: 'Tax deductions for donations', url: 'https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/donations', check: 'content', checkedOn: RELIEFS_CHECKED },
 
   // ---- MOM -------------------------------------------------------------------------
   { id: 'mom-leave', agency: 'MOM', title: 'Leave — overview of entitlements', url: 'https://www.mom.gov.sg/employment-practices/leave', check: 'content', checkedOn: CHECKED },

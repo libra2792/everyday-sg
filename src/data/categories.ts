@@ -50,14 +50,6 @@ export const CATEGORIES: Category[] = [
     icon: 'piggy-bank',
   },
   {
-    id: 'careers',
-    name: 'Careers and income security',
-    shortName: 'Careers',
-    description: 'Job changes, salary comparisons, benefits, resignation, retrenchment, upskilling and variable income.',
-    topics: ['Job changes', 'Salary comparison', 'Benefits', 'Resignation', 'Retrenchment', 'SkillsFuture', 'Freelance income'],
-    icon: 'briefcase',
-  },
-  {
     id: 'marriage',
     name: 'Marriage and family administration',
     shortName: 'Marriage and family',
@@ -82,19 +74,11 @@ export const CATEGORIES: Category[] = [
     icon: 'car',
   },
   {
-    id: 'digital',
-    name: 'Digital safety and personal administration',
-    shortName: 'Digital safety',
-    description: 'Scam awareness, account and Singpass security, passwords, passports, document renewals, warranties and contracts.',
-    topics: ['Scam awareness', 'Account security', 'Singpass', 'Password management', 'Passport', 'Document renewals', 'Warranties and contracts'],
-    icon: 'lock-keyhole',
-  },
-  {
     id: 'wellbeing',
     name: 'Health, wellbeing and household organisation',
     shortName: 'Wellbeing',
-    description: 'Healthcare navigation, screening, mental health resources, caregiver wellbeing, routines, moving and annual maintenance.',
-    topics: ['Healthcare navigation', 'Screening reminders', 'Mental health', 'Caregiver wellbeing', 'Routines', 'Moving checklist', 'Annual life admin'],
+    description: 'Healthcare navigation, screening, caregiver wellbeing, routines, moving and annual maintenance.',
+    topics: ['Healthcare navigation', 'Screening reminders', 'Caregiver wellbeing', 'Routines', 'Moving checklist', 'Annual life admin'],
     icon: 'leaf',
   },
 ];
@@ -106,7 +90,7 @@ export const LIFE_STAGES: LifeStage[] = [
     id: 'starting-out',
     name: 'Starting out',
     description: 'First jobs, first budgets, building habits and savings.',
-    categories: ['money', 'careers', 'digital', 'insurance'],
+    categories: ['money', 'cpf-tax-retirement', 'insurance', 'housing'],
   },
   {
     id: 'building',

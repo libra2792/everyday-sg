@@ -17,6 +17,7 @@ const NAV: { to: string; label: string; short?: string; icon: IconName; end?: bo
   { to: '/plan', label: 'My Plan', icon: 'list-checks' },
   { to: '/saved', label: 'Saved Items', short: 'Saved', icon: 'bookmark' },
   { to: '/creator', label: 'Who made this', icon: 'user', mobile: false },
+  { to: '/feedback', label: 'Feedback', icon: 'message-circle-heart', mobile: false },
 ];
 
 function Wordmark() {
@@ -152,12 +153,17 @@ function Footer() {
               </Link>
             </li>
             <li>
+              <Link to="/feedback" className="hover:text-ink">
+                Send feedback
+              </Link>
+            </li>
+            <li>
               <Link to="/plan" className="hover:text-ink">
                 Export, import or reset your data
               </Link>
             </li>
           </ul>
-          <p className="mt-4 leading-5">Everything you enter stays in this browser. No accounts, no tracking, no servers.</p>
+          <p className="mt-4 leading-5">Everything you enter stays in this browser, except a message you choose to send through the feedback form. No accounts, no tracking.</p>
         </div>
       </div>
       <div className="mx-auto max-w-6xl border-t border-stone-200 px-4 py-5 sm:px-6">

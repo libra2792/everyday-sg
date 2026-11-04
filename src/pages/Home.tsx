@@ -133,7 +133,7 @@ export function Home() {
           <p className="mb-3 text-[12px] font-medium uppercase tracking-wider text-hero-eyebrow">Everyday SG</p>
           <h1 className="text-[30px] font-semibold leading-[1.15] text-hero-ink sm:text-[40px]">Your guide to adulting in Singapore.</h1>
           <p className="mt-4 text-[16px] leading-7 text-hero-muted">
-            Plain-English, practical help with money, housing, family, caregiving, insurance, CPF, careers and the admin in between. What applies to you, what to do,
+            Plain-English, practical help with money, housing, family, caregiving, insurance, CPF, tax and the admin in between. What applies to you, what to do,
             what it might cost, and where to get it done.
           </p>
         </div>

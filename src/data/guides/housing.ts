@@ -157,7 +157,7 @@ export const HOUSING_GUIDES: Guide[] = [
     watchOuts: ['Large deposits without milestones', 'Mid-way design changes', 'Defects not reported within the liability period', 'Tip: get every verbal promise into the contract'],
     officialLinks: ['hdb', 'ica-address'],
     relatedCalculators: ['housing', 'budget'],
-    relatedGuides: ['home-affordability-and-loans', 'moving-checklist', 'document-renewals'],
+    relatedGuides: ['home-affordability-and-loans', 'moving-checklist', 'annual-life-admin'],
     checklist: [
       { id: 'scope', text: 'List renovation needs, then wants', essential: true },
       { id: 'budget', text: 'Set a budget with a 10 to 20 percent contingency', essential: true },

@@ -5,11 +5,9 @@ export type CategoryId =
   | 'parents'
   | 'insurance'
   | 'cpf-tax-retirement'
-  | 'careers'
   | 'marriage'
   | 'legal'
   | 'transport'
-  | 'digital'
   | 'wellbeing';
 
 export type LifeStageId = 'starting-out' | 'building' | 'family' | 'midlife' | 'later-life';

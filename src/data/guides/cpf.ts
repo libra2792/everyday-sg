@@ -115,7 +115,7 @@ export const CPF_GUIDES: Guide[] = [
     watchOuts: ['Investing the emergency fund', 'Chasing last year\'s winner or a chat-group tip', 'Ignoring "small" fees', 'Tip: a one-page personal investment policy'],
     officialLinks: ['moneysense', 'iras-srs', 'cpf'],
     relatedCalculators: ['retirement', 'emergency-debt'],
-    relatedGuides: ['emergency-fund', 'retirement-income-cpf-life', 'scam-protection'],
+    relatedGuides: ['emergency-fund', 'retirement-income-cpf-life', 'cpf-basics'],
     checklist: [
       { id: 'foundations', text: 'Confirm emergency fund, debt and insurance foundations', essential: true },
       { id: 'goals', text: 'Write down goals and time horizons', essential: true },

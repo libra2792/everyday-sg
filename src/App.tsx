@@ -11,6 +11,7 @@ import { Saved } from './pages/Saved';
 import { SearchPage } from './pages/SearchPage';
 import { About } from './pages/About';
 import { Creator } from './pages/Creator';
+import { Feedback } from './pages/Feedback';
 import { NotFound } from './pages/NotFound';
 import { IntentHub } from './pages/IntentHub';
 
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/creator" element={<Creator />} />
+          <Route path="/feedback" element={<Feedback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

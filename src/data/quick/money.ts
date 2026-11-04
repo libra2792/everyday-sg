@@ -243,7 +243,7 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
           verdict: total === 0 ? 'Waiting for your numbers' : unused > 0 ? `${sgd(yearly)} a year on unused ones` : `${sgd(total * 12)} a year, all in use`,
           stats: total > 0 ? [{ label: 'Per month', value: sgd(total) }, { label: 'Per year', value: sgd(total * 12) }] : undefined,
           why,
-          next: [tool('budget', 'Put the kept subscriptions in your budget as a lifestyle line.'), guide('document-renewals', 'Contracts and insurance that auto-renew belong on the same list.')],
+          next: [tool('budget', 'Put the kept subscriptions in your budget as a lifestyle line.'), guide('annual-life-admin', 'Contracts and insurance that auto-renew belong on the same yearly review.')],
           fine: 'Based on an even split of the total across your subscriptions; your statement has the exact amounts.',
           figure:
             total > 0
@@ -288,15 +288,15 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
         if (a.work === 'ais') why.push('Your employer submits your income to IRAS; you only confirm it and add anything else (rental, side income) and reliefs.');
         if (a.work === 'nonais') why.push('You need the IR8A from your employer and must enter the income yourself.');
         if (a.work === 'self') why.push('Keep a simple income and expense record; you declare net profit, and MediSave contributions are compulsory on it.');
-        if (a.reliefs === 'some') why.push('Gather the proof: parent relief needs the parent’s details, course fees need receipts, CPF top-ups and donations are usually auto-included but check they appear.');
-        if (a.reliefs === 'unsure') why.push('Run through IRAS’s relief list once; parent, spouse, child and course-fee reliefs are the ones most often missed.');
+        if (a.reliefs === 'some') why.push('Gather the proof: parent relief needs the parent’s details, life insurance relief needs the policy details, CPF top-ups and donations are usually auto-included but check they appear.');
+        if (a.reliefs === 'unsure') why.push('Run through IRAS’s relief list once; parent, spouse, child and grandparent caregiver reliefs are the ones most often missed.');
         if (a.nfs === 'yes') why.push('No-Filing Service: check the pre-filled figures and reliefs on myTax Portal; you only act if something is wrong or missing.');
         else why.push('Filing opens on 1 March; the e-filing deadline is 18 April. The Notice of Assessment follows from May, and payment is due within a month unless you use GIRO.');
         return {
           label: 'Pointer',
           verdict: a.nfs === 'yes' ? 'Check, do not file' : a.work === 'self' ? 'Prepare your income record' : 'Confirm income, add reliefs',
           why,
-          next: [tool('tax-prep', 'The document checklist, saved in this browser.'), official('iras-filing', 'How filing works and the dates.'), guide('freelance-variable-income', 'Setting money aside for tax when income varies.')],
+          next: [tool('tax-prep', 'The document checklist, saved in this browser.'), official('iras-filing', 'How filing works and the dates.')],
           fine: 'This site has no tax calculator on purpose; rates and reliefs change and IRAS’s own calculator is the authority.',
         };
       },
