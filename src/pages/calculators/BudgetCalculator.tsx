@@ -8,7 +8,7 @@ import { Icon } from '@/components/ui/Icon';
 import { uid } from '@/lib/storage';
 import { BENCHMARKS } from '@/data/benchmarks';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
-import { NumberField, SelectField, SliderField } from '@/components/ui/Field';
+import { NameInput, NumberField, SelectField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { BarList, StackedBar } from '@/components/charts/Charts';
@@ -23,7 +23,7 @@ interface BudgetState {
 }
 
 const DEFAULT_CATEGORIES: BudgetCategory[] = [
-  { id: 'housing', name: 'Housing (rent, mortgage, conservancy)', amount: 0, kind: 'essential' },
+  { id: 'housing', name: 'Housing (rent/mortgage/S&CC)', amount: 0, kind: 'essential' },
   { id: 'food', name: 'Food and groceries', amount: 0, kind: 'essential' },
   { id: 'transport', name: 'Transport', amount: 0, kind: 'essential' },
   { id: 'insurance', name: 'Insurance premiums', amount: 0, kind: 'essential' },
@@ -60,6 +60,13 @@ export default function BudgetCalculator() {
       if (raw === null || !Number.isFinite(Number(raw))) continue;
       cats = cats.map((c) => (c.id === catId ? { ...c, amount: Number(raw) } : c));
     }
+    // A guide that asks for essentials as one total: keep it as one line to split later.
+    const lump = Number(params.get('essentials'));
+    if (params.has('essentials') && Number.isFinite(lump)) {
+      cats = cats.some((c) => c.id === 'essentials')
+        ? cats.map((c) => (c.id === 'essentials' ? { ...c, amount: lump } : c))
+        : [{ id: 'essentials', name: 'Essentials (total from the guide)', amount: lump, kind: 'essential' }, ...cats];
+    }
     return { ...s, categories: cats };
   });
   const result = useMemo(() => budgetSummary(state), [state]);
@@ -75,6 +82,7 @@ export default function BudgetCalculator() {
     <CalculatorShell
       id="budget"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['moneysense', 'moneysense-decisions', 'mom-labour-force-2025', 'singstat-income-2025', 'singstat-hes-2023']}
       relatedGuides={['build-a-budget', 'emergency-fund', 'subscriptions-and-bills']}
@@ -131,26 +139,27 @@ export default function BudgetCalculator() {
       }
     >
       <InputGroup title="Income" description="Monthly figures, after CPF and tax.">
-        <SliderField label="Monthly take-home income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={20000} step={100} value={state.takeHomeIncome} onChange={(v) => setState((s) => ({ ...s, takeHomeIncome: v }))} />
-        <SliderField label="Other household income" benchmark={BENCHMARKS.householdIncomeContext} prefix="S$" min={0} max={20000} step={100} value={state.otherIncome} onChange={(v) => setState((s) => ({ ...s, otherIncome: v }))} help="A partner's take-home pay, rental income, regular allowances." />
+        <SliderField label="Monthly take-home income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={20000} hardMax={200000} step={100} value={state.takeHomeIncome} onChange={(v) => setState((s) => ({ ...s, takeHomeIncome: v }))} />
+        <SliderField label="Other household income" benchmark={BENCHMARKS.householdIncomeContext} prefix="S$" min={0} max={20000} hardMax={200000} step={100} value={state.otherIncome} onChange={(v) => setState((s) => ({ ...s, otherIncome: v }))} help="A partner's take-home pay, rental income, regular allowances." />
         <SliderField label="Desired monthly savings" benchmark={BENCHMARKS.savingsTarget} benchmarkValue={state.takeHomeIncome > 0 ? Math.round((state.takeHomeIncome + state.otherIncome) * 0.2 / 50) * 50 : undefined} prefix="S$" min={0} max={10000} step={50} value={state.desiredMonthlySavings} onChange={(v) => setState((s) => ({ ...s, desiredMonthlySavings: v }))} help="What you would like to put away each month. The results compare this with what the budget actually allows." />
       </InputGroup>
 
       <InputGroup title="Monthly spending and savings" description="Edit names, amounts and types. Add or remove categories to match your life.">
         <div className="space-y-3">
           {state.categories.map((c) => (
-            <div key={c.id} className="relative grid grid-cols-2 gap-2 rounded-md border border-stone-200 bg-stone-100 p-3 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] sm:items-end">
-              <div className="col-span-2 pr-10 sm:col-span-1 sm:pr-0">
+            <div key={c.id} className="relative grid grid-cols-2 gap-2 rounded-md border border-stone-200 bg-stone-100 p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.9fr)_auto] sm:items-end">
+              {/* On phones the remove button sits beside the label, so the name gets the full width. */}
+              <div className="col-span-2 sm:col-span-1">
                 <label htmlFor={`cat-name-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">
-                  Category
+                  Category name
                 </label>
-                <input id={`cat-name-${c.id}`} className="field-input !py-1.5 text-sm" value={c.name} onChange={(e) => updateCategory(c.id, { name: e.target.value })} maxLength={60} />
+                <NameInput id={`cat-name-${c.id}`} value={c.name} onChange={(name) => updateCategory(c.id, { name })} maxLength={60} />
               </div>
               <div>
                 <label htmlFor={`cat-amount-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">
                   Monthly amount
                 </label>
-                <NumberField id={`cat-amount-${c.id}`} compact label={`${c.name} amount`} prefix="S$" value={c.amount} onChange={(v) => updateCategory(c.id, { amount: v })} min={0} step={10} />
+                <NumberField id={`cat-amount-${c.id}`} compact label={`${c.name} amount`} prefix="S$" value={c.amount} onChange={(v) => updateCategory(c.id, { amount: v })} min={0} max={1000000} step={10} />
               </div>
               <div>
                 <label htmlFor={`cat-kind-${c.id}`} className="mb-1 block text-[12px] text-ink-faint">
@@ -158,7 +167,7 @@ export default function BudgetCalculator() {
                 </label>
                 <SelectField id={`cat-kind-${c.id}`} compact label={`${c.name} type`} value={c.kind} onChange={(v) => updateCategory(c.id, { kind: v })} options={KIND_OPTIONS} />
               </div>
-              <Button size="sm" variant="ghost" icon="trash-2" aria-label={`Remove ${c.name}`} onClick={() => removeCategory(c.id)} className="absolute right-2 top-2 sm:static sm:mb-0.5">
+              <Button size="sm" variant="ghost" icon="trash-2" aria-label={`Remove ${c.name}`} onClick={() => removeCategory(c.id)} className="absolute right-2 top-1 sm:static sm:mb-0.5">
                 <span className="sr-only">Remove</span>
               </Button>
             </div>

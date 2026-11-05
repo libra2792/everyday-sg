@@ -2,14 +2,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import App from './App';
+import App, { preloadPage } from './App';
 import { AppStateProvider } from './state/AppState';
 import { GUIDES } from './data/guides';
 import { CALCULATORS } from './data/calculators';
 import { SOURCES } from './data/sources';
 import { CATEGORIES } from './data/categories';
 import { CREATOR } from './data/creator';
+import { TAX_RELIEF_CATEGORIES } from './data/checklists';
 import { BENCHMARKS, type Benchmark } from './data/benchmarks';
+import { snapshotHref } from './lib/usePrefill';
 
 function renderAt(path: string) {
   return render(
@@ -47,7 +49,7 @@ describe('content integrity', () => {
       expect(g.keyPoints.length).toBeGreaterThan(1);
       expect(g.icon).toBeTruthy();
     }
-    expect(GUIDES.length).toBeGreaterThanOrEqual(36);
+    expect(GUIDES.length).toBeGreaterThanOrEqual(33);
     // every category has at least two guides
     for (const c of CATEGORIES) expect(GUIDES.filter((g) => g.categoryId === c.id).length).toBeGreaterThanOrEqual(2);
   });
@@ -57,6 +59,15 @@ describe('content integrity', () => {
       expect(s.url.startsWith('https://')).toBe(true);
       if (s.check === 'unchecked') expect(s.checkedOn).toBeUndefined();
       else expect(s.checkedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it('every tax relief has a note and links to its IRAS page', () => {
+    const sourceIds = new Set(SOURCES.map((s) => s.id));
+    for (const r of TAX_RELIEF_CATEGORIES) {
+      for (const text of [r.name, r.what, r.who, r.claim]) expect(text.length, r.id).toBeGreaterThan(5);
+      expect(r.sourceIds.length, r.id).toBeGreaterThan(0);
+      for (const id of r.sourceIds) expect(sourceIds.has(id), `${r.id} references unknown source ${id}`).toBe(true);
     }
   });
 });
@@ -105,8 +116,14 @@ describe('pages render', () => {
     fireEvent.click(within(doNext).getByRole('link', { name: /housing affordability and mortgage/i }));
     expect(await screen.findByRole('heading', { level: 1, name: /housing affordability and mortgage/i })).toBeTruthy();
     expect(await screen.findByText(/filled in from your answers in the guide/i)).toBeTruthy();
-    await waitFor(() => expect((screen.getByLabelText(/^Estimated property price$/i) as HTMLInputElement).value).toBe('600000'));
+    await waitFor(() => expect((screen.getByLabelText(/^Estimated property price$/i) as HTMLInputElement).value).toBe('600,000'));
     expect(screen.getByText(/you are now in a/i)).toBeTruthy();
+  });
+
+  it('a life stage puts its most relevant guides first and keeps the rest one click away', async () => {
+    renderAt('/guides?stage=family');
+    expect(await screen.findByRole('heading', { level: 2, name: /most relevant for growing a family/i })).toBeTruthy();
+    expect(screen.getByText(/everything else \(\d+ guides\)/i)).toBeTruthy();
   });
 
   it('renders every guide page without crashing', () => {
@@ -115,6 +132,26 @@ describe('pages render', () => {
       renderAt(`/guides/${g.id}`);
       expect(screen.getByRole('heading', { level: 1, name: g.title })).toBeTruthy();
     }
+  });
+
+  it('a calculator whose code is loaded ahead renders at once, without "Loading…"', async () => {
+    for (const c of CALCULATORS) {
+      cleanup();
+      await preloadPage(c.path);
+      renderAt(c.path);
+      expect(screen.queryByText('Loading…')).toBeNull();
+      expect(screen.getByRole('heading', { level: 1, name: c.name })).toBeTruthy();
+    }
+  });
+
+  it('the inline search says when nothing matches instead of closing', async () => {
+    renderAt('/');
+    const box = screen.getAllByRole('combobox')[0];
+    fireEvent.focus(box);
+    fireEvent.change(box, { target: { value: 'qwzxv' } });
+    expect(await screen.findByText(/no matches for “qwzxv”/i)).toBeTruthy();
+    expect(box.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.getByRole('link', { name: /browse all guides/i })).toBeTruthy();
   });
 
   it('shows search results and a 404', async () => {
@@ -185,7 +222,7 @@ describe('calculators recompute from inputs', () => {
   it('budget: surplus and savings rate update, categories can be added and removed', async () => {
     renderAt('/calculators/budget');
     await setNumber(/^Monthly take-home income$/i, 5000);
-    await setNumber(/^Housing \(rent, mortgage, conservancy\) amount$/i, 1500);
+    await setNumber(/^Housing \(rent\/mortgage\/S&CC\) amount$/i, 1500);
     await setNumber(/^Savings and investments amount$/i, 1000);
     const results = screen.getByRole('complementary', { name: /results/i });
     await waitFor(() => expect(within(results).getByText(/monthly surplus/i)).toBeTruthy());
@@ -286,12 +323,42 @@ describe('calculators recompute from inputs', () => {
     await waitFor(() => expect(within(results).getByText(/car costs more by/i)).toBeTruthy());
   });
 
+  it('feedback: needs a message, checks contact details if given, then thanks', async () => {
+    renderAt('/feedback');
+    expect(screen.getByRole('heading', { level: 1, name: /tell me what to fix/i })).toBeTruthy();
+    // Netlify finds the form by these attributes in the prerendered page.
+    expect(document.querySelector('form[name="feedback"]')?.getAttribute('data-netlify')).toBe('true');
+    const send = screen.getByRole('button', { name: 'Send feedback' });
+    fireEvent.click(send);
+    expect(await screen.findByText(/write a few words/i)).toBeTruthy();
+    expect(document.activeElement?.id).toBe('fb-message');
+    fireEvent.change(screen.getByLabelText(/your feedback/i), { target: { value: 'The Parent Relief note helped, thank you.' } });
+    fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'nigel@' } });
+    fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '9123' } });
+    fireEvent.click(send);
+    expect(await screen.findByText(/email address looks incomplete/i)).toBeTruthy();
+    expect(screen.getByText(/8 to 15 digits/i)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'reader@example.com' } });
+    fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '+65 9123 4567' } });
+    fireEvent.click(send);
+    expect(await screen.findByText(/get back to you at reader@example.com/i)).toBeTruthy();
+  });
+
   it('tools: tax prep and annual admin render with persistent checklists', async () => {
     renderAt('/tools/tax-prep');
     expect(await screen.findByRole('heading', { level: 1, name: /tax preparation/i })).toBeTruthy();
     const boxes = screen.getAllByRole('checkbox');
     fireEvent.click(boxes[0]);
     expect((boxes[0] as HTMLInputElement).checked).toBe(true);
+    // Each relief explains itself behind an info button; a tap pins it open, Escape closes it.
+    const about = screen.getByRole('button', { name: 'About Parent Relief' });
+    const note = document.getElementById(about.getAttribute('aria-controls')!)!;
+    expect(note.hidden).toBe(true);
+    fireEvent.click(about);
+    expect(note.hidden).toBe(false);
+    expect(within(note).getByText(/55 or older/)).toBeTruthy();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(note.hidden).toBe(true);
     cleanup();
     renderAt('/tools/annual-admin');
     expect(await screen.findByRole('heading', { level: 1, name: /annual life-admin/i })).toBeTruthy();
@@ -312,10 +379,46 @@ describe('calculators recompute from inputs', () => {
     const use = await screen.findByRole('button', { name: /^Use S\$3,950$/ });
     fireEvent.click(use);
     const income = screen.getByLabelText(/^Monthly take-home income$/i) as HTMLInputElement;
-    expect(income.value).toBe('3950');
+    expect(income.value).toBe('3,950');
     expect(screen.getByRole('button', { name: /S\$3,950 applied/i })).toBeTruthy();
     expect(screen.getAllByText(/official figure/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/planning guide/i).length).toBeGreaterThan(0);
+  });
+
+  it('benchmarks: gross income fields offer the gross figure, not take-home', async () => {
+    renderAt('/calculators/housing');
+    // "Your" and "Partner's" gross monthly income
+    expect((await screen.findAllByRole('button', { name: /^Use S\$5,775$/ })).length).toBe(2);
+    expect(screen.queryByRole('button', { name: /^Use S\$3,950$/ })).toBeNull();
+  });
+
+  it('S$ inputs show thousands separators except while being edited', async () => {
+    renderAt('/calculators/housing');
+    const price = (await screen.findByLabelText(/^Estimated property price$/i)) as HTMLInputElement;
+    expect(price.value).toBe('500,000');
+    fireEvent.focus(price);
+    expect(price.value).toBe('500000');
+    fireEvent.change(price, { target: { value: '1,250,000' } });
+    fireEvent.blur(price);
+    expect(price.value).toBe('1,250,000');
+    expect(price.getAttribute('inputmode')).toBe('decimal');
+  });
+
+  it('a snapshot link reopens the calculator with its saved inputs', async () => {
+    renderAt(snapshotHref('/calculators/insurance', { yearsOfIncomeReplacement: 10, annualHouseholdExpenses: 60000, outstandingDebts: 0, futureCommitments: 0, existingLifeCoverage: 0, liquidAssetsToCount: 0, dependants: 2 }, 'Insurance — 3 Nov'));
+    expect(await screen.findByText(/loaded from your snapshot “insurance — 3 nov”/i)).toBeTruthy();
+    await waitFor(() => expect((screen.getByLabelText(/^Annual household living expenses$/i) as HTMLInputElement).value).toBe('60,000'));
+    fireEvent.click(screen.getByRole('button', { name: /reset inputs/i }));
+    await waitFor(() => expect(screen.queryByText(/loaded from your snapshot/i)).toBeNull());
+  });
+
+  it('reset inputs offers an Undo that restores them', async () => {
+    renderAt('/calculators/insurance');
+    await setNumber(/^Annual household living expenses$/i, 50000);
+    fireEvent.click(screen.getByRole('button', { name: /reset inputs/i }));
+    await waitFor(() => expect(window.localStorage.getItem('everydaysg:calc:insurance')).toBeNull());
+    fireEvent.click(await screen.findByRole('button', { name: /undo/i }));
+    await waitFor(() => expect(window.localStorage.getItem('everydaysg:calc:insurance')).toContain('50000'));
   });
 
   it('reset clears saved inputs', async () => {
@@ -342,6 +445,23 @@ describe('appearance', () => {
   });
 });
 
+describe('your data', () => {
+  it('erases everything in one click, with no confirm dialog, and Undo puts it back', async () => {
+    window.localStorage.setItem('everydaysg:tasks', JSON.stringify([{ id: 't1', title: 'Renew passport', done: false, source: 'manual', createdAt: '2026-11-01T00:00:00Z' }]));
+    const confirm = vi.spyOn(window, 'confirm');
+    renderAt('/plan');
+    expect(screen.getByText('Renew passport')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /reset all saved data/i }));
+    expect(confirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByText('Renew passport')).toBeNull());
+    expect(window.localStorage.getItem('everydaysg:tasks')).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: /undo/i }));
+    expect(await screen.findByText('Renew passport')).toBeTruthy();
+    expect(window.localStorage.getItem('everydaysg:tasks')).toContain('Renew passport');
+    confirm.mockRestore();
+  });
+});
+
 describe('profile and recommendations', () => {
   it('saves a profile and surfaces personalised next steps', async () => {
     renderAt('/plan/profile');
@@ -351,6 +471,7 @@ describe('profile and recommendations', () => {
       fireEvent.click(screen.getByRole('button', { name: /save profile/i }));
     });
     expect(await screen.findByText(/suggested next steps/i)).toBeTruthy();
+    expect(screen.getByText(/profile saved — your suggestions are updated/i)).toBeTruthy();
     expect(screen.getAllByText(/preparing for a baby/i).length).toBeGreaterThan(0);
     expect(window.localStorage.getItem('everydaysg:profile')).toContain('baby');
   });

@@ -8,6 +8,7 @@ const TILES = ['bg-tile-1', 'bg-tile-2', 'bg-tile-3'];
 const SHAPE: Record<CreatorPhoto['shape'], string> = {
   portrait: 'aspect-[3/4]',
   landscape: 'aspect-[16/10]',
+  standard: 'aspect-[4/3]',
   square: 'aspect-square',
 };
 
@@ -139,6 +140,10 @@ export function Creator() {
               </a>
             </span>
           ))}
+          , or{' '}
+          <Link to="/feedback" className="font-medium text-hero-ink underline decoration-hero-muted underline-offset-2 hover:decoration-hero-ink">
+            send me feedback
+          </Link>
           .
         </p>
       </section>

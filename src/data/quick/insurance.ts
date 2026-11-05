@@ -33,7 +33,7 @@ export const INSURANCE_EXTRAS: Record<string, GuideExtras> = {
           stats: need > 0 ? [{ label: 'Estimated need', value: sgd(need) }, { label: 'Gap', value: gap > 0 ? sgd(gap) : 'None' }] : undefined,
           why,
           next: [
-            tool('insurance', need > 0 ? 'Opens with your years, debts and existing cover; add living expenses and commitments.' : 'Work out the need in full.', need > 0 ? { years, debts, existing } : undefined),
+            tool('insurance', need > 0 ? 'Opens with your income as the yearly amount to replace, plus years, debts and existing cover; swap in living expenses and add commitments there.' : 'Work out the need in full.', need > 0 ? { expenses: income, years, debts, existing } : undefined),
             guide('health-insurance-sg', 'How hospital bills are actually paid.'),
             official('moneysense', 'Government explanations of each type of cover.'),
           ],

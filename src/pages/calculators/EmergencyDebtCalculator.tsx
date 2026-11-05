@@ -7,7 +7,7 @@ import { uid } from '@/lib/storage';
 import { BENCHMARKS } from '@/data/benchmarks';
 import { BenchmarkHint } from '@/components/ui/BenchmarkHint';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
-import { NumberField, Segmented, SliderField } from '@/components/ui/Field';
+import { NameInput, NumberField, Segmented, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { ColumnChart, LineChart } from '@/components/charts/Charts';
@@ -40,7 +40,10 @@ export default function EmergencyDebtCalculator() {
     if (!Number.isFinite(bal) || bal <= 0) return s;
     const apr = Number(params.get('debt_rate'));
     const min = Number(params.get('debt_min'));
-    return { ...s, debts: [...s.debts, { id: uid(), name: params.get('debt_name') || 'Card or loan', balance: bal, aprPct: Number.isFinite(apr) ? apr : 26, minPayment: Number.isFinite(min) && min > 0 ? min : Math.max(50, Math.round(bal * 0.03)) }] };
+    const debt = { id: uid(), name: params.get('debt_name') || 'Card or loan', balance: bal, aprPct: Number.isFinite(apr) ? apr : 26, minPayment: Number.isFinite(min) && min > 0 ? min : Math.max(50, Math.round(bal * 0.03)) };
+    // Opening the same guide link twice should not add the same debt twice.
+    if (s.debts.some((d) => d.balance === debt.balance && d.aprPct === debt.aprPct && d.minPayment === debt.minPayment)) return s;
+    return { ...s, debts: [...s.debts, debt] };
   });
   const fund = useMemo(() => emergencyFund(state.currentSavings, state.essentialMonthly, state.coverageMonths, state.monthlyContribution), [state]);
   const payoff = useMemo(() => debtPayoff(state.debts, state.extraMonthly, state.strategy), [state.debts, state.extraMonthly, state.strategy]);
@@ -61,6 +64,7 @@ export default function EmergencyDebtCalculator() {
     <CalculatorShell
       id="emergency-debt"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['moneysense', 'singstat-hes-2023']}
       relatedGuides={['emergency-fund', 'pay-down-debt', 'build-a-budget']}
@@ -71,7 +75,7 @@ export default function EmergencyDebtCalculator() {
       snapshot={[
         { label: 'Emergency fund target', value: sgd(fund.target) },
         { label: 'Funding gap', value: sgd(fund.gap) },
-        { label: 'Months to target', value: fund.monthsToTarget === null ? 'No contribution set' : fmtMonths(fund.monthsToTarget) },
+        { label: 'Months to target', value: fund.target === 0 ? '—' : fund.monthsToTarget === null ? 'No contribution set' : fmtMonths(fund.monthsToTarget) },
         { label: 'Debt payoff time', value: hasDebts ? (payoff.paidOff ? fmtMonths(payoff.months) : 'Not paid off') : 'No debts' },
         { label: 'Interest paid', value: hasDebts ? sgd(payoff.totalInterest) : '—' },
       ]}
@@ -98,8 +102,8 @@ export default function EmergencyDebtCalculator() {
             <div className="mb-3 text-[12px] font-medium uppercase tracking-wider text-sage-700">Emergency fund</div>
             <StatGrid>
               <Stat label="Target" value={sgd(fund.target)} hint={`${state.coverageMonths} × ${sgd(state.essentialMonthly)}`} />
-              <Stat label="Gap" value={sgd(fund.gap)} tone={fund.gap > 0 ? 'caution' : 'positive'} hint={fund.gap === 0 && fund.target > 0 ? 'Fully funded' : undefined} />
-              <Stat label="Months to target" value={fund.monthsToTarget === null ? '—' : fmtMonths(fund.monthsToTarget)} hint={fund.monthsToTarget === null && fund.gap > 0 ? 'Set a monthly contribution' : undefined} />
+              <Stat label="Gap" value={sgd(fund.gap)} tone={fund.target === 0 ? 'neutral' : fund.gap > 0 ? 'caution' : 'positive'} hint={fund.gap === 0 && fund.target > 0 ? 'Fully funded' : undefined} />
+              <Stat label="Months to target" value={fund.target === 0 || fund.monthsToTarget === null ? '—' : fmtMonths(fund.monthsToTarget)} hint={fund.target === 0 ? 'Enter essential expenses' : fund.monthsToTarget === null && fund.gap > 0 ? 'Set a monthly contribution' : undefined} />
               <Stat label="Covered today" value={`${fund.coverageNow.toFixed(1)} months`} />
             </StatGrid>
           </div>
@@ -122,7 +126,7 @@ export default function EmergencyDebtCalculator() {
       <InputGroup title="Emergency fund" description="Cash you can reach within a day or two, kept separate from daily spending.">
         <SliderField label="Current emergency savings" prefix="S$" min={0} max={100000} step={500} value={state.currentSavings} onChange={(v) => setState((s) => ({ ...s, currentSavings: v }))} />
         <SliderField label="Essential monthly expenses" benchmark={BENCHMARKS.essentialSpending} prefix="S$" min={0} max={15000} step={100} value={state.essentialMonthly} onChange={(v) => setState((s) => ({ ...s, essentialMonthly: v }))} help="Rent or mortgage, food, transport, insurance, minimum debt payments, family support." />
-        <SliderField label="Desired coverage" benchmark={BENCHMARKS.emergencyMonths} suffix="months" min={1} max={12} step={1} value={state.coverageMonths} onChange={(v) => setState((s) => ({ ...s, coverageMonths: v }))} allowAboveMax={false} help="Three to six months is a common range; more if income is variable or you have dependants." />
+        <SliderField label="Desired coverage" benchmark={BENCHMARKS.emergencyMonths} suffix="months" min={1} max={12} hardMin={1} step={1} value={state.coverageMonths} onChange={(v) => setState((s) => ({ ...s, coverageMonths: v }))} allowAboveMax={false} help="Three to six months is a common range; more if income is variable or you have dependants." />
         <SliderField label="Monthly contribution to the fund" benchmark={BENCHMARKS.emergencyContribution} prefix="S$" min={0} max={5000} step={50} value={state.monthlyContribution} onChange={(v) => setState((s) => ({ ...s, monthlyContribution: v }))} />
       </InputGroup>
 
@@ -135,13 +139,13 @@ export default function EmergencyDebtCalculator() {
                 <label htmlFor={`debt-name-${d.id}`} className="mb-1 block text-[12px] text-ink-faint">
                   Name
                 </label>
-                <input id={`debt-name-${d.id}`} className="field-input !py-1.5 text-sm" value={d.name} onChange={(e) => updateDebt(d.id, { name: e.target.value })} maxLength={40} />
+                <NameInput id={`debt-name-${d.id}`} value={d.name} onChange={(name) => updateDebt(d.id, { name })} maxLength={40} />
               </div>
               <div>
                 <label htmlFor={`debt-bal-${d.id}`} className="mb-1 block text-[12px] text-ink-faint">
                   Balance
                 </label>
-                <NumberField id={`debt-bal-${d.id}`} compact label={`${d.name} balance`} prefix="S$" value={d.balance} onChange={(v) => updateDebt(d.id, { balance: v })} step={100} />
+                <NumberField id={`debt-bal-${d.id}`} compact label={`${d.name} balance`} prefix="S$" value={d.balance} onChange={(v) => updateDebt(d.id, { balance: v })} max={10000000} step={100} />
               </div>
               <div>
                 <label htmlFor={`debt-apr-${d.id}`} className="mb-1 block text-[12px] text-ink-faint">
@@ -153,7 +157,7 @@ export default function EmergencyDebtCalculator() {
                 <label htmlFor={`debt-min-${d.id}`} className="mb-1 block text-[12px] text-ink-faint">
                   Minimum / month
                 </label>
-                <NumberField id={`debt-min-${d.id}`} compact label={`${d.name} minimum payment`} prefix="S$" value={d.minPayment} onChange={(v) => updateDebt(d.id, { minPayment: v })} step={10} />
+                <NumberField id={`debt-min-${d.id}`} compact label={`${d.name} minimum payment`} prefix="S$" value={d.minPayment} onChange={(v) => updateDebt(d.id, { minPayment: v })} max={1000000} step={10} />
               </div>
               <Button size="sm" variant="ghost" icon="trash-2" aria-label={`Remove ${d.name}`} onClick={() => removeDebt(d.id)} className="absolute right-2 top-2 sm:static sm:mb-0.5">
                 <span className="sr-only">Remove</span>

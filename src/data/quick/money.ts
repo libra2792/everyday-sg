@@ -1,5 +1,5 @@
 import type { GuideExtras } from '../types';
-import { guide, num, plural, sgd, tool } from '@/lib/quick';
+import { guide, num, official, plural, sgd, tool } from '@/lib/quick';
 
 const FINE_PLAN = 'A planning pointer from your own numbers, not advice. Adjust it to your commitments and risk.';
 
@@ -52,7 +52,8 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
           verdict: income === 0 ? 'Waiting for your numbers' : left < 0 ? `Over by ${sgd(-left)} a month` : `Saving ${pct(save + Math.max(0, left))}% of take-home`,
           stats: income > 0 ? [{ label: 'Essentials', value: `${pct(ess)}%` }, { label: 'Lifestyle', value: `${pct(life)}%` }] : undefined,
           why,
-          next: [tool('budget', 'Opens with your income and savings target; add categories there.', { income, savings: save }), guide('emergency-fund', 'The first thing the savings line should fund.')],
+          // The three totals go in too, so the calculator opens with the same split as above.
+          next: [tool('budget', spent > 0 ? 'Opens with your income, spending and savings; split the essentials into categories there.' : 'Opens with your income and savings target; add categories there.', { income, savings: save, ...(spent > 0 ? { essentials: ess, personal: life, saving: save } : {}) }), guide('emergency-fund', 'The first thing the savings line should fund.')],
           fine: FINE_PLAN,
           figure:
             income > 0
@@ -122,7 +123,7 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
           stats: ess > 0 ? [{ label: 'Target fund', value: sgd(target) }, { label: 'Covered so far', value: `${cover.toFixed(1)} mo` }] : undefined,
           why,
           next: [
-            tool('emergency-debt', ess > 0 ? `Opens with ${sgd(ess)}, ${months} months and your savings filled in.` : 'Plan the target and timeline in full.', { ess: ess || 3500, months, savings: have, monthly: monthly || 600 }),
+            tool('emergency-debt', ess > 0 ? `Opens with ${sgd(ess)}, ${months} months and your savings filled in.` : 'Plan the target and timeline in full.', { months, savings: have, ...(ess > 0 ? { ess } : {}), ...(monthly > 0 ? { monthly } : {}) }),
             guide('build-a-budget', 'Find the essentials figure if you are unsure.'),
           ],
           fine: FINE_PLAN,
@@ -242,7 +243,7 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
           verdict: total === 0 ? 'Waiting for your numbers' : unused > 0 ? `${sgd(yearly)} a year on unused ones` : `${sgd(total * 12)} a year, all in use`,
           stats: total > 0 ? [{ label: 'Per month', value: sgd(total) }, { label: 'Per year', value: sgd(total * 12) }] : undefined,
           why,
-          next: [tool('budget', 'Put the kept subscriptions in your budget as a lifestyle line.'), guide('document-renewals', 'Contracts and insurance that auto-renew belong on the same list.')],
+          next: [tool('budget', 'Put the kept subscriptions in your budget as a lifestyle line.'), guide('annual-life-admin', 'Contracts and insurance that auto-renew belong on the same yearly review.')],
           fine: 'Based on an even split of the total across your subscriptions; your statement has the exact amounts.',
           figure:
             total > 0
@@ -273,5 +274,38 @@ export const MONEY_EXTRAS: Record<string, GuideExtras> = {
       aria: 'Illustrative yearly subscriptions split into used and unused.',
     },
   },
-};
 
+  'tax-filing-prep': {
+    quick: {
+      intro: 'Your employment type decides how much IRAS already has. Three answers list what you still need to gather.',
+      fields: [
+        { id: 'work', label: 'Your income is from', type: 'choice', options: [{ value: 'ais', label: 'An employer on the Auto-Inclusion Scheme' }, { value: 'nonais', label: 'An employer not on AIS' }, { value: 'self', label: 'Self-employment or freelance' }], default: 'ais' },
+        { id: 'reliefs', label: 'Reliefs you might claim', type: 'choice', options: [{ value: 'none', label: 'None that I know of' }, { value: 'some', label: 'Parent, child, course fees, CPF top-ups, donations' }, { value: 'unsure', label: 'Not sure' }], default: 'unsure' },
+        { id: 'nfs', label: 'Received a No-Filing Service notice?', type: 'choice', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'unsure', label: 'Not sure' }], default: 'unsure' },
+      ],
+      evaluate: (a) => {
+        const why: string[] = [];
+        if (a.work === 'ais') why.push('Your employer submits your income to IRAS; you only confirm it and add anything else (rental, side income) and reliefs.');
+        if (a.work === 'nonais') why.push('You need the IR8A from your employer and must enter the income yourself.');
+        if (a.work === 'self') why.push('Keep a simple income and expense record; you declare net profit, and MediSave contributions are compulsory on it.');
+        if (a.reliefs === 'some') why.push('Gather the proof: parent relief needs the parent’s details, life insurance relief needs the policy details, CPF top-ups and donations are usually auto-included but check they appear.');
+        if (a.reliefs === 'unsure') why.push('Run through IRAS’s relief list once; parent, spouse, child and grandparent caregiver reliefs are the ones most often missed.');
+        if (a.nfs === 'yes') why.push('No-Filing Service: check the pre-filled figures and reliefs on myTax Portal; you only act if something is wrong or missing.');
+        else why.push('Filing opens on 1 March; the e-filing deadline is 18 April. The Notice of Assessment follows from May, and payment is due within a month unless you use GIRO.');
+        return {
+          label: 'Pointer',
+          verdict: a.nfs === 'yes' ? 'Check, do not file' : a.work === 'self' ? 'Prepare your income record' : 'Confirm income, add reliefs',
+          why,
+          next: [tool('tax-prep', 'The document checklist, saved in this browser.'), official('iras-filing', 'How filing works and the dates.')],
+          fine: 'This site has no tax calculator on purpose; rates and reliefs change and IRAS’s own calculator is the authority.',
+        };
+      },
+    },
+    figure: {
+      type: 'timeline',
+      lanes: [{ label: 'Tax year', nodes: ['Jan to Feb: gather documents', '1 Mar: filing opens', '18 Apr: e-filing deadline', 'From May: Notice of Assessment', 'Pay within a month or by GIRO'], wait: { from: 1, to: 2, label: 'filing season' } }],
+      caption: 'The yearly rhythm of personal income tax in Singapore. Most of the work is in the first six weeks of the year, before the portal opens.',
+      aria: 'Timeline of the tax year from gathering documents in January to payment after the Notice of Assessment.',
+    },
+  },
+};

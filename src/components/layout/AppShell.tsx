@@ -1,16 +1,23 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { Link, NavLink, useLocation, useNavigationType } from 'react-router-dom';
 import { Icon, type IconName } from '@/components/ui/Icon';
-import { useAppState } from '@/state/AppState';
+import { useAppState, useStorageControl } from '@/state/AppState';
+import { UndoNotice } from '@/components/ui/Misc';
 import { ThemeMenu, ThemeOptions } from '@/components/ThemePicker';
+import { useDocumentHead } from '@/lib/useDocumentHead';
 
-const NAV: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+/**
+ * `mobile: false` keeps an item out of the phone tab bar (it stays in the header and footer).
+ * `short` is the label where space is tight: the phone tab bar, and the header below `lg`.
+ */
+const NAV: { to: string; label: string; short?: string; icon: IconName; end?: boolean; mobile?: false }[] = [
   { to: '/', label: 'Home', icon: 'home', end: true },
-  { to: '/guides', label: 'Life Guides', icon: 'book-open' },
+  { to: '/guides', label: 'Life Guides', short: 'Guides', icon: 'book-open' },
   { to: '/calculators', label: 'Calculators', icon: 'calculator' },
   { to: '/plan', label: 'My Plan', icon: 'list-checks' },
-  { to: '/saved', label: 'Saved Items', icon: 'bookmark' },
-  { to: '/creator', label: 'About Me', icon: 'user' },
+  { to: '/saved', label: 'Saved Items', short: 'Saved', icon: 'bookmark' },
+  { to: '/creator', label: 'Who made this', icon: 'user', mobile: false },
+  { to: '/feedback', label: 'Feedback', icon: 'message-circle-heart', mobile: false },
 ];
 
 function Wordmark() {
@@ -21,7 +28,8 @@ function Wordmark() {
       </span>
       <span className="leading-tight">
         <span className="block text-[15px] font-semibold tracking-tight">Everyday SG</span>
-        <span className="hidden text-[11.5px] text-ink-faint sm:block">Your guide to adulting in Singapore</span>
+        {/* Hidden while the header nav needs the room. */}
+        <span className="hidden text-[11.5px] text-ink-faint sm:block md:hidden xl:block">Your guide to adulting in Singapore</span>
       </span>
     </Link>
   );
@@ -35,17 +43,25 @@ function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Wordmark />
         <nav aria-label="Main" className="hidden md:block">
-          <ul className="flex items-center gap-1">
+          {/* Tighter, with short labels, from md to lg, so every item stays on one line. */}
+          <ul className="flex items-center gap-0.5 lg:gap-1">
             {NAV.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${isActive ? 'bg-nav-active font-medium text-ink' : 'text-ink-muted hover:bg-stone-100 hover:text-ink'}`
+                    `inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2 text-[13px] transition-colors lg:gap-2 lg:px-3 lg:text-sm ${isActive ? 'bg-nav-active font-medium text-ink' : 'text-ink-muted hover:bg-stone-100 hover:text-ink'}`
                   }
                 >
-                  {item.label}
+                  {item.short ? (
+                    <>
+                      <span className="lg:hidden">{item.short}</span>
+                      <span className="hidden lg:inline">{item.label}</span>
+                    </>
+                  ) : (
+                    item.label
+                  )}
                   {item.to === '/saved' && saved.length > 0 && <span className="rounded-full bg-sage-100 px-1.5 text-[11px] font-medium text-sage-800 tabular-nums">{saved.length}</span>}
                 </NavLink>
               </li>
@@ -67,8 +83,8 @@ function Header() {
 function MobileNav() {
   return (
     <nav aria-label="Main (mobile)" className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-canvas/95 backdrop-blur md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <ul className="grid grid-cols-6">
-        {NAV.map((item) => (
+      <ul className="grid grid-cols-5">
+        {NAV.filter((item) => item.mobile !== false).map((item) => (
           <li key={item.to}>
             <NavLink to={item.to} end={item.end} className={({ isActive }) => `flex flex-col items-center gap-1 px-1 py-2 text-[11px] ${isActive ? 'font-medium text-ink' : 'text-ink-faint'}`}>
               {({ isActive }) => (
@@ -76,7 +92,7 @@ function MobileNav() {
                   <span className={`flex h-7 w-10 items-center justify-center rounded-full ${isActive ? 'bg-nav-active' : ''}`}>
                     <Icon name={item.icon} size={18} />
                   </span>
-                  <span className="truncate">{item.label === 'Saved Items' ? 'Saved' : item.label === 'Life Guides' ? 'Guides' : item.label === 'About Me' ? 'About' : item.label}</span>
+                  <span className="truncate">{item.short ?? item.label}</span>
                 </>
               )}
             </NavLink>
@@ -137,12 +153,17 @@ function Footer() {
               </Link>
             </li>
             <li>
+              <Link to="/feedback" className="hover:text-ink">
+                Send feedback
+              </Link>
+            </li>
+            <li>
               <Link to="/plan" className="hover:text-ink">
                 Export, import or reset your data
               </Link>
             </li>
           </ul>
-          <p className="mt-4 leading-5">Everything you enter stays in this browser. No accounts, no tracking, no servers.</p>
+          <p className="mt-4 leading-5">Everything you enter stays in this browser, except a message you choose to send through the feedback form. No accounts, no tracking.</p>
         </div>
       </div>
       <div className="mx-auto max-w-6xl border-t border-stone-200 px-4 py-5 sm:px-6">
@@ -155,11 +176,89 @@ function Footer() {
   );
 }
 
+/**
+ * Every new page opens at the top, like a full page load. `behavior: 'instant'` matters:
+ * 'auto' inherits the global `scroll-behavior: smooth`, and a smooth scroll is cut short
+ * when the new page renders. A URL with a hash scrolls to that element instead.
+ *
+ * Back/Forward (POP) returns to where that page was left. The browser's own restoration
+ * runs before React has rendered the previous page, so positions are remembered here, in
+ * memory only, per history entry (never in storage).
+ */
+const scrollPositions = new Map<string, number>();
+
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  // Entries the browser creates itself (a full load, an anchor jump) all share the key
+  // 'default', so the path and hash are part of the id.
+  const entry = `${key}|${pathname}${hash}`;
+  // Read, not a dependency: a filter or prefill that only REPLACEs the query string must not jump.
+  const type = useNavigationType();
+  const navType = useRef(type);
+  navType.current = type;
+  const entryKey = useRef(entry);
+  const last = useRef({ pathname, hash });
+
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [pathname]);
+    // The browser would otherwise restore against the old page and record a clamped position.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // Recorded on scroll, and again just before a navigation can change the page: a click
+    // (links and buttons that navigate) or Back/Forward. Capture phase, so this runs before
+    // the router's own popstate listener re-renders the page.
+    const remember = () => scrollPositions.set(entryKey.current, window.scrollY);
+    window.addEventListener('scroll', remember, { passive: true });
+    window.addEventListener('click', remember, { capture: true });
+    window.addEventListener('popstate', remember, { capture: true });
+    return () => {
+      window.removeEventListener('scroll', remember);
+      window.removeEventListener('click', remember, { capture: true });
+      window.removeEventListener('popstate', remember, { capture: true });
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    entryKey.current = entry;
+    const samePage = last.current.pathname === pathname;
+    const sameHash = last.current.hash === hash;
+    last.current = { pathname, hash };
+    let timer = 0;
+    let tries = 0;
+    // Lazily loaded pages may not be tall enough (or have the target) straight away.
+    const retry = (attempt: () => boolean) => {
+      const run = () => {
+        if (!attempt() && tries++ < 40) timer = window.setTimeout(run, 16);
+      };
+      run();
+    };
+    const toHash = (behavior: ScrollBehavior = 'instant') => {
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)));
+      el?.scrollIntoView({ behavior, block: 'start' });
+      return Boolean(el);
+    };
+    if (navType.current === 'POP') {
+      // An in-page anchor (a click, or Back over one): glide to that section, as the
+      // section tabs always have, unless the reader prefers reduced motion.
+      if (samePage && hash) {
+        if (!sameHash) toHash(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth');
+        return;
+      }
+      const saved = scrollPositions.get(entry);
+      if (saved === undefined) return;
+      retry(() => {
+        window.scrollTo({ top: saved, left: 0, behavior: 'instant' });
+        return Math.abs(window.scrollY - saved) < 2;
+      });
+    } else if (samePage && sameHash) {
+      // Only the query string changed (a filter, or a calculator clearing its prefill): stay put.
+      return;
+    } else if (hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      retry(() => toHash());
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+    return () => window.clearTimeout(timer);
+  }, [pathname, hash, entry]);
   return null;
 }
 
@@ -176,17 +275,39 @@ function LoadSweep() {
 function PageFrame({ children }: { children: ReactNode }) {
   // Keyed by path, not location key, so clearing a query string does not re-mount the page.
   const { pathname: key } = useLocation();
+  // The first page is often on screen already, prerendered: only pages navigated to slide in.
+  const first = useRef<string | null>(key);
+  if (key !== first.current) first.current = null;
   useEffect(() => {
     if (typeof (document as Document & { startViewTransition?: unknown }).startViewTransition !== 'function') document.documentElement.classList.add('no-vt');
   }, []);
   return (
-    <main id="main" key={key} className="page-enter mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:px-6 md:pb-12">
+    <main id="main" key={key} className={`${first.current === null ? 'page-enter ' : ''}mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:px-6 md:pb-12`}>
       {children}
     </main>
   );
 }
 
+/** The Undo offered after erasing all saved data; it outlives the reload of state from storage. */
+function StorageUndo() {
+  const { pendingUndo, clearUndo } = useStorageControl();
+  if (!pendingUndo) return null;
+  return (
+    <UndoNotice
+      key={pendingUndo.id}
+      floating
+      message={pendingUndo.message}
+      onUndo={() => {
+        clearUndo();
+        pendingUndo.restore();
+      }}
+      onExpire={clearUndo}
+    />
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
+  useDocumentHead();
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-canvas">
@@ -197,6 +318,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <PageFrame>{children}</PageFrame>
       <Footer />
       <MobileNav />
+      <StorageUndo />
     </div>
   );
 }

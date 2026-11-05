@@ -4,6 +4,7 @@ export const CALCULATORS: CalculatorMeta[] = [
   {
     id: 'budget',
     kind: 'calculator',
+    summary: 'Where your money goes each month, and your savings rate.',
     name: 'Household budget and cash flow',
     shortName: 'Budget',
     description: 'See where your money goes each month, your savings rate, and how your spending compares with a suggested allocation.',
@@ -16,6 +17,7 @@ export const CALCULATORS: CalculatorMeta[] = [
   {
     id: 'emergency-debt',
     kind: 'calculator',
+    summary: 'Size your emergency fund and plan the quickest way out of debt.',
     name: 'Emergency fund and debt repayment',
     shortName: 'Emergency fund and debt',
     description: 'Size your emergency fund, then see how fast extra payments clear your debts and how much interest you avoid.',
@@ -28,6 +30,7 @@ export const CALCULATORS: CalculatorMeta[] = [
   {
     id: 'housing',
     kind: 'calculator',
+    summary: 'Repayments, upfront cash and CPF, and what changes them.',
     name: 'Housing affordability and mortgage',
     shortName: 'Housing',
     description: 'Estimate monthly repayments, upfront cash and CPF needs, and test what happens when rates, prices or tenure change.',
@@ -40,6 +43,7 @@ export const CALCULATORS: CalculatorMeta[] = [
   {
     id: 'baby',
     kind: 'calculator',
+    summary: 'Setup, delivery, monthly and childcare costs over the years.',
     name: 'Baby and childcare budget',
     shortName: 'Baby budget',
     description: 'Plan one-time setup costs, delivery expenses, monthly infant costs and childcare scenarios across your planning horizon.',
@@ -52,6 +56,7 @@ export const CALCULATORS: CalculatorMeta[] = [
   {
     id: 'retirement',
     kind: 'calculator',
+    summary: 'Your savings at retirement, after inflation, and the gap.',
     name: 'Retirement projection',
     shortName: 'Retirement',
     description: 'Project your savings to retirement, adjust for inflation and see the gap between what you will have and what you may need.',
@@ -100,7 +105,7 @@ export const CALCULATORS: CalculatorMeta[] = [
     name: 'Annual tax preparation checklist',
     shortName: 'Tax prep',
     description: 'Collect income documents, review relief categories and track what is done before you file with IRAS.',
-    categoryId: 'cpf-tax-retirement',
+    categoryId: 'money',
     path: '/tools/tax-prep',
     icon: 'receipt',
     tags: ['tax', 'IRAS', 'income tax', 'reliefs', 'filing', 'year of assessment', 'IR8A'],

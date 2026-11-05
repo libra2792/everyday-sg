@@ -36,10 +36,20 @@ export default function CarCalculator() {
   const set = <K extends keyof CarInputs>(key: K) => (v: CarInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const months = Math.round(state.ownershipYears * 12);
 
+  const blocked = !(state.purchasePrice > 0)
+    ? "Enter the car's price to see what it costs."
+    : !(state.ownershipYears >= 1)
+      ? 'Enter an ownership period of at least 1 year.'
+      : r.loanAmount > 0 && !(state.loanTenureYears >= 1)
+        ? 'Enter a loan tenure of at least 1 year, or pay the full price upfront.'
+        : null;
+
   return (
     <CalculatorShell
       id="car"
       prefilled={prefilled}
+      inputs={state}
+      blocked={blocked}
       onReset={reset}
       sourceIds={['onemotoring', 'onemotoring-upfront', 'onemotoring-coe', 'onemotoring-coe-results', 'onemotoring-ongoing', 'onemotoring-road-tax', 'lta-fares']}
       relatedGuides={['car-ownership-costs', 'car-vs-public-transport', 'build-a-budget']}
@@ -106,8 +116,8 @@ export default function CarCalculator() {
       }
     >
       <InputGroup title="Purchase and financing">
-        <SliderField label="Purchase price (including COE and duties)" benchmark={BENCHMARKS.coePrice} prefix="S$" min={10000} max={500000} step={1000} value={state.purchasePrice} onChange={set('purchasePrice')} />
-        <SliderField label="Initial payment" benchmark={BENCHMARKS.carDownPayment} benchmarkValue={state.purchasePrice > 0 ? Math.round((state.purchasePrice * 0.3) / 1000) * 1000 : undefined} prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.initialPayment} onChange={set('initialPayment')} help={`Loan amount: ${sgd(r.loanAmount)}. Minimum down payments and maximum tenures for car loans are regulated; check with your lender.`} />
+        <SliderField label="Purchase price (including COE and duties)" benchmark={BENCHMARKS.coePrice} prefix="S$" min={10000} max={500000} hardMin={0} step={1000} value={state.purchasePrice} onChange={set('purchasePrice')} />
+        <SliderField label="Initial payment" allowAboveMax={false} benchmark={BENCHMARKS.carDownPayment} benchmarkValue={state.purchasePrice > 0 ? Math.round((state.purchasePrice * 0.3) / 1000) * 1000 : undefined} prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.initialPayment} onChange={set('initialPayment')} help={`Loan amount: ${sgd(r.loanAmount)}. Minimum down payments and maximum tenures for car loans are regulated; check with your lender.`} />
         <SliderField label="Other upfront costs" prefix="S$" min={0} max={30000} step={100} value={state.otherUpfrontCosts} onChange={set('otherUpfrontCosts')} help="Registration, first insurance, accessories, in-vehicle unit." />
         <Segmented
           label="Loan type"
@@ -118,13 +128,13 @@ export default function CarCalculator() {
             { value: 'reducing', label: 'Reducing balance' },
           ]}
         />
-        <SliderField label="Loan interest rate" benchmark={BENCHMARKS.carLoanRate} suffix="% p.a." min={0} max={8} step={0.05} value={state.loanInterestPct} onChange={set('loanInterestPct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
-        <SliderField label="Loan tenure" benchmark={BENCHMARKS.carLoanTenure} suffix="years" min={1} max={7} step={1} value={state.loanTenureYears} onChange={set('loanTenureYears')} allowAboveMax={false} help={r.loanAmount > 0 ? `${sgd(r.loanMonthly)} per month · ${sgd(r.totalLoanInterest)} total interest over ${r.loanMonths} months` : 'No loan at this initial payment'} />
+        <SliderField label="Loan interest rate" benchmark={BENCHMARKS.carLoanRate} suffix="% p.a." min={0} max={8} hardMax={15} step={0.05} value={state.loanInterestPct} onChange={set('loanInterestPct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
+        <SliderField label="Loan tenure" benchmark={BENCHMARKS.carLoanTenure} suffix="years" min={1} max={7} hardMin={1} step={1} value={state.loanTenureYears} onChange={set('loanTenureYears')} allowAboveMax={false} help={r.loanAmount > 0 ? `${sgd(r.loanMonthly)} per month · ${sgd(r.totalLoanInterest)} total interest over ${r.loanMonths} months` : 'No loan at this initial payment'} />
       </InputGroup>
 
       <InputGroup title="Ownership and resale">
-        <SliderField label="Ownership period" benchmark={BENCHMARKS.ownershipYears} suffix="years" min={1} max={10} step={1} value={state.ownershipYears} onChange={set('ownershipYears')} allowAboveMax={false} />
-        <SliderField label="Estimated resale value at the end" benchmark={BENCHMARKS.carResale} benchmarkValue={state.purchasePrice > 0 ? Math.round((state.purchasePrice * 0.45) / 1000) * 1000 : undefined} prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.resaleValueAtEnd} onChange={set('resaleValueAtEnd')} help={`Depreciation: ${sgd(r.depreciation)} over the period (${sgd(months > 0 ? r.depreciation / months : 0)} per month). Include expected COE or PARF rebates in the resale estimate.`} />
+        <SliderField label="Ownership period" benchmark={BENCHMARKS.ownershipYears} suffix="years" min={1} max={10} hardMin={1} step={1} value={state.ownershipYears} onChange={set('ownershipYears')} allowAboveMax={false} />
+        <SliderField label="Estimated resale value at the end" allowAboveMax={false} benchmark={BENCHMARKS.carResale} benchmarkValue={state.purchasePrice > 0 ? Math.round((state.purchasePrice * 0.45) / 1000) * 1000 : undefined} prefix="S$" min={0} max={Math.max(10000, state.purchasePrice)} step={1000} value={state.resaleValueAtEnd} onChange={set('resaleValueAtEnd')} help={`Depreciation: ${sgd(r.depreciation)} over the period (${sgd(months > 0 ? r.depreciation / months : 0)} per month). Include expected COE or PARF rebates in the resale estimate.`} />
         <SliderField label="Expected annual mileage" benchmark={BENCHMARKS.mileage} suffix="km" min={0} max={40000} step={500} value={state.annualMileageKm} onChange={set('annualMileageKm')} />
       </InputGroup>
 

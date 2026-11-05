@@ -320,6 +320,8 @@ export interface HousingInputs {
   propertyPrice: number;
   downPaymentPct: number; // user assumption
   cpfForDownPayment: number; // how much of the down payment the user intends to pay from CPF
+  /** Until the user sets the CPF portion, it follows min(CPF allocated, down payment). */
+  cpfDownAuto?: boolean;
   interestRatePct: number;
   tenureYears: number;
   renovationBudget: number;
@@ -384,15 +386,15 @@ export function housingAffordability(i: HousingInputs): HousingResult {
   const loanAmount = Math.max(0, price - downPayment);
   const monthlyLoan = monthlyPayment(loanAmount, i.interestRatePct, i.tenureYears);
   const totals = loanTotals(loanAmount, i.interestRatePct, i.tenureYears);
-  const cpfForDp = Math.min(downPayment, nonNeg(i.cpfForDownPayment));
-  const upfrontFromCpf = cpfForDp;
-  const upfrontFromCash = downPayment - cpfForDp + nonNeg(i.renovationBudget) + nonNeg(i.otherUpfrontCosts);
-  const upfrontTotal = upfrontFromCpf + upfrontFromCash;
   const p = Boolean(i.withPartner);
   const yourIncome = nonNeg(i.grossMonthlyIncome);
   const partnerIncome = p ? nonNeg(i.partnerGrossMonthlyIncome ?? 0) : 0;
   const totalCash = nonNeg(i.availableCash) + (p ? nonNeg(i.partnerAvailableCash ?? 0) : 0);
   const totalCpf = nonNeg(i.availableCpf) + (p ? nonNeg(i.partnerAvailableCpf ?? 0) : 0);
+  const cpfForDp = Math.min(downPayment, i.cpfDownAuto ? totalCpf : nonNeg(i.cpfForDownPayment));
+  const upfrontFromCpf = cpfForDp;
+  const upfrontFromCash = downPayment - cpfForDp + nonNeg(i.renovationBudget) + nonNeg(i.otherUpfrontCosts);
+  const upfrontTotal = upfrontFromCpf + upfrontFromCash;
   const totalCpfOa = nonNeg(i.monthlyCpfOaContribution) + (p ? nonNeg(i.partnerMonthlyCpfOaContribution ?? 0) : 0);
   const cashShortfall = Math.max(0, upfrontFromCash - totalCash);
   const cpfShortfall = Math.max(0, upfrontFromCpf - totalCpf);

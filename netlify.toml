@@ -5,10 +5,12 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# Single-page app: send every path to index.html so React Router can handle it.
+# Single-page app: public pages are prerendered files (guides/x.html and so on), served
+# first. Every other path gets the empty app shell (not index.html, which is the
+# prerendered home page) so React Router can handle it.
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/app.html"
   status = 200
 
 [[headers]]

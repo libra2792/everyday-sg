@@ -53,8 +53,9 @@ export function Stat({ label, value, hint, tone = 'neutral', size = 'md', classN
   return (
     <div className={`min-w-0 ${className}`}>
       <div className="text-[13px] leading-5 text-ink-faint">{label}</div>
-      <div className={`${size === 'lg' ? 'text-2xl sm:text-[28px]' : 'text-lg'} mt-0.5 font-semibold tabular-nums tracking-tight ${toneCls}`}>{value}</div>
-      {hint && <div className="mt-0.5 text-[13px] leading-5 text-ink-faint">{hint}</div>}
+      {/* Long figures wrap inside their own cell rather than running into the next one. */}
+      <div className={`${size === 'lg' ? 'text-2xl sm:text-[28px]' : 'text-lg'} mt-0.5 font-semibold tabular-nums tracking-tight [overflow-wrap:anywhere] ${toneCls}`}>{value}</div>
+      {hint && <div className="mt-0.5 text-[13px] leading-5 text-ink-faint [overflow-wrap:anywhere]">{hint}</div>}
     </div>
   );
 }
@@ -75,8 +76,8 @@ export function DefinitionList({ rows, className = '', dense }: DefinitionListPr
     <dl className={`divide-y divide-stone-200 ${className}`}>
       {rows.map((r, i) => (
         <div key={i} className={`flex items-baseline justify-between gap-4 ${dense ? 'py-1.5' : 'py-2.5'}`}>
-          <dt className={`text-[14px] ${r.emphasis ? 'font-medium text-ink' : 'text-ink-muted'}`}>{r.label}</dt>
-          <dd className={`shrink-0 text-right text-[14px] tabular-nums ${r.emphasis ? 'font-semibold' : ''} ${r.tone === 'caution' ? 'text-clay-700' : r.tone === 'positive' ? 'text-sage-800' : 'text-ink'}`}>{r.value}</dd>
+          <dt className={`min-w-0 text-[14px] ${r.emphasis ? 'font-medium text-ink' : 'text-ink-muted'}`}>{r.label}</dt>
+          <dd className={`max-w-[65%] shrink-0 text-right text-[14px] tabular-nums [overflow-wrap:anywhere] ${r.emphasis ? 'font-semibold' : ''} ${r.tone === 'caution' ? 'text-clay-700' : r.tone === 'positive' ? 'text-sage-800' : 'text-ink'}`}>{r.value}</dd>
         </div>
       ))}
     </dl>

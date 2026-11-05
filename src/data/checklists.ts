@@ -15,21 +15,174 @@ export const TAX_INCOME_DOCUMENTS: ChecklistItem[] = [
   { id: 'prior', text: 'Previous year\'s Notice of Assessment for reference', essential: false, group: 'Income documents' },
 ];
 
-export const TAX_RELIEF_CATEGORIES: ChecklistItem[] = [
-  { id: 'earned', text: 'Earned Income Relief (automatically computed by IRAS where eligible)', essential: false, group: 'Reliefs to review' },
-  { id: 'spouse', text: 'Spouse Relief or Handicapped Spouse Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'child', text: 'Qualifying Child Relief or Handicapped Child Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'wmcr', text: 'Working Mother\'s Child Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'parent', text: 'Parent Relief or Handicapped Parent Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'grandparent', text: 'Grandparent Caregiver Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'cpf', text: 'CPF Relief (employee contributions) and CPF Cash Top-up Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'srs', text: 'Supplementary Retirement Scheme (SRS) Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'life', text: 'Life Insurance Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'course', text: 'Course Fees Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'nsman', text: 'NSman Relief (self, wife or parent)', essential: false, group: 'Reliefs to review' },
-  { id: 'fdw', text: 'Foreign Domestic Worker Levy Relief', essential: false, group: 'Reliefs to review' },
-  { id: 'donations', text: 'Donations to approved institutions (tax deduction)', essential: false, group: 'Reliefs to review' },
+/**
+ * A relief to review, with the plain-English note shown behind its info button: what it is
+ * for, who qualifies and how it is given. Thresholds are described, not quoted, like the rest
+ * of the site; the linked IRAS pages have the figures.
+ */
+export interface TaxRelief extends ChecklistItem {
+  /** Short name, for the note's heading and the organiser's field. */
+  name: string;
+  what: string;
+  who: string;
+  /** Automatic, pre-filled, or claimed by you, and how. */
+  claim: string;
+  note?: string;
+  /** The first Year of Assessment it can no longer be claimed for, once IRAS has ended it. */
+  lapsedFrom?: number;
+  sourceIds: string[];
+}
+
+const RELIEF = { essential: false, group: 'Reliefs to review' } as const;
+
+export const TAX_RELIEF_CATEGORIES: TaxRelief[] = [
+  {
+    ...RELIEF,
+    id: 'earned',
+    text: 'Earned Income Relief (automatically computed by IRAS where eligible)',
+    name: 'Earned Income Relief',
+    what: 'Recognises that you work for a living. It applies to income from a job, a trade, a business or a profession.',
+    who: 'Anyone with earned income in the previous year. It is larger from 55 and again from 60, and larger again with a disability.',
+    claim: 'Automatic, from your income records. With a disability, tell IRAS the first time; later years follow on their own.',
+    sourceIds: ['iras-relief-earned'],
+  },
+  {
+    ...RELIEF,
+    id: 'spouse',
+    text: 'Spouse Relief or Spouse Relief (Disability)',
+    name: 'Spouse Relief',
+    what: 'For supporting a husband or wife who earns little or nothing.',
+    who: 'Your spouse lived with you or was supported by you, and their income in the previous year (including most tax-exempt and overseas income) was within IRAS’s limit. There is no income test if your spouse has a disability. Only one person can claim for the same spouse.',
+    claim: 'Claim it yourself the first year, under Deductions, Tax Reliefs and Rebates when you e-file. It is pre-filled in later years.',
+    note: 'IRAS raised the spouse’s income limit from YA 2025, so more couples now qualify.',
+    sourceIds: ['iras-relief-spouse'],
+  },
+  {
+    ...RELIEF,
+    id: 'child',
+    text: 'Qualifying Child Relief or Child Relief (Disability)',
+    name: 'Qualifying Child Relief',
+    what: 'For each child you support.',
+    who: 'Your own, step or legally adopted child, unmarried, and under 16 or in full-time education. The child’s own income must be within IRAS’s limit, unless the child has a disability.',
+    claim: 'Claim it yourself the first year; it is pre-filled after that. Parents can split it for the same child, but not beyond the amount for one child.',
+    note: 'Working mothers can claim Working Mother’s Child Relief for the same child as well.',
+    sourceIds: ['iras-relief-child'],
+  },
+  {
+    ...RELIEF,
+    id: 'wmcr',
+    text: 'Working Mother\'s Child Relief',
+    name: 'Working Mother’s Child Relief',
+    what: 'Encourages mothers to keep working after having children.',
+    who: 'Working mothers who are married, divorced or widowed. Each child must be a Singapore Citizen and meet the Qualifying Child Relief conditions.',
+    claim: 'Claim it with the child when you e-file (answer Yes to Working Mother’s Child Relief); IRAS works out the amount. It is pre-filled in later years.',
+    note: 'For a child born or adopted on or after 1 January 2024, it is a fixed amount per child from YA 2025, rather than a share of the mother’s earned income.',
+    sourceIds: ['iras-relief-wmcr'],
+  },
+  {
+    ...RELIEF,
+    id: 'parent',
+    text: 'Parent Relief or Parent Relief (Disability)',
+    name: 'Parent Relief',
+    what: 'For supporting your parents, grandparents or parents-in-law, including step and adoptive ones.',
+    who: 'The dependant is 55 or older, their income was within IRAS’s limit (neither test applies with a disability), they lived in Singapore, and they either lived with you or you gave them at least IRAS’s minimum support. Up to two dependants.',
+    claim: 'Claim it yourself the first year; it is pre-filled after that. Siblings supporting the same parent can share it.',
+    note: 'IRAS raised the dependant’s income limit from YA 2025.',
+    sourceIds: ['iras-relief-parent'],
+  },
+  {
+    ...RELIEF,
+    id: 'grandparent',
+    text: 'Grandparent Caregiver Relief',
+    name: 'Grandparent Caregiver Relief',
+    what: 'For working mothers whose parents, grandparents or in-laws look after their children.',
+    who: 'Working mothers who are married, divorced or widowed. The caregiver lived in Singapore and was not working, or earned within IRAS’s limit. The child is a Singapore Citizen aged 12 or under (no age limit with a disability). One claim per caregiver.',
+    claim: 'Claim it yourself the first year; it is pre-filled after that.',
+    sourceIds: ['iras-relief-grandparent'],
+  },
+  {
+    ...RELIEF,
+    id: 'cpf',
+    text: 'CPF Relief (employee contributions) and CPF Cash Top-up Relief',
+    name: 'CPF Relief and CPF Cash Top-up Relief',
+    what: 'Your compulsory CPF contributions as an employee are not taxed, and neither are cash top-ups to your own or your family’s CPF accounts.',
+    who: 'CPF Relief: Singapore Citizen and PR employees, on compulsory contributions only. Top-up Relief: cash top-ups to your own Special, Retirement or MediSave Account, or to parents, grandparents, a spouse or siblings, up to the yearly limit and only while the account is below its retirement or healthcare sum.',
+    claim: 'Usually automatic: CPF Relief comes from your employer through Auto-Inclusion (claim it yourself if your employer is not in the scheme), and Top-up Relief from CPF Board’s records.',
+    note: 'A top-up counts for the year CPF Board receives it, so top up by 31 December for relief in the next Year of Assessment. Top-ups the Government matches under the Matched Retirement Savings Scheme do not get relief.',
+    sourceIds: ['iras-relief-cpf', 'iras-relief-cpf-topup'],
+  },
+  {
+    ...RELIEF,
+    id: 'srs',
+    text: 'Supplementary Retirement Scheme (SRS) Relief',
+    name: 'SRS Relief',
+    what: 'For money you put into a Supplementary Retirement Scheme account: voluntary retirement savings on top of CPF.',
+    who: 'Tax residents, on contributions made in the previous calendar year, up to the yearly contribution cap (higher for foreigners). No relief on an amount you withdraw again in the same year.',
+    claim: 'Automatic, from your SRS operator (your bank).',
+    note: 'Contribute by 31 December for relief in the next Year of Assessment. Withdrawals are taxed later, with a concession from the statutory retirement age.',
+    sourceIds: ['iras-srs'],
+  },
+  {
+    ...RELIEF,
+    id: 'life',
+    text: 'Life Insurance Relief',
+    name: 'Life Insurance Relief',
+    what: 'For premiums on a life policy on your own life or your spouse’s.',
+    who: 'Only if your compulsory CPF contributions in the previous year were below IRAS’s limit, which rules out most full-time employees. Hospitalisation (including Integrated Shield), accident, critical illness and disability policies do not count.',
+    claim: 'Claim it yourself under Life Insurance when you e-file; it is pre-filled in later years.',
+    sourceIds: ['iras-relief-life'],
+  },
+  {
+    ...RELIEF,
+    id: 'course',
+    text: 'Course Fees Relief (YA 2025 is the last year it can be claimed)',
+    name: 'Course Fees Relief',
+    what: 'Was for fees you paid yourself for courses leading to an approved qualification or relevant to your work.',
+    who: 'Courses attended in 2024, claimed for YA 2025, were the last to qualify. Fees paid by an employer or with SkillsFuture Credit never counted.',
+    claim: 'For YA 2025, claimed in the return. Nothing to claim from YA 2026.',
+    note: 'IRAS ended this relief from YA 2026.',
+    lapsedFrom: 2026,
+    sourceIds: ['iras-relief-course'],
+  },
+  {
+    ...RELIEF,
+    id: 'nsman',
+    text: 'NSman Relief (self, wife or parent)',
+    name: 'NSman Relief',
+    what: 'Recognises national service by NSmen, and the support of their wives and parents.',
+    who: 'Self: you completed full-time NS (MINDEF, SPF and SCDF regulars excluded); the amount depends on whether you did NS activities in the previous work year and your appointment. Wife and parent: Singapore Citizens whose husband or child qualifies.',
+    claim: 'Automatic, from MINDEF, SPF and SCDF records. If a wife or parent relief is missing, write to IRAS through myTax Mail.',
+    sourceIds: ['iras-relief-nsman'],
+  },
+  {
+    ...RELIEF,
+    id: 'fdw',
+    text: 'Foreign Domestic Worker Levy Relief',
+    name: 'Foreign Domestic Worker Levy Relief',
+    what: 'Was for married working women who paid the levy on a foreign domestic worker.',
+    who: 'YA 2024 was the last year it could be claimed.',
+    claim: 'Nothing to claim from YA 2025.',
+    note: 'IRAS ended this relief from YA 2025.',
+    lapsedFrom: 2025,
+    sourceIds: ['iras-relief-fdwl'],
+  },
+  {
+    ...RELIEF,
+    id: 'donations',
+    text: 'Donations to approved institutions (tax deduction)',
+    name: 'Donations to approved IPCs',
+    what: 'A tax deduction larger than the amount you give, for donations to approved Institutions of a Public Character (IPCs).',
+    who: 'Only approved IPCs count, so check the charity’s status first. Outright gifts qualify; anything you get in return reduces or removes the deduction.',
+    claim: 'Automatic: give the IPC your NRIC or FIN when you donate, as IRAS does not accept receipts as a claim. Payroll donations through an employer not in Auto-Inclusion go in your return.',
+    note: 'Deductions you cannot use this year carry forward for up to five years.',
+    sourceIds: ['iras-donations'],
+  },
 ];
+
+/** Whether IRAS has ended a relief by this Year of Assessment. */
+export function reliefLapsed(relief: TaxRelief, ya: number): boolean {
+  return relief.lapsedFrom !== undefined && ya >= relief.lapsedFrom;
+}
 
 export const TAX_FILING_TASKS: ChecklistItem[] = [
   { id: 'status', text: 'Check filing status and the current deadline in myTax Portal', essential: true, group: 'Filing tasks' },
@@ -154,4 +307,3 @@ export const ANNUAL_ADMIN_SECTIONS: ChecklistSection[] = [
 ];
 
 export const ANNUAL_ADMIN_ALL_ITEMS = ANNUAL_ADMIN_SECTIONS.flatMap((s) => s.items.map((i) => ({ ...i, id: `${s.id}.${i.id}` })));
-export const TAX_ALL_ITEMS = [...TAX_INCOME_DOCUMENTS, ...TAX_RELIEF_CATEGORIES, ...TAX_FILING_TASKS];

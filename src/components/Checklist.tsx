@@ -1,29 +1,31 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { ChecklistItem } from '@/data/types';
 import { useAppState } from '@/state/AppState';
 import { Button } from './ui/Button';
 import { CheckboxField } from './ui/Field';
 import { Badge, ProgressBar } from './ui/Misc';
 
-interface ChecklistProps {
+interface ChecklistProps<T extends ChecklistItem> {
   listId: string;
-  items: ChecklistItem[];
+  items: T[];
   title?: string;
   description?: string;
   showEssentialBadges?: boolean;
   compact?: boolean;
+  /** Something to show at the end of an item's row, such as an info button. */
+  info?: (item: T) => ReactNode;
 }
 
 /**
  * A persistent checklist. Progress is stored by listId in localStorage through AppState,
  * so it survives reloads. Items can be grouped and marked essential or optional.
  */
-export function Checklist({ listId, items, title, description, showEssentialBadges = true, compact }: ChecklistProps) {
+export function Checklist<T extends ChecklistItem>({ listId, items, title, description, showEssentialBadges = true, compact, info }: ChecklistProps<T>) {
   const { isChecked, toggleItem, setItems } = useAppState();
   const ids = useMemo(() => items.map((i) => i.id), [items]);
   const done = ids.filter((id) => isChecked(listId, id)).length;
   const groups = useMemo(() => {
-    const map = new Map<string, ChecklistItem[]>();
+    const map = new Map<string, T[]>();
     for (const item of items) {
       const key = item.group || '';
       if (!map.has(key)) map.set(key, []);
@@ -69,6 +71,7 @@ export function Checklist({ listId, items, title, description, showEssentialBadg
                     <span className="print-only">{item.essential ? '(essential)' : ''}</span>
                   )}
                   {showEssentialBadges && item.essential && <Badge tone="sage" className="no-print mt-1 shrink-0">Essential</Badge>}
+                  {info && <div className="no-print -my-1 -mr-1.5 shrink-0">{info(item)}</div>}
                 </li>
               ))}
             </ul>

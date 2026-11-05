@@ -17,6 +17,7 @@ const DEFAULTS: HousingInputs = {
   propertyPrice: 500000,
   downPaymentPct: 25,
   cpfForDownPayment: 0,
+  cpfDownAuto: true,
   interestRatePct: 3,
   tenureYears: 25,
   renovationBudget: 0,
@@ -39,9 +40,33 @@ const SPLIT_OPTIONS: { value: NonNullable<HousingInputs['splitMode']>; label: st
   { value: 'custom', label: 'My own split' },
 ];
 
+/** Inputs saved before the CPF portion could follow the allocation: a 0 there was the untouched default. */
+function migrate(saved: unknown, fallback: HousingInputs): HousingInputs {
+  const s = { ...fallback, ...(saved as Partial<HousingInputs>) };
+  if ((saved as Partial<HousingInputs>).cpfDownAuto === undefined) s.cpfDownAuto = !(s.cpfForDownPayment > 0);
+  return s;
+}
+
+/** The CPF portion of the down payment when it follows the allocation. */
+function autoCpfDown(s: HousingInputs): number {
+  const cpf = s.availableCpf + (s.withPartner ? (s.partnerAvailableCpf ?? 0) : 0);
+  return Math.min(cpf, (s.propertyPrice * Math.min(100, s.downPaymentPct)) / 100);
+}
+
 export default function HousingCalculator() {
-  const [state, setState, reset] = usePersistentState<HousingInputs>('calc:housing', DEFAULTS);
-  const prefilled = usePrefill(setState, { income: 'grossMonthlyIncome', cash: 'availableCash', cpf: 'availableCpf', price: 'propertyPrice', down: 'downPaymentPct', rate: 'interestRatePct', tenure: 'tenureYears', reno: 'renovationBudget', upfront: 'otherUpfrontCosts', recurring: 'monthlyRecurringCosts', oa: 'monthlyCpfOaContribution', limit: 'affordabilityLimitPct' });
+  const [state, setState, reset] = usePersistentState<HousingInputs>('calc:housing', DEFAULTS, migrate);
+  const prefilled = usePrefill(
+    setState,
+    { income: 'grossMonthlyIncome', cash: 'availableCash', cpf: 'availableCpf', cpfDown: 'cpfForDownPayment', price: 'propertyPrice', down: 'downPaymentPct', rate: 'interestRatePct', tenure: 'tenureYears', reno: 'renovationBudget', upfront: 'otherUpfrontCosts', recurring: 'monthlyRecurringCosts', oa: 'monthlyCpfOaContribution', limit: 'affordabilityLimitPct' },
+    (params, s) => {
+      // household=1: the income is a household total (a guide asks for it that way), so
+      // enter it as one buyer rather than as "your" half with a partner on zero.
+      const next = params.get('household') === '1' ? { ...s, withPartner: false } : s;
+      if (!params.has('cpfDown')) return next;
+      // A CPF portion equal to what the allocation gives keeps following it as inputs change.
+      return { ...next, cpfDownAuto: Math.abs(next.cpfForDownPayment - autoCpfDown(next)) < 1 };
+    },
+  );
   const r = useMemo(() => housingAffordability(state), [state]);
   const set = <K extends keyof HousingInputs>(key: K) => (v: HousingInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const withPartner = Boolean(state.withPartner);
@@ -67,10 +92,15 @@ export default function HousingCalculator() {
     [state.propertyPrice, state.downPaymentPct, state.interestRatePct, state.tenureYears],
   );
 
+  // Nothing sensible can be computed without a price and a tenure of at least a year.
+  const blocked = !(state.propertyPrice > 0) ? 'Enter a property price to see repayments.' : !(state.tenureYears >= 1) ? 'Enter a tenure of at least 1 year to see repayments.' : null;
+
   return (
     <CalculatorShell
       id="housing"
       prefilled={prefilled}
+      inputs={state}
+      blocked={blocked}
       onReset={reset}
       sourceIds={['hdb-loan', 'hdb-hfe', 'cpf-housing', 'moneysense-decisions', 'hdb-median-resale', 'singstat-income-2025']}
       relatedGuides={['home-affordability-and-loans', 'hdb-bto-vs-resale', 'renovation-and-moving']}
@@ -108,7 +138,7 @@ export default function HousingCalculator() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Down payment = price × down payment %. Loan = price − down payment.</li>
           <li>Monthly payment M = P × r ÷ (1 − (1 + r)^−n), where r is the annual rate ÷ 12 and n is tenure in months. A zero rate gives P ÷ n.</li>
-          <li>Upfront from CPF = min(CPF you allocate, down payment). Upfront from cash = down payment − CPF portion + renovation + other upfront costs.</li>
+          <li>Upfront from CPF = the down payment you pay from CPF. Until you change that field it is min(CPF you allocate, down payment), with your partner's CPF counted when buying together. Upfront from cash = down payment − CPF portion + renovation + other upfront costs.</li>
           <li>Monthly commitment = loan payment + recurring costs. Share of income = commitment ÷ gross household income (yours plus your partner's).</li>
           <li>Shortfalls compare upfront needs with your combined cash and CPF. Monthly cash after CPF OA uses both partners' OA contributions, up to the loan instalment.</li>
           <li>Each person's share = upfront and monthly costs × their split. “By income” splits in proportion to gross incomes; with no income entered it splits equally.</li>
@@ -117,7 +147,7 @@ export default function HousingCalculator() {
       results={
         <ResultsPanel>
           <StatGrid>
-            <Stat label="Monthly loan payment" value={sgd(r.monthlyLoan)} size="lg" className="col-span-2 sm:col-span-3" hint={`${sgd(r.loanAmount)} over ${state.tenureYears} years at ${state.interestRatePct}% · ${sgd(r.totalInterest)} total interest`} />
+            <Stat label="Monthly loan payment" value={sgd(r.monthlyLoan)} size="lg" className="col-span-2 sm:col-span-3" hint={`${sgd(r.loanAmount)} over ${state.tenureYears} ${state.tenureYears === 1 ? 'year' : 'years'} at ${state.interestRatePct}% · ${sgd(r.totalInterest)} total interest`} />
             <Stat label="Upfront cash" value={sgd(r.upfrontFromCash)} tone={r.cashShortfall > 0 ? 'caution' : 'neutral'} hint={r.cashShortfall > 0 ? `${sgd(r.cashShortfall)} more than available` : withPartner ? 'Within your combined cash' : 'Within available cash'} />
             <Stat label="Upfront CPF" value={sgd(r.upfrontFromCpf)} tone={r.cpfShortfall > 0 ? 'caution' : 'neutral'} hint={r.cpfShortfall > 0 ? `${sgd(r.cpfShortfall)} more than available` : withPartner ? 'Within your combined CPF' : 'Within available CPF'} />
             <Stat label="Monthly commitment" value={sgd(r.monthlyCommitment)} hint={hasIncome ? `${pct(r.commitmentShareOfIncome)} of ${incomeWord} income` : 'Enter income for a share'} />
@@ -147,7 +177,7 @@ export default function HousingCalculator() {
       }
     >
       <InputGroup title="You" description="Your income and what you can commit upfront. Keep an emergency fund out of the cash figure.">
-        <SliderField label={withPartner ? 'Your gross monthly income' : 'Gross monthly household income'} benchmark={withPartner ? BENCHMARKS.medianFullTimeIncome : BENCHMARKS.medianHouseholdIncome} prefix="S$" min={0} max={30000} step={100} value={state.grossMonthlyIncome} onChange={set('grossMonthlyIncome')} help="Before CPF and tax; lenders and HDB assess gross income." />
+        <SliderField label={withPartner ? 'Your gross monthly income' : 'Gross monthly household income'} benchmark={withPartner ? BENCHMARKS.medianFullTimeIncomeGross : BENCHMARKS.medianHouseholdIncome} prefix="S$" min={0} max={30000} hardMax={200000} step={100} value={state.grossMonthlyIncome} onChange={set('grossMonthlyIncome')} help="Before CPF and tax; lenders and HDB assess gross income." />
         <SliderField label="Your cash for the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.availableCash} onChange={set('availableCash')} />
         <SliderField label="Your CPF savings allocated to the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.availableCpf} onChange={set('availableCpf')} help="Ordinary Account savings you intend to use; CPF Board sets the rules on what can be used." />
         <SliderField label="Your monthly CPF OA contribution for repayments" benchmark={BENCHMARKS.cpfOaForLoan} benchmarkValue={state.grossMonthlyIncome > 0 ? Math.round((state.grossMonthlyIncome * 0.23) / 10) * 10 : undefined} prefix="S$" min={0} max={5000} step={50} value={state.monthlyCpfOaContribution} onChange={set('monthlyCpfOaContribution')} help="If you plan to service the loan from CPF OA, this reduces monthly cash needed." />
@@ -166,7 +196,7 @@ export default function HousingCalculator() {
         />
         {withPartner && (
           <>
-            <SliderField label="Partner's gross monthly income" benchmark={BENCHMARKS.medianFullTimeIncome} prefix="S$" min={0} max={30000} step={100} value={state.partnerGrossMonthlyIncome ?? 0} onChange={set('partnerGrossMonthlyIncome')} />
+            <SliderField label="Partner's gross monthly income" benchmark={BENCHMARKS.medianFullTimeIncomeGross} prefix="S$" min={0} max={30000} hardMax={200000} step={100} value={state.partnerGrossMonthlyIncome ?? 0} onChange={set('partnerGrossMonthlyIncome')} />
             <SliderField label="Partner's cash for the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.partnerAvailableCash ?? 0} onChange={set('partnerAvailableCash')} />
             <SliderField label="Partner's CPF savings allocated to the purchase" prefix="S$" min={0} max={500000} step={1000} value={state.partnerAvailableCpf ?? 0} onChange={set('partnerAvailableCpf')} />
             <SliderField label="Partner's monthly CPF OA contribution for repayments" benchmark={BENCHMARKS.cpfOaForLoan} benchmarkValue={(state.partnerGrossMonthlyIncome ?? 0) > 0 ? Math.round(((state.partnerGrossMonthlyIncome ?? 0) * 0.23) / 10) * 10 : undefined} prefix="S$" min={0} max={5000} step={50} value={state.partnerMonthlyCpfOaContribution ?? 0} onChange={set('partnerMonthlyCpfOaContribution')} />
@@ -177,11 +207,32 @@ export default function HousingCalculator() {
       </InputGroup>
 
       <InputGroup title="The property and loan">
-        <SliderField label="Estimated property price" benchmark={BENCHMARKS.resale4Room} prefix="S$" min={100000} max={3000000} step={5000} value={state.propertyPrice} onChange={set('propertyPrice')} />
+        <SliderField label="Estimated property price" benchmark={BENCHMARKS.resale4Room} prefix="S$" min={100000} max={3000000} hardMin={0} hardMax={20000000} step={5000} value={state.propertyPrice} onChange={set('propertyPrice')} />
         <SliderField label="Down payment" benchmark={BENCHMARKS.downPayment} suffix="%" min={0} max={100} step={1} value={state.downPaymentPct} onChange={set('downPaymentPct')} allowAboveMax={false} help={`Your assumption. ${sgd(r.downPayment)} at the current price; the loan would be ${sgd(r.loanAmount)}.`} />
-        <SliderField label="Down payment to pay from CPF" prefix="S$" min={0} max={Math.max(1000, Math.round(r.downPayment))} step={1000} value={state.cpfForDownPayment} onChange={set('cpfForDownPayment')} help="The rest of the down payment is paid in cash. Minimum cash components may apply depending on loan type." />
-        <SliderField label="Loan interest rate" benchmark={BENCHMARKS.hdbLoanRate} suffix="% p.a." min={0} max={8} step={0.05} value={state.interestRatePct} onChange={set('interestRatePct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
-        <SliderField label="Loan tenure" benchmark={BENCHMARKS.loanTenure} suffix="years" min={5} max={35} step={1} value={state.tenureYears} onChange={set('tenureYears')} allowAboveMax={false} help="Maximum tenures depend on loan type, age and property; check with HDB or your lender." />
+        <SliderField
+          label="Down payment to pay from CPF"
+          prefix="S$"
+          min={0}
+          max={Math.max(1000, Math.round(r.downPayment))}
+          step={1000}
+          value={Math.round(r.upfrontFromCpf)}
+          onChange={(v) => setState((s) => ({ ...s, cpfForDownPayment: v, cpfDownAuto: false }))}
+          allowAboveMax={false}
+          help={
+            state.cpfDownAuto ? (
+              'Follows the CPF you allocated, up to the down payment; the rest is paid in cash. Minimum cash components may apply depending on loan type.'
+            ) : (
+              <>
+                The rest of the down payment is paid in cash. Minimum cash components may apply depending on loan type.{' '}
+                <button type="button" className="link" onClick={() => setState((s) => ({ ...s, cpfDownAuto: true }))}>
+                  Use all the CPF allocated
+                </button>
+              </>
+            )
+          }
+        />
+        <SliderField label="Loan interest rate" benchmark={BENCHMARKS.hdbLoanRate} suffix="% p.a." min={0} max={8} hardMax={15} step={0.05} value={state.interestRatePct} onChange={set('interestRatePct')} format={(n) => `${n.toFixed(2)}% p.a.`} />
+        <SliderField label="Loan tenure" benchmark={BENCHMARKS.loanTenure} suffix="years" min={5} max={35} hardMin={1} hardMax={40} step={1} value={state.tenureYears} onChange={set('tenureYears')} help="Maximum tenures depend on loan type, age and property; check with HDB or your lender." />
       </InputGroup>
 
       <InputGroup title="Other costs">
@@ -191,20 +242,22 @@ export default function HousingCalculator() {
         <SliderField label="Your affordability limit" benchmark={BENCHMARKS.housingLimit} suffix="% of income" min={10} max={60} step={1} value={state.affordabilityLimitPct} onChange={set('affordabilityLimitPct')} allowAboveMax={false} help="The share of gross income you are comfortable committing to housing each month. This is your choice, not a regulatory figure." />
       </InputGroup>
 
-      <InputGroup title="Scenario comparison" description="How the monthly payment moves when assumptions change. The current scenario is highlighted.">
-        <div>
-          <div className="mb-2 text-[13.5px] font-medium text-ink">If interest rates change</div>
-          <ColumnChart ariaLabel="Monthly loan payment at different interest rates" items={rateScenarios.map((s) => ({ label: `${s.rate.toFixed(2)}%`, value: s.monthly, highlight: s.delta === 0 }))} />
-        </div>
-        <div>
-          <div className="mb-2 text-[13.5px] font-medium text-ink">If the tenure changes</div>
-          <DefinitionList dense rows={tenureScenarios.map((s) => ({ label: `${s.tenure} years`, value: `${sgd(s.monthly)} / month · ${sgd(Math.max(0, s.interest))} total interest`, emphasis: s.tenure === state.tenureYears }))} />
-        </div>
-        <div>
-          <div className="mb-2 text-[13.5px] font-medium text-ink">If the price changes</div>
-          <DefinitionList dense rows={priceScenarios.map((s) => ({ label: `${s.delta > 0 ? '+' : ''}${s.delta}% · ${sgd(s.price)}`, value: `${sgd(s.monthly)} / month`, emphasis: s.delta === 0 }))} />
-        </div>
-      </InputGroup>
+      {!blocked && (
+        <InputGroup title="Scenario comparison" description="How the monthly payment moves when assumptions change. The current scenario is highlighted.">
+          <div>
+            <div className="mb-2 text-[13.5px] font-medium text-ink">If interest rates change</div>
+            <ColumnChart ariaLabel="Monthly loan payment at different interest rates" items={rateScenarios.map((s) => ({ label: `${s.rate.toFixed(2)}%`, value: s.monthly, highlight: s.delta === 0 }))} />
+          </div>
+          <div>
+            <div className="mb-2 text-[13.5px] font-medium text-ink">If the tenure changes</div>
+            <DefinitionList dense rows={tenureScenarios.map((s) => ({ label: `${s.tenure} years`, value: `${sgd(s.monthly)} / month · ${sgd(Math.max(0, s.interest))} total interest`, emphasis: s.tenure === state.tenureYears }))} />
+          </div>
+          <div>
+            <div className="mb-2 text-[13.5px] font-medium text-ink">If the price changes</div>
+            <DefinitionList dense rows={priceScenarios.map((s) => ({ label: `${s.delta > 0 ? '+' : ''}${s.delta}% · ${sgd(s.price)}`, value: `${sgd(s.monthly)} / month`, emphasis: s.delta === 0 }))} />
+          </div>
+        </InputGroup>
+      )}
     </CalculatorShell>
   );
 }

@@ -31,7 +31,7 @@ export const TRANSPORT_EXTRAS: Record<string, GuideExtras> = {
           stats: price > 0 ? [{ label: 'Depreciation', value: `${sgd(dep)}/mo` }, { label: `Over ${years} years`, value: sgd(total * 12 * years) }] : undefined,
           why,
           next: [
-            tool('car', price > 0 ? 'Opens with your price, years and resale; add the loan and each running cost.' : 'Build the full cost with loan, fuel, parking and insurance.', price > 0 ? { price, years, resale } : undefined),
+            tool('car', price > 0 ? 'Opens with your price, years and resale; add the loan and each running cost.' : 'Build the full cost with loan, fuel, parking and insurance.', price > 0 ? { price, initial: price, years, resale } : undefined),
             guide('car-vs-public-transport', 'Put it beside the alternative.'),
             official('onemotoring-ongoing', 'Road tax, insurance and other ongoing costs.'),
           ],

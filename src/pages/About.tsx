@@ -33,7 +33,7 @@ export function About() {
         <section>
           <SectionHeading title="Who made it" />
           <p>
-            Everyday SG is a personal project by one Singaporean working through the same life admin as everyone else: a newborn, parents in retirement, a home that is
+            Everyday SG is a personal project by one Singaporean working through the same life admin as everyone else: a baby on the way, parents in retirement, a home that is
             still being built, and the paperwork that follows a death in the family. By day I work in financial advisory with an insurer; this site is built in my own time,
             and it does not sell or recommend any product or company. <Link to="/creator" className="link">Read the story behind the site</Link>.
           </p>
@@ -43,6 +43,7 @@ export function About() {
           <SectionHeading title="Privacy and your data" />
           <ul className="list-disc space-y-2 pl-5">
             <li>Your profile, checklist ticks, saved items, tasks and calculator inputs are stored in this browser's local storage only. They are never sent to a server.</li>
+            <li>The one exception is the <Link to="/feedback" className="link">feedback form</Link>. What you write there, and the name, email or number if you choose to add them, is sent to me through Netlify, the site's host, so that I can read it and reply. It is not used for anything else, shared or added to a mailing list.</li>
             <li>There are no accounts, no cookies for tracking, no analytics and no third-party scripts. The site is static files served from a content delivery network.</li>
             <li>Everyday SG never asks for NRIC numbers, Singpass credentials, bank logins, full addresses or health information. Please do not enter them in free-text fields.</li>
             <li>Saved information may be lost if you clear browser data, use private browsing or switch devices. Export a copy from <Link to="/plan#data" className="link">My Plan</Link> to keep it, and import it on another browser.</li>

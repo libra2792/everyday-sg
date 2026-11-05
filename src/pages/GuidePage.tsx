@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CATEGORY_MAP } from '@/data/categories';
 import { GUIDE_MAP } from '@/data/guides';
 import { GUIDE_EXTRAS } from '@/data/quick';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { NotFound } from './NotFound';
 import { isValidISODate } from '@/lib/dates';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDayMonth } from '@/lib/format';
 import { answersWithDefaults } from '@/lib/quick';
 import { usePersistentState } from '@/lib/usePersistentState';
 
@@ -73,9 +73,11 @@ export function GuidePage() {
   const { guideId = '' } = useParams();
   const guide = GUIDE_MAP[guideId];
   const extras = GUIDE_EXTRAS[guideId];
-  const { addTask } = useAppState();
+  const { addTask, tasks } = useAppState();
+  const navigate = useNavigate();
   const [dueDate, setDueDate] = useState('');
-  const [added, setAdded] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  const addedAt = useRef(0);
   const [answers, setAnswers] = usePersistentState<QuickAnswers>(`quick:${guideId}`, {});
   const result = useMemo(() => (extras ? extras.quick.evaluate(answersWithDefaults(extras.quick.fields, answers)) : null), [extras, answers]);
   if (!guide) return <NotFound />;
@@ -87,23 +89,27 @@ export function GuidePage() {
   const figure = result?.figure ?? extras?.figure;
   const showParentSupport = guide.categoryId === 'parenting';
 
+  // The button's added state comes from the plan itself, so it survives a reload and
+  // clears if the task is removed.
+  const planTask = tasks.find((t) => t.source === 'guide' && t.path === from.path);
+  const addedLabel = (due?: string) => `Added to My Plan${due ? ` · due ${formatDayMonth(due)}` : ''}`;
   const addReminder = () => {
-    addTask({ title: `Work through “${guide.title}”`, dueDate: isValidISODate(dueDate) ? dueDate : undefined, path: `/guides/${guide.id}`, source: 'guide' });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2500);
+    const due = isValidISODate(dueDate) ? dueDate : undefined;
+    addTask({ title: `Work through “${guide.title}”`, dueDate: due, path: from.path, source: 'guide' });
+    addedAt.current = Date.now();
+    setAnnouncement(addedLabel(due));
   };
 
+  // At most six tabs. Steps covers what follows it (support for parents, prepare and watch
+  // out); Next steps covers calculators, further reading and official links. Every section
+  // keeps its own id, so older #prepare, #tools, #reading and #official links still land.
   const nav: { id: string; label: string }[] = [
     { id: 'glance', label: 'At a glance' },
     ...(extras ? [{ id: 'situation', label: 'Your situation' }] : []),
     { id: 'checklist', label: 'Checklist' },
     ...(figure ? [{ id: 'how', label: 'How it works' }] : []),
-    { id: 'steps', label: 'Steps' },
-    ...(showParentSupport ? [{ id: 'support', label: 'Support for parents' }] : []),
-    { id: 'prepare', label: 'Prepare' },
-    { id: 'tools', label: 'Run the numbers' },
-    { id: 'reading', label: 'Keep reading' },
-    { id: 'official', label: 'Official links' },
+    { id: 'steps', label: showParentSupport ? 'Steps and support' : 'Steps' },
+    { id: 'next', label: 'Next steps' },
   ];
 
   return (
@@ -133,7 +139,7 @@ export function GuidePage() {
       <TrailBar nowTitle={guide.title} nowKind="guide" categoryId={guide.categoryId} />
 
       {/* Header band in the category's colour, with its illustration */}
-      <header className={`grid items-center gap-5 rounded-lg border border-stone-200 ${tile} px-5 py-5 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto]`}>
+      <header className={`grid items-center gap-5 rounded-lg border border-stone-200 ${tile} px-4 py-4 sm:px-6 sm:py-5 md:grid-cols-[minmax(0,1fr)_auto]`}>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-sage-800">
             <span className="inline-flex items-center gap-1.5 rounded border border-stone-300 bg-stone-50 px-1.5 py-0.5 text-ink">
@@ -145,7 +151,11 @@ export function GuidePage() {
           </div>
           <h1 className="mt-2.5 text-[28px] font-semibold leading-tight text-ink sm:text-[34px]">{guide.title}</h1>
           <p className="mt-2 max-w-[58ch] text-[16px] leading-6 text-ink-muted">{guide.summary}</p>
-          <div className="mt-3.5 flex flex-wrap gap-1.5 text-[12px]">
+          {/* Phones: the three facts on one line, so the guide itself starts on the first screen. */}
+          <p className="mt-2.5 text-[12.5px] text-ink-muted sm:hidden">
+            {[guide.estimatedMinutes ? `~${guide.estimatedMinutes} min` : null, `${guide.checklist.length} items`, guide.reviewedOn ? `Reviewed ${formatDayMonth(guide.reviewedOn)}` : 'General guide'].filter(Boolean).join(' · ')}
+          </p>
+          <div className="mt-3.5 hidden flex-wrap gap-1.5 text-[12px] sm:flex">
             {guide.estimatedMinutes && (
               <span className="inline-flex items-center gap-1 rounded-full border border-stone-300 bg-stone-50 px-2.5 py-1 text-ink-muted">
                 <Icon name="clock" size={12} /> ~{guide.estimatedMinutes} min
@@ -164,20 +174,22 @@ export function GuidePage() {
               </span>
             )}
           </div>
-          <div className="no-print mt-4 flex flex-wrap items-center gap-2">
+          <div className="no-print mt-3 flex flex-wrap items-center gap-2 sm:mt-4">
             <SaveButton type="guide" refId={guide.id} title={guide.title} subtitle={guide.summary} path={`/guides/${guide.id}`} size="sm" />
             <Button size="sm" variant="ghost" icon="printer" onClick={() => window.print()}>
               Print
             </Button>
           </div>
         </div>
-        <div className="order-first w-24 md:order-none md:w-[150px]">
+        {/* Hidden on phones: the category icon beside the category name stands in for it. */}
+        <div className="order-first hidden w-24 sm:block md:order-none md:w-[150px]">
           <Illustration category={guide.categoryId} className="block h-auto w-full" />
         </div>
       </header>
 
-      <nav aria-label="On this page" className="no-print -mx-4 mt-4 mb-2 overflow-x-auto border-b border-stone-200 px-4 sm:mx-0 sm:px-0">
-        <ol className="flex gap-1 whitespace-nowrap">
+      {/* Below md the bar can scroll: a fade on the right edge says there is more. */}
+      <nav aria-label="On this page" className="no-print -mx-4 mt-4 mb-2 overflow-x-auto border-b border-stone-200 px-4 max-md:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] sm:mx-0 sm:px-0">
+        <ol className="flex gap-1 whitespace-nowrap max-md:pr-8">
           {nav.map((n) => (
             <li key={n.id}>
               <a href={`#${n.id}`} className="block border-b-2 border-transparent px-2.5 py-2 text-[13px] text-ink-muted hover:border-stone-400 hover:text-ink">
@@ -215,15 +227,31 @@ export function GuidePage() {
           <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 sm:p-5">
             <Checklist listId={guide.id} items={guide.checklist} description="Essential items first; the rest are optional." />
             <div className="no-print mt-4 flex flex-wrap items-end gap-3 border-t border-stone-200 pt-4">
-              <div>
-                <label htmlFor="guide-due" className="mb-1 block text-[12.5px] text-ink-muted">
-                  Add to My Plan with a target date (optional)
-                </label>
-                <input id="guide-due" type="date" className="field-input !w-auto !py-1.5 text-sm" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-              </div>
-              <Button size="sm" variant="secondary" icon={added ? 'check' : 'plus'} onClick={addReminder}>
-                {added ? 'Added to My Plan' : 'Add to My Plan'}
-              </Button>
+              {planTask ? (
+                <>
+                  <p className="text-[12.5px] text-ink-muted">This guide is in your plan{planTask.done ? ' and marked done' : ''}.</p>
+                  {/* Same element as the add button, so keyboard focus stays put after adding;
+                      the second click of a double-click is ignored rather than leaving the page. */}
+                  <Button size="sm" variant="secondary" icon="check" onClick={() => Date.now() - addedAt.current > 600 && navigate('/plan')} aria-label={`${addedLabel(planTask.dueDate)}. Open My Plan`}>
+                    {addedLabel(planTask.dueDate)}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="guide-due" className="mb-1 block text-[12.5px] text-ink-muted">
+                      Add to My Plan with a target date (optional)
+                    </label>
+                    <input id="guide-due" type="date" className="field-input !w-auto !py-1.5 text-sm" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                  </div>
+                  <Button size="sm" variant="secondary" icon="plus" onClick={addReminder}>
+                    Add to My Plan
+                  </Button>
+                </>
+              )}
+              <span role="status" aria-live="polite" className="sr-only">
+                {announcement}
+              </span>
             </div>
           </div>
         </section>
@@ -296,53 +324,55 @@ export function GuidePage() {
           </Card>
         </section>
 
-        {/* Run the numbers */}
-        {guide.relatedCalculators.length > 0 && (
-          <section id="tools" aria-labelledby="tools-h" className="scroll-mt-24">
-            <SectionHead id="tools" icon="calculator" title="Run the numbers" lede="Calculators: your figures in, results out" dark />
-            <div className="grid gap-2.5 md:grid-cols-2">
-              {guide.relatedCalculators.map((id) => (
-                <ToolTile key={id} id={id} from={from} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Keep reading */}
-        {guide.relatedGuides.length > 0 && (
-          <section id="reading" aria-labelledby="reading-h" className="scroll-mt-24">
-            <SectionHead id="reading" icon="book-open" title="Keep reading" lede="Guides: explanations and checklists" />
-            <div className="grid gap-2.5 md:grid-cols-2">
-              {guide.relatedGuides.map((id) => (
-                <GuideLinkCard key={id} id={id} from={from} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Official links */}
-        <section id="official" aria-labelledby="official-h" className="scroll-mt-24">
-          <SectionHead id="official" icon="landmark" title="Official next steps" />
-          {sources.length > 0 ? (
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {sources.map((s) => (
-                <li key={s.id} className="min-w-0">
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex h-full min-w-0 items-center gap-3 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 hover:border-sage-400">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-stone-100 text-ink-muted" aria-hidden>
-                      <Icon name="external-link" size={15} />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block break-words text-[14px] font-medium leading-snug text-ink group-hover:text-sage-900">{s.title}</span>
-                      <span className="block text-[12px] text-ink-faint">{s.agency}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[14px] text-ink-muted">General practice; no agency process involved.</p>
+        <div id="next" className="scroll-mt-24 space-y-7">
+          {/* Run the numbers */}
+          {guide.relatedCalculators.length > 0 && (
+            <section id="tools" aria-labelledby="tools-h" className="scroll-mt-24">
+              <SectionHead id="tools" icon="calculator" title="Run the numbers" lede="Calculators: your figures in, results out" dark />
+              <div className="grid gap-2.5 md:grid-cols-2">
+                {guide.relatedCalculators.map((id) => (
+                  <ToolTile key={id} id={id} from={from} />
+                ))}
+              </div>
+            </section>
           )}
-        </section>
+
+          {/* Keep reading */}
+          {guide.relatedGuides.length > 0 && (
+            <section id="reading" aria-labelledby="reading-h" className="scroll-mt-24">
+              <SectionHead id="reading" icon="book-open" title="Keep reading" lede="Guides: explanations and checklists" />
+              <div className="grid gap-2.5 md:grid-cols-2">
+                {guide.relatedGuides.map((id) => (
+                  <GuideLinkCard key={id} id={id} from={from} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Official links */}
+          <section id="official" aria-labelledby="official-h" className="scroll-mt-24">
+            <SectionHead id="official" icon="landmark" title="Official next steps" />
+            {sources.length > 0 ? (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {sources.map((s) => (
+                  <li key={s.id} className="min-w-0">
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex h-full min-w-0 items-center gap-3 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3 hover:border-sage-400">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-stone-100 text-ink-muted" aria-hidden>
+                        <Icon name="external-link" size={15} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block break-words text-[14px] font-medium leading-snug text-ink group-hover:text-sage-900">{s.title}</span>
+                        <span className="block text-[12px] text-ink-faint">{s.agency}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[14px] text-ink-muted">General practice; no agency process involved.</p>
+            )}
+          </section>
+        </div>
 
         <SourceNote sources={sources} reviewedOn={guide.reviewedOn} infoType={guide.infoType} />
       </div>

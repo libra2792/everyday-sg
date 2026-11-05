@@ -8,21 +8,22 @@ It is **not a government website**, is not affiliated with any agency, and canno
 
 | Area | Details |
 | --- | --- |
-| **Home** | Search, quick actions, life-stage selector, popular calculators, featured guides, personalised "Your next steps", "Due soon" tasks |
-| **Life Guides** | 41 guides across 12 categories in a card layout with a category illustration and short bullet points: at a glance (what it means, who it's for, when to act), a **"Your situation" quick check** (a few questions or numbers → a tailored pointer, reasons, and "do next" links that open a calculator pre-filled), the persistent checklist, a **"How it works" diagram** (timeline, gauge, price band, stacked bar, flowchart or comparison, many drawn from the answers), numbered steps, what to prepare, watch-outs, then **Run the numbers** (dark calculator tiles) and **Keep reading** (tinted guide cards), official links and sources |
+| **Home** | Search, quick-start chips (each opens a hub at `/start/:intent` with the 3 to 5 most relevant guides and calculators, defined in `src/data/intents.ts`), life-stage selector, popular calculators, featured guides, personalised "Your next steps", "Due soon" tasks |
+| **Life Guides** | 33 guides across 10 categories in a card layout with a category illustration and short bullet points: at a glance (what it means, who it's for, when to act), a **"Your situation" quick check** (a few questions or numbers → a tailored pointer, reasons, and "do next" links that open a calculator pre-filled), the persistent checklist, a **"How it works" diagram** (timeline, gauge, price band, stacked bar, flowchart or comparison, many drawn from the answers), numbered steps, what to prepare, watch-outs, then **Run the numbers** (dark calculator tiles) and **Keep reading** (tinted guide cards), official links and sources |
 | **Calculators** | Household budget · Emergency fund and debt repayment · Housing affordability and mortgage · Baby and childcare budget · Retirement projection · Insurance needs organiser · Caregiving and eldercare cost planner · Car ownership total cost. Inputs show an indicative figure (an official median/average with its source and check date, or a labelled planning guide) with a one-tap **Use** button |
-| **Tools** | Annual tax preparation checklist (organiser + IRAS links; deliberately no tax-rate engine) · Annual life-admin checklist (8 sections) |
+| **Tools** | Annual tax preparation checklist (organiser + IRAS links, with an info button on each relief explaining what it is for, who qualifies and how it is given; reliefs IRAS has ended are dropped for later years; deliberately no tax-rate engine) · Annual life-admin checklist (8 sections) |
 | **My Plan** | Optional profile (7 broad questions), ranked next steps, dated tasks, checklist progress, JSON export/import, printable summary, one-click reset |
-| **Saved Items** | Bookmarked guides/calculators/tools and saved results snapshots |
+| **Saved Items** | Bookmarked guides/calculators/tools and calculator snapshots, which reopen the exact scenario they were saved from |
 | **About** | Privacy statement, verification policy, full list of official sources with how/when each was checked |
 | **Who made this** (`/creator`) | A first-person page about the creator, with six photos, linked from the footer, the About page and the home page |
+| **Feedback** (`/feedback`) | A form for corrections, ideas and questions, with optional name, email and contact number for a reply. Received by Netlify Forms (see [Feedback form](#4-feedback-form)) |
 | **Appearance** | Four themes — Sage (default, cool mint greens), Playful (cream, coral hero, pastel tiles), Dark, Professional — switchable from the header, the footer or My Plan; saved locally, with Dark following the OS setting until a choice is made |
 | **Navigation** | Moving between guides, or into a calculator, reads as a new page: the old page slides out and the new one slides in (View Transitions API, with an entry animation as the fallback), a loading sweep runs under the header, and a pulsing "New page" trail bar names where you are with a one-tap Back |
 
 ### Privacy model
 
 - Everything the user enters (profile, checklist ticks, saved items, tasks, calculator inputs) is stored in `localStorage` under the `everydaysg:` prefix.
-- Nothing is transmitted anywhere. There is no backend, no account, no analytics, no third-party scripts or fonts.
+- Nothing is transmitted anywhere, with one exception: the feedback form at `/feedback`, which sends what the reader writes (and any name, email or number they add) to Netlify Forms. There is no backend of our own, no account, no analytics, no third-party scripts or fonts.
 - Export/import produces a JSON bundle of those keys; "Reset all saved data" removes them.
 - No NRIC, Singpass, bank, address or health data is requested.
 
@@ -50,12 +51,13 @@ everyday-sg/
 ├── index.html
 ├── netlify.toml                 # build command, publish dir, SPA redirect, headers
 ├── package.json
-├── vite.config.ts               # React + Tailwind plugins, @ alias, Vitest config
+├── vite.config.ts               # React + Tailwind plugins, prerendering, @ alias, Vitest config
 ├── tsconfig.json
 ├── public/                      # favicon, robots.txt, _redirects, creator/ photos
 └── src/
-    ├── main.tsx                 # entry: BrowserRouter + AppStateProvider
-    ├── App.tsx                  # routes (calculators/tools are lazy-loaded)
+    ├── main.tsx                 # entry: BrowserRouter + AppStateProvider, replaces the prerendered page
+    ├── entry-server.tsx         # build-time render of a route to HTML (StaticRouter + prerender)
+    ├── App.tsx                  # routes (calculators/tools are lazy-loaded, preloadPage)
     ├── index.css                # Tailwind theme tokens, base styles, print styles
     ├── app.test.tsx             # DOM smoke tests (pages, calculators, persistence)
     ├── components/
@@ -73,7 +75,7 @@ everyday-sg/
     │   ├── types.ts             # Guide, Category, Source, CalculatorMeta…
     │   ├── benchmarks.ts        # indicative figures for calculator inputs (statistic vs guide)
     │   ├── creator.ts           # text and photo captions for the /creator page
-    │   ├── categories.ts        # 12 categories + 5 life stages
+    │   ├── categories.ts        # 10 categories + 5 life stages
     │   ├── calculators.ts       # calculator/tool registry (routes, tags)
     │   ├── checklists.ts        # tax-prep and annual-admin checklist content
     │   ├── sources.ts           # official link registry with verification status
@@ -95,6 +97,16 @@ everyday-sg/
         ├── calculators/         #   Saved, SearchPage, About, NotFound
         └── tools/
 ```
+
+### Page titles and link previews
+
+`src/lib/head.ts` maps every route to a `<title>` ("{Page} · Everyday SG") and description (a guide's or calculator's one-line summary). In the browser, `useDocumentHead` keeps the title, description, Open Graph tags and canonical link current. Canonical and `og:url` use Netlify's build-time `URL`; set it yourself for other hosts. The share image is `public/og-image.png`.
+
+Public pages are prerendered, head and body. After `vite build`, a small Vite plugin in `vite.config.ts` writes one HTML file per public route (`dist/guides/<id>.html`, `dist/calculators/<id>.html`, the tools, hubs, guide library and static pages, 55 in all). Each has that route's tags filled in and the page itself rendered into `#root` by `src/entry-server.tsx`: React's `prerender` with a `StaticRouter`, waiting for the calculators' lazily loaded code. So search engines, WhatsApp, Telegram and other link unfurlers see a guide's title, summary, checklist and steps, or a calculator with its default inputs, without running JavaScript. The HTML is what a first-time visitor sees: nothing saved, the Sage theme (the saved or system theme still applies before first paint), and charts and figures at their wide layout. The build fails if a page would need a script to show its content.
+
+In the browser, `src/main.tsx` replaces that markup with `createRoot` rather than hydrating it. The first render reads what this browser saved (theme, ticks, inputs, profile), which the build's HTML cannot match, so hydrating would mean mismatches for every returning visitor. React swaps old markup for new in one commit, and the current page's code is loaded before that render (`preloadPage` in `src/App.tsx`), so a calculator never passes through "Loading…" on the way. Nothing about the privacy model changes: there is no server of our own at run time (the feedback form posts to Netlify Forms), and saved data still lives only in `localStorage`.
+
+Every other path (My Plan, Saved, search, unknown URLs; none of them indexed) gets `dist/app.html`, the empty app shell with `noindex`, through the SPA redirect in `netlify.toml` and `public/_redirects`. `npm run preview` does the same locally. `index.html` is the prerendered home page, so it must not be the fallback. On another host, point the fallback at `/app.html` and serve `guides/x.html` at `/guides/x`.
 
 ### Themes
 
@@ -155,7 +167,7 @@ git push -u origin main
    - Build command: `npm run build`
    - Publish directory: `dist`
    - Node version: 22 (from `[build.environment]`)
-3. Click **Deploy site**. The SPA redirect (`/* → /index.html 200`) and security headers are already in `netlify.toml`, so deep links such as `/calculators/housing` work after deployment.
+3. Click **Deploy site**. The SPA redirect (`/* → /app.html 200`, after the prerendered pages) and security headers are already in `netlify.toml`, so deep links such as `/calculators/housing` work after deployment.
 
 ### 3. Deploy without GitHub (optional)
 
@@ -170,15 +182,25 @@ npx netlify-cli deploy --prod --dir=dist
 
 (Log in with the account you want when prompted; `netlify.toml` is honoured for redirects and headers.)
 
+### 4. Feedback form
+
+The `/feedback` page is a [Netlify Forms](https://docs.netlify.com/manage/forms/setup/) form named `feedback`. Netlify finds it in the prerendered `dist/feedback.html` when the site deploys; the page submits with `fetch` and also works without JavaScript. A hidden `bot-field` honeypot and Netlify's own spam filter screen out bots. Once, after the first deploy that includes the page:
+
+1. In the Netlify dashboard, open the site → **Forms**, and click **Enable form detection** if it is off. Then trigger a new deploy (Deploys → Trigger deploy) so Netlify picks the form up; a form named `feedback` should appear under Forms.
+2. Under **Forms → Form notifications** (in Site configuration), add an **Email notification** for the `feedback` form to the address you want replies to come from.
+
+Submissions are listed under Forms in the dashboard either way. The free plan includes 100 submissions a month. In `npm run dev` nothing is sent: the form logs what it would send to the browser console and shows the thank-you message.
+
 ### Environment variables, secrets, backend
 
-None are required. The site is entirely static and all user data stays in the browser.
+None are required. The site is static; apart from the feedback form, which Netlify receives, all user data stays in the browser.
 
 ## Testing
 
 - `src/lib/finance.test.ts` — 35 tests covering mortgage/flat-rate maths against known values, budget totals, emergency fund, debt payoff (avalanche vs snowball, insufficient payments, zero-rate), housing splits, baby budget scaling, retirement projection (closed-form future value, growing annuity, funds-run-out detection), insurance need, caregiving shares and inflation, car cash-vs-economic cost — including zero/empty/negative/extreme inputs.
 - `src/data/quick/quick.test.ts` — every guide has a quick check and a figure; every quick check evaluates with defaults and with blanks; every "do next" link points at an existing calculator, guide or source; sample answers produce the expected pointers.
-- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM, walks the guide → related guide (trail bar) → back → calculator (pre-filled) flow, checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404.
+- `src/app.test.tsx` — renders every guide page and the creator page, exercises each calculator through the DOM, walks the guide → related guide (trail bar) → back → calculator (pre-filled) flow, checks that every benchmark statistic cites a checked source and that the "Use" button fills a field, verifies checklist persistence across remounts, reset behaviour, theme switching, profile saving and recommendations, search and 404, and that a preloaded calculator renders without "Loading…".
+- `src/entry-server.test.tsx` — the build-time render: every guide's HTML carries its title, summary, checklist and steps, every calculator and tool arrives complete, and no public page needs a script to show its content.
 
 ## Known limitations (first version)
 

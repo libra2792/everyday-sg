@@ -40,43 +40,6 @@ export const WELLBEING_EXTRAS: Record<string, GuideExtras> = {
     },
   },
 
-  'mental-health-support': {
-    quick: {
-      intro: 'Three answers point to the right kind of help, from a conversation today to ongoing care.',
-      fields: [
-        { id: 'what', label: 'What fits best', type: 'choice', options: [{ value: 'crisis', label: 'I or someone else may be in danger right now' }, { value: 'weeks', label: 'Low, anxious or not coping for weeks' }, { value: 'support', label: 'Supporting someone else' }, { value: 'curious', label: 'Want to understand the options' }], default: 'weeks' },
-        { id: 'seen', label: 'Spoken to a professional before', type: 'choice', options: [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Yes' }], default: 'no' },
-        { id: 'cost', label: 'Cost is a concern', type: 'choice', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }], default: 'yes' },
-      ],
-      evaluate: (a) => {
-        const why: string[] = [];
-        if (a.what === 'crisis') why.push('If anyone is in immediate danger, call 995. For a crisis conversation at any hour, the 24-hour helplines in the official links below answer; you do not need to explain everything to start.');
-        if (a.what === 'weeks') why.push(a.seen === 'no' ? 'A GP or polyclinic is a sensible first visit: they can assess, treat common conditions and refer onward. mindline.sg has self-help tools and a chat service if talking in person feels too big a step.' : 'Go back to the professional you saw, or ask your GP for a referral if you want a different kind of support.');
-        if (a.what === 'support') why.push('Caregivers burn out quietly. Look for caregiver support groups and respite, and keep your own GP in the loop; you cannot pour from an empty cup.');
-        if (a.what === 'curious') why.push('Options run from self-help and peer support, through GPs and polyclinics, to community mental health teams and specialist clinics. Starting low and stepping up is normal.');
-        if (a.cost === 'yes') why.push('Polyclinic and public hospital psychiatric care are subsidised; MediSave can be used for approved outpatient treatment of some conditions, and community services are often free.');
-        return {
-          label: 'Direction',
-          verdict: a.what === 'crisis' ? 'Reach a helpline or 995 now' : a.what === 'support' ? 'Support for the supporter too' : a.seen === 'no' ? 'Start with a GP or mindline.sg' : 'Go back, or ask for a referral',
-          why,
-          next: [official('mindline', '24-hour chat, self-help tools and where to get help.'), official('healthhub-mental', 'Services and helplines, by situation.'), guide('healthcare-navigation', 'Subsidised routes to care.')],
-          fine: 'Information about where to find help, not clinical advice. If you are in danger, call 995.',
-        };
-      },
-    },
-    figure: {
-      type: 'flow',
-      start: 'Not coping',
-      question: 'Immediate danger to you or someone else?',
-      yes: 'Call 995, or a 24-hour helpline to talk now',
-      no: 'GP or polyclinic, or mindline.sg to start',
-      yesThen: 'Stay with the person until help arrives',
-      noThen: 'Referral onward if more support is needed',
-      caption: 'The first step is smaller than it feels: a conversation with a helpline, a GP or an online service. Everything else can follow from there.',
-      aria: 'Flowchart: in immediate danger call 995 or a 24-hour helpline; otherwise start with a GP, polyclinic or mindline.sg and step up if needed.',
-    },
-  },
-
   'annual-life-admin': {
     quick: {
       intro: 'One yearly review keeps everything else current. Three answers pick where to start this year.',

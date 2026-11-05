@@ -7,7 +7,7 @@ import { uid } from '@/lib/storage';
 import { BENCHMARKS } from '@/data/benchmarks';
 import { BenchmarkHint } from '@/components/ui/BenchmarkHint';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
-import { NumberField, SliderField } from '@/components/ui/Field';
+import { NameInput, NumberField, SliderField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { ColumnChart } from '@/components/charts/Charts';
@@ -77,6 +77,7 @@ export default function BabyCalculator() {
     <CalculatorShell
       id="baby"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['lifesg-sg-child-support', 'lifesg-baby-bonus', 'ecda-subsidies', 'mom-maternity', 'mom-paternity', 'mom-shared-parental', 'cpf-healthcare', 'ecda-aop', 'singstat-income-2025']}
       relatedGuides={['preparing-for-pregnancy', 'newborn-first-year', 'childcare-and-preschool']}
@@ -128,9 +129,9 @@ export default function BabyCalculator() {
       }
     >
       <InputGroup title="Family and horizon">
-        <SliderField label="Expected number of children" min={1} max={5} step={1} value={state.numberOfChildren} onChange={set('numberOfChildren')} allowAboveMax={false} />
-        <SliderField label="Planning horizon" suffix="years" min={1} max={10} step={1} value={state.horizonYears} onChange={set('horizonYears')} allowAboveMax={false} />
-        <SliderField label="Household monthly income (take-home)" benchmark={BENCHMARKS.householdTakeHome} prefix="S$" min={0} max={30000} step={100} value={state.householdMonthlyIncome} onChange={set('householdMonthlyIncome')} help="Optional, for the cash-flow impact figure." />
+        <SliderField label="Expected number of children" min={1} max={5} hardMin={1} step={1} value={state.numberOfChildren} onChange={set('numberOfChildren')} allowAboveMax={false} />
+        <SliderField label="Planning horizon" suffix="years" min={1} max={10} hardMin={1} step={1} value={state.horizonYears} onChange={set('horizonYears')} allowAboveMax={false} />
+        <SliderField label="Household monthly income (take-home)" benchmark={BENCHMARKS.householdTakeHome} prefix="S$" min={0} max={30000} hardMax={200000} step={100} value={state.householdMonthlyIncome} onChange={set('householdMonthlyIncome')} help="Optional, for the cash-flow impact figure." />
       </InputGroup>
 
       <InputGroup title="One-time costs" description="Per child unless stated.">
@@ -157,19 +158,19 @@ export default function BabyCalculator() {
                   <label htmlFor={`sc-name-${s.id}`} className="mb-1 block text-[12px] text-ink-faint">
                     Arrangement
                   </label>
-                  <input id={`sc-name-${s.id}`} className="field-input !py-1.5 text-sm" value={s.name} onChange={(e) => updateScenario(s.id, { name: e.target.value })} maxLength={40} />
+                  <NameInput id={`sc-name-${s.id}`} value={s.name} onChange={(name) => updateScenario(s.id, { name })} maxLength={40} />
                 </div>
                 <div>
                   <label htmlFor={`sc-fee-${s.id}`} className="mb-1 block text-[12px] text-ink-faint">
                     Monthly fee
                   </label>
-                  <NumberField id={`sc-fee-${s.id}`} compact label={`${s.name} monthly fee`} prefix="S$" value={s.monthlyFee} onChange={(v) => updateScenario(s.id, { monthlyFee: v })} step={10} />
+                  <NumberField id={`sc-fee-${s.id}`} compact label={`${s.name} monthly fee`} prefix="S$" value={s.monthlyFee} onChange={(v) => updateScenario(s.id, { monthlyFee: v })} max={100000} step={10} />
                 </div>
                 <div>
                   <label htmlFor={`sc-sub-${s.id}`} className="mb-1 block text-[12px] text-ink-faint">
                     Subsidy (your estimate)
                   </label>
-                  <NumberField id={`sc-sub-${s.id}`} compact label={`${s.name} subsidy estimate`} prefix="S$" value={s.monthlySubsidy} onChange={(v) => updateScenario(s.id, { monthlySubsidy: v })} step={10} />
+                  <NumberField id={`sc-sub-${s.id}`} compact label={`${s.name} subsidy estimate`} prefix="S$" value={s.monthlySubsidy} onChange={(v) => updateScenario(s.id, { monthlySubsidy: v })} max={100000} step={10} />
                 </div>
                 <Button size="sm" variant="ghost" icon="trash-2" aria-label={`Remove ${s.name}`} onClick={() => removeScenario(s.id)} disabled={state.scenarios.length <= 1} className="absolute right-2 top-2 sm:static sm:mb-0.5">
                   <span className="sr-only">Remove</span>

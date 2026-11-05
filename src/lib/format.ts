@@ -20,11 +20,19 @@ const sgdCentsFormatter = new Intl.NumberFormat('en-SG', {
 
 const numberFormatter = new Intl.NumberFormat('en-SG', { maximumFractionDigits: 0 });
 
+/** From S$10 million, amounts are abbreviated ("$12.3m", "$25.0b") so results stay readable. */
+const ABBREVIATE_FROM = 10_000_000;
+
 /** Format a number as S$ with no cents. Non-finite values render as an em dash. */
 export function sgd(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
   // Avoid "-$0" artefacts
   const rounded = Math.round(value);
+  const abs = Math.abs(rounded);
+  if (abs >= ABBREVIATE_FROM) {
+    const [div, unit] = abs >= 1e12 ? [1e12, 't'] : abs >= 1e9 ? [1e9, 'b'] : [1e6, 'm'];
+    return `${rounded < 0 ? '-' : ''}$${(abs / div).toFixed(1)}${unit}`;
+  }
   return sgdFormatter.format(rounded === 0 ? 0 : rounded);
 }
 
@@ -41,9 +49,10 @@ export function num(value: number | null | undefined, maxFractionDigits = 0): st
   return new Intl.NumberFormat('en-SG', { maximumFractionDigits: maxFractionDigits }).format(value);
 }
 
-/** Percentage from a fraction (0.25 → "25%"). */
+/** Percentage from a fraction (0.25 → "25%"). Beyond ±9,999% the exact figure means nothing. */
 export function pct(fraction: number | null | undefined, digits = 0): string {
   if (fraction === null || fraction === undefined || !Number.isFinite(fraction)) return '—';
+  if (Math.abs(fraction) >= 100) return `${fraction < 0 ? '−' : ''}over 9,999%`;
   return `${(fraction * 100).toFixed(digits)}%`;
 }
 
@@ -79,6 +88,13 @@ export function toNumber(input: string | number | null | undefined): number {
   const cleaned = String(input).replace(/[^0-9.\-]/g, '');
   const n = parseFloat(cleaned);
   return Number.isFinite(n) ? n : 0;
+}
+
+/** "15 Dec": day and month only, for short confirmations and snapshot titles. */
+export function formatDayMonth(iso: string | Date): string {
+  const d = typeof iso === 'string' ? new Date(iso.length === 10 ? `${iso}T00:00:00` : iso) : iso;
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' });
 }
 
 export function formatDate(iso: string | null | undefined): string {

@@ -11,8 +11,8 @@ export interface CreatorPhoto {
   src: string;
   alt: string;
   caption: string;
-  /** Portrait photos are shown in a 3:4 frame, landscape in 16:10, square in 1:1. */
-  shape: 'portrait' | 'landscape' | 'square';
+  /** Portrait photos are shown in a 3:4 frame, landscape in 16:10, standard (a phone camera's) in 4:3, square in 1:1. */
+  shape: 'portrait' | 'landscape' | 'standard' | 'square';
 }
 
 export interface CreatorSection {
@@ -29,21 +29,21 @@ export const CREATOR = {
   name: 'Nigel',
   eyebrow: 'Who made this',
   title: 'Hi, I’m Nigel. I’m figuring this out too.',
-  lead: 'Everyday SG is not built by a bank, an agency or a content farm. It is built by an ordinary Singaporean trying to get through the same high-pressure cauldron as you: CPF rules, housing queues, insurance jargon, ageing parents and a newborn, while holding down a job and a life.',
+  lead: 'Everyday SG is not built by a bank, an agency or a content farm. It is built by an ordinary Singaporean trying to get through the same high-pressure cauldron as you: CPF rules, housing queues, insurance jargon, ageing parents and a baby on the way, while holding down a job and a life.',
   heroPhoto: {
-    src: '/creator/stadium.jpg',
-    alt: 'Nigel and his wife taking a selfie in the stands of a stadium before a football match.',
-    caption: 'My wife and me at a match at the National Stadium.',
-    shape: 'landscape',
+    src: '/creator/new-zealand.jpg',
+    alt: 'Nigel and his wife sitting together on a rock beside a mountain trail, with snow-capped peaks, a turquoise glacial lake and a suspension bridge behind them.',
+    caption: 'My wife and me, hiking in New Zealand.',
+    shape: 'standard',
   } satisfies CreatorPhoto,
   sections: [
     {
       id: 'newborn',
       icon: 'sprout',
-      title: 'It started with a newborn',
+      title: 'It started with a baby on the way',
       paragraphs: [
-        'Not long ago my wife and I welcomed our daughter. Nobody warns you about the admin that arrives with her.',
-        'Between night feeds I was registering a birth, sorting out leave, opening accounts, chasing insurance and working out childcare, each with its own portal, its own rules and its own deadline. I kept thinking: why is there no single place that tells me, in plain English, what to do next and roughly what it costs?',
+        'My wife and I are expecting our daughter this November. Nobody warns you how much admin arrives before the baby does.',
+        'While we get ready, I have been working out how to register a birth, plan our leave, open accounts, sort out insurance and arrange childcare, each with its own portal, its own rules and its own deadline. I kept thinking: why is there no single place that tells me, in plain English, what to do next and roughly what it costs?',
         'That question became this site. The baby calculator and the parenting guides are the ones I needed first.',
       ],
       photos: [
@@ -122,7 +122,7 @@ export const CREATOR = {
   ] satisfies CreatorSection[],
   promises: [
     { icon: 'shield-check', title: 'Upfront about who I am', text: 'I work in financial advisory with an insurer. This is my personal project, built in my own time: it does not sell or recommend any product or company, and nobody pays to be featured.' },
-    { icon: 'lock-keyhole', title: 'Private', text: 'Nothing you type leaves your browser. No accounts, no tracking, no servers.' },
+    { icon: 'lock-keyhole', title: 'Private', text: 'Nothing you type into the guides, calculators or checklists leaves your browser. No accounts, no tracking. The one exception is the feedback form, which sends your message to me.' },
     { icon: 'badge-check', title: 'Honest about numbers', text: 'Figures are labelled as official statistics or planning guides, with the date they were checked, and links go to the agency itself.' },
     { icon: 'compass', title: 'Not advice', text: 'This is general information, not financial, legal or tax advice. Use it to prepare, then confirm with the agency or a licensed professional.' },
   ],

@@ -46,7 +46,19 @@ const RESOURCES: ChecklistItem[] = [
 
 export default function CaregivingCalculator() {
   const [state, setState, reset] = usePersistentState<CaregivingInputs>('calc:caregiving', DEFAULTS);
-  const prefilled = usePrefill(setState, { homecare: 'homeCare', helper: 'helper', transport: 'transport', medical: 'medical', other: 'other', budget: 'monthlyBudget', support: 'monthlySupport', years: 'durationYears', inflation: 'inflationPct' });
+  const prefilled = usePrefill(setState, { homecare: 'homeCare', helper: 'helper', transport: 'transport', medical: 'medical', other: 'other', budget: 'monthlyBudget', support: 'monthlySupport', years: 'durationYears', inflation: 'inflationPct' }, (params, s) => {
+    // people=N: the guide splits the cost equally between N family members.
+    const people = Math.round(Number(params.get('people')));
+    if (!params.has('people') || !Number.isFinite(people) || people < 1 || people > 10) return s;
+    // One decimal place keeps the shares within a dollar of the guide's equal split.
+    const share = Math.floor(1000 / people) / 10;
+    const contributors = Array.from({ length: people }, (_, n) => ({
+      id: n === 0 ? 'me' : n === 1 ? 'sibling' : `member-${n + 1}`,
+      name: n === 0 ? 'Me' : n === 1 ? 'Sibling' : `Family member ${n + 1}`,
+      sharePct: n === 0 ? Math.round((100 - share * (people - 1)) * 10) / 10 : share,
+    }));
+    return { ...s, contributors };
+  });
   const r = useMemo(() => caregivingPlan(state), [state]);
   const set = <K extends keyof CaregivingInputs>(key: K) => (v: CaregivingInputs[K]) => setState((s) => ({ ...s, [key]: v }));
   const updateContributor = (id: string, patch: Partial<Contributor>) => setState((s) => ({ ...s, contributors: s.contributors.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
@@ -58,6 +70,7 @@ export default function CaregivingCalculator() {
     <CalculatorShell
       id="caregiving"
       prefilled={prefilled}
+      inputs={state}
       onReset={reset}
       sourceIds={['aic', 'aic-financial', 'aic-hcg', 'moh-ltc', 'moh-aged-care', 'cpf-careshield', 'mom-mdw']}
       relatedGuides={['caregiving-plan', 'eldercare-costs-and-support', 'hiring-a-helper']}
@@ -96,7 +109,7 @@ export default function CaregivingCalculator() {
             <Stat label="Monthly care cost" value={sgd(r.monthlyTotal)} size="lg" className="col-span-2 sm:col-span-3" hint={`${sgd(r.annualTotal)} per year before support`} />
             <Stat label="After expected support" value={sgd(r.monthlyAfterSupport)} hint={`${sgd(state.monthlySupport)} support assumed`} />
             <Stat label="Versus your budget" value={state.monthlyBudget > 0 ? `${r.budgetGap > 0 ? '+' : ''}${sgd(r.budgetGap)}` : '—'} tone={state.monthlyBudget > 0 && r.budgetGap > 0 ? 'caution' : 'neutral'} hint={state.monthlyBudget > 0 ? (r.budgetGap > 0 ? 'over budget' : 'within budget') : 'Set a monthly budget'} />
-            <Stat label="Monthly shortfall" value={sgd(r.monthlyShortfall)} tone={r.monthlyShortfall > 0 ? 'caution' : 'positive'} hint={r.monthlyShortfall > 0 ? 'not covered by contributions' : 'fully covered'} />
+            <Stat label="Monthly shortfall" value={sgd(r.monthlyShortfall)} tone={r.monthlyTotal === 0 ? 'neutral' : r.monthlyShortfall > 0 ? 'caution' : 'positive'} hint={r.monthlyTotal === 0 ? 'Enter the care costs' : r.monthlyShortfall > 0 ? 'not covered by contributions' : 'fully covered'} />
             <Stat label={`${state.durationYears}-year total`} value={sgd(r.durationTotalWithInflation)} hint={`${sgd(r.durationTotalNoInflation)} without inflation`} className="col-span-2 sm:col-span-3" />
           </StatGrid>
           {r.contributions.length > 0 && r.monthlyAfterSupport > 0 && (
@@ -151,8 +164,8 @@ export default function CaregivingCalculator() {
       </InputGroup>
 
       <InputGroup title="Duration and inflation scenario">
-        <SliderField label="Duration of care being planned for" benchmark={BENCHMARKS.careDuration} suffix="years" min={1} max={20} step={1} value={state.durationYears} onChange={set('durationYears')} allowAboveMax={false} />
-        <SliderField label="Assumed annual cost inflation" benchmark={BENCHMARKS.careInflation} suffix="% p.a." min={0} max={8} step={0.5} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Care and helper costs have tended to rise faster than general inflation." />
+        <SliderField label="Duration of care being planned for" benchmark={BENCHMARKS.careDuration} suffix="years" min={1} max={20} hardMin={1} step={1} value={state.durationYears} onChange={set('durationYears')} allowAboveMax={false} />
+        <SliderField label="Assumed annual cost inflation" benchmark={BENCHMARKS.careInflation} suffix="% p.a." min={0} max={8} hardMax={15} step={0.5} value={state.inflationPct} onChange={set('inflationPct')} format={(n) => `${n.toFixed(1)}% p.a.`} help="Care and helper costs have tended to rise faster than general inflation." />
         {r.yearByYear.length > 0 && r.monthlyAfterSupport > 0 && <ColumnChart ariaLabel="Annual caregiving cost by year with inflation" items={r.yearByYear.slice(0, 12).map((y) => ({ label: `Yr ${y.year}`, value: y.annual }))} />}
       </InputGroup>
 

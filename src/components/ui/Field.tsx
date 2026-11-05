@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { clamp } from '@/lib/format';
 import type { Benchmark } from '@/data/benchmarks';
 import { BenchmarkHint } from './BenchmarkHint';
+import { Icon } from './Icon';
 
 /* ---------------------------------------------------------------------- */
 /* Shared pieces                                                           */
@@ -33,13 +34,32 @@ export function formatWithUnits(n: number, prefix?: string, suffix?: string, for
   return `${prefix ?? ''}${n.toLocaleString('en-SG')}${suffix ? `${tight ? '' : ' '}${suffix}` : ''}`;
 }
 
-function useNumberText(value: number, format?: (n: number) => string) {
-  const [text, setText] = useState(() => (format ? format(value) : String(value)));
+/** Default ceiling for typed numbers when a field sets none (S$1 billion, or 1e9 of anything). */
+const NUMBER_CEILING = 1_000_000_000;
+
+/**
+ * The text shown in a number box. S$ amounts read with thousands separators ("80,000")
+ * while the box is not being edited, and as plain digits while it is, so typing is never
+ * fighting the commas. Other units stay plain.
+ */
+function useNumberText(value: number, money: boolean) {
+  const display = (n: number) => (money ? n.toLocaleString('en-SG', { maximumFractionDigits: 2 }) : String(n));
+  const [text, setText] = useState(() => display(value));
   const focused = useRef(false);
   useEffect(() => {
-    if (!focused.current) setText(format ? format(value) : String(value));
-  }, [value, format]);
-  return { text, setText, focused };
+    if (!focused.current) setText(display(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, money]);
+  const onFocus = () => {
+    focused.current = true;
+    setText(String(value));
+  };
+  return { text, setText, focused, display, onFocus };
+}
+
+/** Typed text to a number, ignoring thousands separators. */
+function parseTyped(raw: string): number {
+  return Number(raw.replace(/,/g, '').trim());
 }
 
 /* ---------------------------------------------------------------------- */
@@ -72,10 +92,12 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
   const autoId = useId();
   const fieldId = id || autoId;
   const helpId = `${fieldId}-help`;
-  const { text, setText, focused } = useNumberText(value);
+  const money = prefix === 'S$';
+  const { text, setText, focused, display, onFocus } = useNumberText(value, money);
   const lower = min ?? (allowNegative ? Number.NEGATIVE_INFINITY : 0);
-  const upper = max ?? Number.POSITIVE_INFINITY;
-  const invalid = text.trim() !== '' && !Number.isFinite(Number(text));
+  // A finite ceiling everywhere: no typed value should be able to produce nonsense figures.
+  const upper = max ?? NUMBER_CEILING;
+  const invalid = text.trim() !== '' && !Number.isFinite(parseTyped(text));
 
   const commit = (raw: string) => {
     setText(raw);
@@ -83,7 +105,7 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
       onChange(lower === Number.NEGATIVE_INFINITY ? 0 : Math.max(0, lower));
       return;
     }
-    const n = Number(raw);
+    const n = parseTyped(raw);
     if (Number.isFinite(n)) onChange(clamp(n, lower, upper));
   };
 
@@ -94,23 +116,21 @@ export function NumberField({ id, label, value, onChange, min, max, step = 1, pr
         {prefix && <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-ink-faint">{prefix}</span>}
         <input
           id={fieldId}
-          type="number"
+          type={money ? 'text' : 'number'}
           inputMode="decimal"
           className={`field-input tabular-nums ${prefix ? 'pl-9' : ''} ${suffix ? 'pr-12' : ''}`}
           value={text}
-          min={Number.isFinite(lower) ? lower : undefined}
-          max={Number.isFinite(upper) ? upper : undefined}
-          step={step}
+          min={!money && Number.isFinite(lower) ? lower : undefined}
+          max={!money && Number.isFinite(upper) ? upper : undefined}
+          step={money ? undefined : step}
           placeholder={placeholder}
           aria-label={compact ? (typeof label === 'string' ? label : undefined) : undefined}
           aria-describedby={help ? helpId : undefined}
           aria-invalid={invalid ? 'true' : undefined}
-          onFocus={() => {
-            focused.current = true;
-          }}
+          onFocus={onFocus}
           onBlur={() => {
             focused.current = false;
-            setText(String(value));
+            setText(display(value));
           }}
           onChange={(e) => commit(e.target.value)}
         />
@@ -139,31 +159,41 @@ interface SliderFieldProps {
   help?: ReactNode;
   format?: (n: number) => string;
   className?: string;
-  /** Allow typing values above the slider's max (slider pins at max). */
+  /** Allow typing values above the slider's max (slider pins at max), up to `hardMax`. */
   allowAboveMax?: boolean;
+  /** Lowest value that can be typed. Defaults to 0 (or the slider's min if negative). */
+  hardMin?: number;
+  /** Highest value that can be typed. Defaults to the slider's max, or 10 × it with `allowAboveMax`. */
+  hardMax?: number;
   /** An indicative figure shown under the field, with a one-tap "Use" button. */
   benchmark?: Benchmark;
   /** Overrides the benchmark's value, e.g. when it is derived from another input. */
   benchmarkValue?: number;
 }
 
-export function SliderField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, format, className = '', allowAboveMax = true, benchmark, benchmarkValue }: SliderFieldProps) {
+export function SliderField({ id, label, value, onChange, min, max, step = 1, prefix, suffix, help, format, className = '', allowAboveMax = true, hardMin, hardMax, benchmark, benchmarkValue }: SliderFieldProps) {
   const autoId = useId();
   const fieldId = id || autoId;
   const sliderId = `${fieldId}-slider`;
   const helpId = `${fieldId}-help`;
-  const { text, setText, focused } = useNumberText(value);
-  const upper = allowAboveMax ? Number.POSITIVE_INFINITY : max;
+  const money = prefix === 'S$';
+  const { text, setText, focused, display: displayText, onFocus } = useNumberText(value, money);
+  const lower = hardMin ?? Math.min(0, min);
+  const upper = hardMax ?? (allowAboveMax ? max * 10 : max);
   const display = formatWithUnits(value, prefix, suffix, format);
 
+  // Typed values are clamped to [lower, upper], not only the slider. Above the maximum is
+  // capped at once. Below a hard minimum (or blank) is let through while typing, so the
+  // results can say what is missing, and raised to the minimum when the field is left.
   const commitText = (raw: string) => {
     setText(raw);
     if (raw.trim() === '' || raw === '-' || raw === '.') {
-      onChange(Math.max(0, min));
+      onChange(hardMin !== undefined ? Math.min(0, hardMin) : Math.max(0, min));
       return;
     }
-    const n = Number(raw);
-    if (Number.isFinite(n)) onChange(clamp(n, Math.min(0, min), upper));
+    const n = parseTyped(raw);
+    if (!Number.isFinite(n)) return;
+    onChange(hardMin !== undefined && n < hardMin ? Math.max(Math.min(0, hardMin), n) : clamp(n, lower, upper));
   };
 
   return (
@@ -171,7 +201,8 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
       <FieldLabel htmlFor={fieldId} hint={display}>
         {label}
       </FieldLabel>
-      <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] items-center gap-3">
+      {/* S$ boxes are a little wider so separated amounts up to S$20,000,000 fit. */}
+      <div className={`grid ${money ? 'grid-cols-[minmax(0,1fr)_8.5rem]' : 'grid-cols-[minmax(0,1fr)_7.5rem]'} items-center gap-3`}>
         <input
           id={sliderId}
           type="range"
@@ -188,19 +219,19 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
           {prefix && <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-xs text-ink-faint">{prefix}</span>}
           <input
             id={fieldId}
-            type="number"
+            type={money ? 'text' : 'number'}
             inputMode="decimal"
             className={`field-input !py-1.5 text-sm tabular-nums ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-8' : ''}`}
             value={text}
-            min={Math.min(0, min)}
-            step={step}
+            min={money ? undefined : lower}
+            max={money ? undefined : upper}
+            step={money ? undefined : step}
             aria-describedby={help ? helpId : undefined}
-            onFocus={() => {
-              focused.current = true;
-            }}
+            onFocus={onFocus}
             onBlur={() => {
               focused.current = false;
-              setText(String(value));
+              if (hardMin !== undefined && value < hardMin) onChange(hardMin);
+              else setText(displayText(value));
             }}
             onChange={(e) => commitText(e.target.value)}
           />
@@ -213,7 +244,7 @@ export function SliderField({ id, label, value, onChange, min, max, step = 1, pr
           benchmark={benchmark}
           value={benchmarkValue}
           current={value}
-          onUse={(n) => onChange(allowAboveMax ? Math.max(Math.min(0, min), n) : clamp(n, min, max))}
+          onUse={(n) => onChange(clamp(n, Math.max(lower, allowAboveMax ? lower : min), upper))}
           format={(n) => formatWithUnits(n, prefix, suffix, format)}
         />
       )}
@@ -303,6 +334,20 @@ export function TextField({ id, label, value, onChange, type = 'text', placehold
         onChange={(e) => onChange(e.target.value)}
       />
       {help && <FieldHelp id={helpId}>{help}</FieldHelp>}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* NameInput — a row's editable name (budget category, debt, arrangement)  */
+/* ---------------------------------------------------------------------- */
+
+/** A text box for a row's own name, with a pencil so it reads as something you can rename. */
+export function NameInput({ id, value, onChange, maxLength }: { id: string; value: string; onChange: (v: string) => void; maxLength?: number }) {
+  return (
+    <div className="relative">
+      <input id={id} className="field-input !py-1.5 pr-8 text-sm" value={value} onChange={(e) => onChange(e.target.value)} maxLength={maxLength} title={value} />
+      <Icon name="pencil" size={14} aria-hidden className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-faint" />
     </div>
   );
 }

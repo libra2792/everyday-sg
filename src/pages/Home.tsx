@@ -3,25 +3,20 @@ import { Link } from 'react-router-dom';
 import { CALCULATORS } from '@/data/calculators';
 import { CATEGORY_MAP, LIFE_STAGES } from '@/data/categories';
 import { FEATURED_GUIDE_IDS, GUIDE_MAP, GUIDES } from '@/data/guides';
+import { INTENTS } from '@/data/intents';
 import { recommend } from '@/lib/recommend';
 import { daysUntil, describeDue } from '@/lib/dates';
 import { useAppState } from '@/state/AppState';
 import { SearchBox } from '@/components/SearchBox';
 import { GuideCard } from '@/components/GuideCard';
-import { Icon, type IconName } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { LinkButton } from '@/components/ui/Button';
 import { SectionHeading } from '@/components/ui/Misc';
 
 const TILE_CLASSES = ['bg-tile-1', 'bg-tile-2', 'bg-tile-3'];
 
-const QUICK_ACTIONS: { label: string; to: string; icon: IconName }[] = [
-  { label: 'Plan my finances', to: '/calculators/budget', icon: 'wallet' },
-  { label: 'Buy a home', to: '/guides/home-affordability-and-loans', icon: 'home' },
-  { label: 'Prepare for a baby', to: '/guides/preparing-for-pregnancy', icon: 'baby' },
-  { label: 'Support my parents', to: '/guides/caregiving-plan', icon: 'heart-handshake' },
-  { label: 'Plan my retirement', to: '/calculators/retirement', icon: 'sunrise' },
-  { label: 'Sort out my life admin', to: '/tools/annual-admin', icon: 'calendar-check' },
-];
+// Each quick-start chip opens a hub of guides and calculators for that intent.
+const QUICK_ACTIONS = INTENTS.map((i) => ({ label: i.label, to: `/start/${i.id}`, icon: i.icon }));
 
 function NextSteps() {
   const { profile, profileDismissed, progress, tasks } = useAppState();
@@ -54,7 +49,8 @@ function NextSteps() {
           {profile ? 'Edit profile' : profileDismissed ? 'Set up profile' : 'Personalise'}
         </LinkButton>
       </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      {/* An odd last card spans the row rather than sitting alone. */}
+      <div className="mt-4 grid gap-3 md:grid-cols-2 md:[&>*:last-child:nth-child(odd)]:col-span-2">
         {recs.map((r) => (
           <Link key={`${r.type}-${r.id}`} to={r.path} className="group flex items-start gap-3 rounded-md border border-stone-200 bg-stone-50 p-4 transition-colors hover:border-sage-400">
             <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sage-100 text-sage-800">
@@ -137,7 +133,7 @@ export function Home() {
           <p className="mb-3 text-[12px] font-medium uppercase tracking-wider text-hero-eyebrow">Everyday SG</p>
           <h1 className="text-[30px] font-semibold leading-[1.15] text-hero-ink sm:text-[40px]">Your guide to adulting in Singapore.</h1>
           <p className="mt-4 text-[16px] leading-7 text-hero-muted">
-            Plain-English, practical help with money, housing, family, caregiving, insurance, CPF, careers and the admin in between. What applies to you, what to do,
+            Plain-English, practical help with money, housing, family, caregiving, insurance, CPF, tax and the admin in between. What applies to you, what to do,
             what it might cost, and where to get it done.
           </p>
         </div>
@@ -164,7 +160,7 @@ export function Home() {
 
       <section aria-labelledby="stage-title">
         <SectionHeading title="Where are you in life?" description="Pick a stage to see the guides that usually matter most." />
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ul className="grid gap-3 sm:grid-cols-2 sm:max-lg:[&>*:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
           {LIFE_STAGES.map((s, i) => (
             <li key={s.id}>
               <Link to={`/guides?stage=${s.id}`} className={`block h-full rounded-lg border border-stone-200 p-4 transition-colors hover:border-sage-400 ${TILE_CLASSES[i % 3]}`}>
@@ -194,7 +190,7 @@ export function Home() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[15px] font-medium text-ink group-hover:text-sage-900">{c.name}</span>
-                  <span className="block truncate text-[13px] text-ink-faint">{c.description}</span>
+                  <span className="line-clamp-2 text-[13px] leading-5 text-ink-faint">{c.summary ?? c.description}</span>
                 </span>
                 <Icon name="chevron-right" size={16} className="shrink-0 text-stone-400 group-hover:text-sage-700" />
               </Link>

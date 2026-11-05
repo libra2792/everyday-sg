@@ -202,6 +202,13 @@ describe('housingAffordability', () => {
     expect(r.commitmentShareOfIncome).toBe(0);
     expect(r.withinLimit).toBe(true);
   });
+  it('pays the down payment from all allocated CPF until the user sets the CPF portion', () => {
+    const auto = housingAffordability({ ...inputs, cpfForDownPayment: 0, cpfDownAuto: true });
+    expect(auto.upfrontFromCpf).toBe(120_000);
+    expect(auto.upfrontFromCash).toBe(17_500 + 40_000 + 15_000);
+    const withPartner = housingAffordability({ ...inputs, cpfDownAuto: true, withPartner: true, partnerAvailableCpf: 50_000 });
+    expect(withPartner.upfrontFromCpf).toBe(137_500);
+  });
   it('handles a 100% down payment (no loan)', () => {
     const r = housingAffordability({ ...inputs, downPaymentPct: 100 });
     expect(r.loanAmount).toBe(0);

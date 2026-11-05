@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAppState, PRIORITY_OPTIONS } from '@/state/AppState';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { savedItemHref, useAppState, useStorageControl, PRIORITY_OPTIONS } from '@/state/AppState';
 import { GUIDES } from '@/data/guides';
 import { recommend } from '@/lib/recommend';
 import { daysUntil, describeDue, isValidISODate } from '@/lib/dates';
@@ -48,6 +48,7 @@ function TasksSection() {
   const { tasks, addTask, updateTask, removeTask } = useAppState();
   const [title, setTitle] = useState('');
   const [due, setDue] = useState('');
+  const [formMessage, setFormMessage] = useState('');
   const sorted = useMemo(() => {
     return [...tasks].sort((a, b) => {
       if (a.done !== b.done) return a.done ? 1 : -1;
@@ -60,7 +61,12 @@ function TasksSection() {
   const submit = () => {
     const t = title.trim();
     if (!t) return;
-    addTask({ title: t, dueDate: isValidISODate(due) ? due : undefined, source: 'manual' });
+    const dueDate = isValidISODate(due) ? due : undefined;
+    if (!addTask({ title: t, dueDate, source: 'manual' })) {
+      setFormMessage(`“${t}”${dueDate ? ` on ${formatDate(dueDate)}` : ''} is already in your plan.`);
+      return;
+    }
+    setFormMessage(`Added “${t}” to My Plan.`);
     setTitle('');
     setDue('');
   };
@@ -79,6 +85,9 @@ function TasksSection() {
         <Button type="submit" variant="primary" icon="plus" className="sm:mb-0">
           Add
         </Button>
+        <p role="status" aria-live="polite" className={formMessage ? 'text-[13px] text-ink-muted sm:col-span-3' : 'sr-only'}>
+          {formMessage}
+        </p>
       </form>
       {sorted.length === 0 ? (
         <p className="text-[13.5px] text-ink-faint">No tasks yet. Add your own, or use “Add to My Plan” on any guide, the tax tool or the annual checklist.</p>
@@ -112,6 +121,7 @@ function TasksSection() {
 }
 
 function DataSection() {
+  const { reloadFromStorage, offerUndo } = useStorageControl();
   const [message, setMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const footprint = storageFootprintBytes();
@@ -135,11 +145,15 @@ function DataSection() {
       setMessage('That file could not be read as JSON.');
     }
   };
+  // One click erases; a copy is held in memory for five seconds so Undo can put it all back.
   const doReset = () => {
-    if (!window.confirm('Erase everything Everyday SG has saved in this browser? This cannot be undone unless you exported a copy.')) return;
+    const copy = exportAll();
     const n = clearAll();
-    setMessage(`Removed ${n} saved items. Reloading…`);
-    setTimeout(() => window.location.reload(), 600);
+    reloadFromStorage();
+    offerUndo(`Removed ${n} saved ${n === 1 ? 'item' : 'items'} from this browser.`, () => {
+      importAll(copy);
+      reloadFromStorage();
+    });
   };
 
   return (
@@ -184,6 +198,15 @@ function DataSection() {
 
 export function MyPlan() {
   const { profile, progress, saved } = useAppState();
+  // Arriving from "Save profile": confirm it once. The flag is cleared from history at once,
+  // so a reload or coming Back later does not repeat the message.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [profileSaved] = useState(() => Boolean((location.state as { profileSaved?: boolean } | null)?.profileSaved));
+  useEffect(() => {
+    if (profileSaved) navigate('.', { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const recs = useMemo(() => recommend(profile, progress, 8), [profile, progress]);
   const checklistSummary = useMemo(
     () =>
@@ -198,6 +221,14 @@ export function MyPlan() {
   return (
     <div>
       <PageHeader title="My Plan" description="Your profile, next steps, dates and checklist progress — and full control over the data behind them." actions={<LinkButton to="/plan/profile" size="sm" icon="pencil">{profile ? 'Edit profile' : 'Set up profile'}</LinkButton>} />
+
+      {profileSaved && (
+        <div role="status" className="no-print mb-6">
+          <Note icon="circle-check" title="Profile saved — your suggestions are updated">
+            Your next steps below and on the home page now follow your answers.
+          </Note>
+        </div>
+      )}
 
       <div className="print-only mb-6">
         <h2 className="text-lg font-semibold">Everyday SG — plan summary ({formatDate(new Date().toISOString())})</h2>
@@ -214,7 +245,7 @@ export function MyPlan() {
                   ['Age range', LABELS[profile.ageRange]],
                   ['Residency', LABELS[profile.residency]],
                   ['Household', profile.household.map((h) => LABELS[h]).join(', ')],
-                  ['Housing', LABELS[profile.housing]],
+                  ['Housing', profile.housing.map((h) => LABELS[h]).join(', ')],
                   ['Employment', LABELS[profile.employment]],
                   ['Horizon', LABELS[profile.horizon]],
                   ['Priorities', profile.priorities.map((p) => PRIORITY_OPTIONS.find((o) => o.id === p)?.label).filter(Boolean).join(', ')],
@@ -268,12 +299,12 @@ export function MyPlan() {
         <div className="min-w-0 space-y-6">
           <Panel title="Saved items" icon="bookmark" id="saved-summary" actions={<Link to="/saved" className="text-[13px] text-sage-800 hover:underline">Open</Link>}>
             {saved.length === 0 ? (
-              <p className="text-[13.5px] text-ink-faint">Save guides, calculators and results snapshots to find them again quickly.</p>
+              <p className="text-[13.5px] text-ink-faint">Bookmark guides, calculators and tools, or save calculator snapshots, to find them again quickly.</p>
             ) : (
               <ul className="space-y-2 text-[14px]">
                 {saved.slice(0, 6).map((s) => (
                   <li key={s.id} className="truncate">
-                    <Link to={s.path} className="text-ink hover:text-sage-900">
+                    <Link to={savedItemHref(s)} className="text-ink hover:text-sage-900">
                       {s.title}
                     </Link>
                   </li>

@@ -30,7 +30,7 @@ export const PARENTS_EXTRAS: Record<string, GuideExtras> = {
           stats: cost > 0 ? [{ label: 'After support', value: `${sgd(net)}/mo` }, { label: 'Per person, per year', value: sgd(each * 12) }] : undefined,
           why,
           next: [
-            tool('caregiving', cost > 0 ? 'Opens with your cost and support; add each contributor’s share.' : 'Break the cost down and set each contributor’s share.', cost > 0 ? { homecare: cost, support } : undefined),
+            tool('caregiving', cost > 0 ? 'Opens with your cost and support; add each contributor’s share.' : 'Break the cost down and set each contributor’s share.', cost > 0 ? { homecare: cost, support, people } : undefined),
             official('aic-financial', 'Subsidies and grants for care at home and in institutions.'),
             guide('lasting-power-of-attorney', 'The document that lets you act if your parent cannot.'),
           ],

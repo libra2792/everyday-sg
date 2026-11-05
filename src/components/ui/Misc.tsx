@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon, type IconName } from './Icon';
 
@@ -22,6 +22,48 @@ export function Note({ children, icon = 'info', title, tone = 'neutral', classNa
         {title && <div className="font-medium text-ink">{title}</div>}
         <div>{children}</div>
       </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* UndoNotice — a confirmation with a short-lived Undo                     */
+/* ---------------------------------------------------------------------- */
+
+interface UndoNoticeProps {
+  message: ReactNode;
+  onUndo: () => void;
+  /** Called when the Undo window closes without being used. */
+  onExpire: () => void;
+  seconds?: number;
+  /** Fixed above the bottom of the screen instead of in the flow of the page. */
+  floating?: boolean;
+  className?: string;
+}
+
+/** "Done. Undo" for a few seconds, then gone. Destructive one-click actions use this instead of window.confirm. */
+export function UndoNotice({ message, onUndo, onExpire, seconds = 5, floating, className = '' }: UndoNoticeProps) {
+  const [left, setLeft] = useState(seconds);
+  const expire = useRef(onExpire);
+  expire.current = onExpire;
+  useEffect(() => {
+    if (left <= 0) {
+      expire.current();
+      return;
+    }
+    const t = window.setTimeout(() => setLeft((s) => s - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [left]);
+  return (
+    <div
+      role="status"
+      className={`no-print flex items-center justify-between gap-3 rounded-md border border-stone-300 bg-stone-50 px-4 py-2.5 text-[13.5px] text-ink shadow-soft ${floating ? 'fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md md:bottom-6' : ''} ${className}`}
+    >
+      <span className="min-w-0">{message}</span>
+      <button type="button" onClick={onUndo} className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-stone-300 bg-stone-100 px-2.5 py-1 text-[13px] font-medium text-sage-800 hover:border-sage-500">
+        <Icon name="rotate-ccw" size={13} aria-hidden />
+        Undo <span className="tabular-nums text-ink-faint">({left})</span>
+      </button>
     </div>
   );
 }

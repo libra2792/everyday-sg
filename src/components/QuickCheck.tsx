@@ -50,7 +50,8 @@ function NumberInput({
   const id = useId();
   const [text, setText] = useState(value === undefined ? '' : String(value));
   const [focused, setFocused] = useState(false);
-  const shown = focused ? text : value === undefined ? '' : String(value);
+  // S$ amounts read "80,000" when not being edited, plain digits while typing.
+  const shown = focused ? text : value === undefined ? '' : field.type === 'money' ? value.toLocaleString('en-SG', { maximumFractionDigits: 2 }) : String(value);
   const prefix = field.type === 'money' ? 'S$' : undefined;
   const suffix = field.type === 'number' ? field.suffix : undefined;
   const bench: Benchmark | undefined = field.benchmark ? (BENCHMARKS as Record<string, Benchmark>)[field.benchmark] : undefined;

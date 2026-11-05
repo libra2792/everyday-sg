@@ -3,7 +3,7 @@ import { usePersistentState } from '@/lib/usePersistentState';
 import { sgd } from '@/lib/format';
 import { isValidISODate } from '@/lib/dates';
 import { useAppState } from '@/state/AppState';
-import { TAX_ALL_ITEMS, TAX_FILING_TASKS, TAX_INCOME_DOCUMENTS, TAX_RELIEF_CATEGORIES } from '@/data/checklists';
+import { TAX_FILING_TASKS, TAX_INCOME_DOCUMENTS, TAX_RELIEF_CATEGORIES, reliefLapsed, type TaxRelief } from '@/data/checklists';
 import { SOURCE_MAP } from '@/data/sources';
 import { CalculatorShell, InputGroup, ResultsPanel } from '@/components/calculators/CalculatorShell';
 import { Checklist } from '@/components/Checklist';
@@ -11,6 +11,8 @@ import { NumberField, SelectField, TextField } from '@/components/ui/Field';
 import { Button } from '@/components/ui/Button';
 import { DefinitionList, Stat, StatGrid } from '@/components/ui/Panel';
 import { ExternalLink, Note } from '@/components/ui/Misc';
+import { InfoTip } from '@/components/ui/InfoTip';
+import { Icon } from '@/components/ui/Icon';
 
 interface TaxState {
   incomeYear: number;
@@ -27,6 +29,41 @@ const INCOME_LINES = [
   { id: 'other', label: 'Other taxable income' },
 ];
 
+/** The note behind a relief's info button. */
+function ReliefNote({ relief }: { relief: TaxRelief }) {
+  const rows = [
+    { label: 'Who qualifies', text: relief.who },
+    { label: 'How you get it', text: relief.claim },
+    ...(relief.note ? [{ label: 'Worth knowing', text: relief.note }] : []),
+  ];
+  return (
+    <>
+      <p className="text-[14px] font-semibold text-ink">{relief.name}</p>
+      <p className="mt-1">{relief.what}</p>
+      <dl className="mt-3 space-y-2">
+        {rows.map((r) => (
+          <div key={r.label}>
+            <dt className="text-[11.5px] font-medium uppercase tracking-wider text-ink-faint">{r.label}</dt>
+            <dd className="mt-0.5">{r.text}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 border-t border-stone-200 pt-2.5 text-[12.5px]">
+        {relief.sourceIds.map((id, i) => (
+          <span key={id}>
+            {i > 0 && ' · '}
+            <a href={SOURCE_MAP[id].url} target="_blank" rel="noopener noreferrer" className="link">
+              IRAS: {SOURCE_MAP[id].title}
+              <Icon name="external-link" size={11} className="ml-0.5 inline-block align-[-1px]" />
+            </a>
+          </span>
+        ))}
+        <span className="text-ink-faint"> · amounts and limits are on IRAS’s page</span>
+      </p>
+    </>
+  );
+}
+
 function defaultState(): TaxState {
   const now = new Date();
   // Filing in Mar–Apr covers the previous calendar year; before March, most people are still preparing last year's figures.
@@ -36,7 +73,7 @@ function defaultState(): TaxState {
 
 export default function TaxPrepTool() {
   const [state, setState, reset] = usePersistentState<TaxState>('tool:tax-prep', defaultState);
-  const { addTask, tasks, resetList, listCompletion } = useAppState();
+  const { addTask, tasks, resetList, restoreList, progress, listCompletion } = useAppState();
   const [added, setAdded] = useState(false);
   const yearOptions = useMemo(() => {
     const y = new Date().getFullYear();
@@ -44,9 +81,12 @@ export default function TaxPrepTool() {
   }, []);
   const ya = state.incomeYear + 1;
   const listId = `tool-tax-prep-${ya}`;
-  const completion = listCompletion(listId, TAX_ALL_ITEMS.map((i) => i.id));
+  // Reliefs IRAS has ended by this Year of Assessment are left out, not offered to tick.
+  const reliefs = TAX_RELIEF_CATEGORIES.filter((r) => !reliefLapsed(r, ya));
+  const lapsed = TAX_RELIEF_CATEGORIES.filter((r) => reliefLapsed(r, ya));
+  const completion = listCompletion(listId, [...TAX_INCOME_DOCUMENTS, ...reliefs, ...TAX_FILING_TASKS].map((i) => i.id));
   const totalIncome = Object.values(state.incomes).reduce((s, v) => s + Math.max(0, v || 0), 0);
-  const totalReliefs = Object.values(state.reliefs).reduce((s, v) => s + Math.max(0, v || 0), 0);
+  const totalReliefs = reliefs.reduce((s, r) => s + Math.max(0, state.reliefs[r.id] || 0), 0);
   const estimatedChargeable = Math.max(0, totalIncome - totalReliefs);
   const existingTask = tasks.find((t) => t.source === 'tax' && t.title.includes(`YA ${ya}`) && !t.done);
 
@@ -58,8 +98,13 @@ export default function TaxPrepTool() {
   };
 
   const handleReset = () => {
+    const ticks = progress[listId];
     resetList(listId);
-    reset();
+    const undo = reset();
+    return () => {
+      undo();
+      restoreList(listId, ticks);
+    };
   };
 
   return (
@@ -67,7 +112,7 @@ export default function TaxPrepTool() {
       id="tax-prep"
       onReset={handleReset}
       sourceIds={['iras-filing', 'iras-file', 'iras-reliefs', 'iras-rates', 'iras-mytax']}
-      relatedGuides={['tax-filing-prep', 'freelance-variable-income', 'cpf-basics']}
+      relatedGuides={['tax-filing-prep', 'cpf-basics', 'retirement-income-cpf-life']}
       intro="Organise the documents, review the relief categories that may apply, and track what is done for the Year of Assessment you are preparing. IRAS determines the actual assessment; this tool keeps you organised and links you to the right place."
       caveat={
         <>
@@ -115,8 +160,13 @@ export default function TaxPrepTool() {
         <Checklist listId={listId} items={TAX_INCOME_DOCUMENTS} showEssentialBadges />
       </InputGroup>
 
-      <InputGroup title="Relief categories to review" description="Tick the ones you have checked against IRAS's eligibility rules for this year. Amounts and caps are on IRAS's site.">
-        <Checklist listId={listId} items={TAX_RELIEF_CATEGORIES} showEssentialBadges={false} />
+      <InputGroup title="Relief categories to review" description="Tick the ones you have checked against IRAS's rules for this year. Hover over or tap the i beside a relief for what it is for, who qualifies and whether you need to claim it. Amounts and caps, including the overall cap on all personal reliefs together, are on IRAS's site.">
+        <Checklist listId={listId} items={reliefs} showEssentialBadges={false} info={(r) => <InfoTip label={`About ${r.name}`}><ReliefNote relief={r} /></InfoTip>} />
+        {lapsed.length > 0 && (
+          <p className="text-[13px] leading-5 text-ink-faint">
+            Not listed because IRAS has ended them for YA {ya}: {lapsed.map((r) => `${r.name} (from YA ${r.lapsedFrom})`).join(', ')}.
+          </p>
+        )}
       </InputGroup>
 
       <InputGroup title="Filing tasks">
@@ -130,8 +180,8 @@ export default function TaxPrepTool() {
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          {TAX_RELIEF_CATEGORIES.map((rel) => (
-            <NumberField key={rel.id} label={rel.text.replace(/\s*\(.*\)\s*/g, '')} prefix="S$" step={100} value={state.reliefs[rel.id] ?? 0} onChange={(v) => setState((s) => ({ ...s, reliefs: { ...s.reliefs, [rel.id]: v } }))} />
+          {reliefs.map((rel) => (
+            <NumberField key={rel.id} label={rel.name} prefix="S$" step={100} value={state.reliefs[rel.id] ?? 0} onChange={(v) => setState((s) => ({ ...s, reliefs: { ...s.reliefs, [rel.id]: v } }))} />
           ))}
         </div>
         <TextField label="Notes for next year" value={state.notes} onChange={(v) => setState((s) => ({ ...s, notes: v }))} placeholder="e.g. Keep course fee receipts in the tax folder; decide on SRS by November." maxLength={500} />
