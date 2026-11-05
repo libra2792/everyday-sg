@@ -29,7 +29,7 @@ export const CREATOR = {
   name: 'Nigel',
   eyebrow: 'Who made this',
   title: 'Hi, I’m Nigel. I’m figuring this out too.',
-  lead: 'Everyday SG is not built by a bank, an agency or a content farm. It is built by an ordinary Singaporean trying to get through the same high-pressure cauldron as you: CPF rules, housing queues, insurance jargon, ageing parents and a newborn, while holding down a job and a life.',
+  lead: 'Everyday SG is not built by a bank, an agency or a content farm. It is built by an ordinary Singaporean trying to get through the same high-pressure cauldron as you: CPF rules, housing queues, insurance jargon, ageing parents and a baby on the way, while holding down a job and a life.',
   heroPhoto: {
     src: '/creator/new-zealand.jpg',
     alt: 'Nigel and his wife sitting together on a rock beside a mountain trail, with snow-capped peaks, a turquoise glacial lake and a suspension bridge behind them.',
@@ -40,10 +40,10 @@ export const CREATOR = {
     {
       id: 'newborn',
       icon: 'sprout',
-      title: 'It started with a newborn',
+      title: 'It started with a baby on the way',
       paragraphs: [
-        'Not long ago my wife and I welcomed our daughter. Nobody warns you about the admin that arrives with her.',
-        'Between night feeds I was registering a birth, sorting out leave, opening accounts, chasing insurance and working out childcare, each with its own portal, its own rules and its own deadline. I kept thinking: why is there no single place that tells me, in plain English, what to do next and roughly what it costs?',
+        'My wife and I are expecting our daughter this November. Nobody warns you how much admin arrives before the baby does.',
+        'While we get ready, I have been working out how to register a birth, plan our leave, open accounts, sort out insurance and arrange childcare, each with its own portal, its own rules and its own deadline. I kept thinking: why is there no single place that tells me, in plain English, what to do next and roughly what it costs?',
         'That question became this site. The baby calculator and the parenting guides are the ones I needed first.',
       ],
       photos: [

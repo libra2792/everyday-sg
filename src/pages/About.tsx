@@ -33,7 +33,7 @@ export function About() {
         <section>
           <SectionHeading title="Who made it" />
           <p>
-            Everyday SG is a personal project by one Singaporean working through the same life admin as everyone else: a newborn, parents in retirement, a home that is
+            Everyday SG is a personal project by one Singaporean working through the same life admin as everyone else: a baby on the way, parents in retirement, a home that is
             still being built, and the paperwork that follows a death in the family. By day I work in financial advisory with an insurer; this site is built in my own time,
             and it does not sell or recommend any product or company. <Link to="/creator" className="link">Read the story behind the site</Link>.
           </p>
